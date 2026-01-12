@@ -1,0 +1,26 @@
+{
+  "login": {
+    "pageTitle": "All your clinic management tools in one place.",
+    "welcomeTitle": "Welcome",
+    "welcomeSubtitle": "Login now",
+    "emailPlaceholder": "Email",
+    "passwordPlaceholder": "Password",
+    "rememberMe": "Remember me",
+    "forgotPassword": "Forgot password?",
+    "loginButton": "Login"
+  },
+  "sidebar": {
+    "home": "Home",
+    "clinicManagement": "Clinic Management",
+    "subscriptions": "Subscriptions",
+    "invoices": "Invoices",
+    "reports": "Reports",
+    "loginRecords": "Login Records",
+    "settings": "Settings",
+    "logout": "Logout"
+  },
+  "navbar": {
+    "notifications": "Notifications",
+    "profile": "Profile"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "login": {
+    "pageTitle": "كل أدواتك لإدارة العيادة في مكان واحد.",
+    "welcomeTitle": "مرحبا بك",
+    "welcomeSubtitle": "قم بتسجيل الدخول الآن",
+    "emailPlaceholder": "البريد الالكتروني",
+    "passwordPlaceholder": "كلمة المرور",
+    "rememberMe": "تذكرني",
+    "forgotPassword": "هل نسيت كلمة المرور؟",
+    "loginButton": "تسجيل الدخول"
+  },
+  "sidebar": {
+    "home": "الرئيسية",
+    "clinicManagement": "ادارة العيادات",
+    "subscriptions": "الاشتراكات",
+    "invoices": "الفواتير",
+    "reports": "التقارير",
+    "loginRecords": "تسجيلات الدخول",
+    "settings": "الاعدادات",
+    "logout": "تسجيل الخروج"
+  },
+  "navbar": {
+    "notifications": "الإشعارات",
+    "profile": "الملف الشخصي"
+  }
+}
