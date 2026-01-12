@@ -1,0 +1,367 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --font-cairo: 'Cairo', sans-serif;
+
+  --navbar-height-mobile: 64px;
+  --navbar-height-desktop: 88px;
+
+
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-cairo);
+
+  /* Base Colors */
+  --color-text: #212529;
+  --color-subtitle: #4a4a4a;
+  --color-BG: #f8f9fa;
+
+  /* Primary Colors */
+  --color-Primary-50: #eef4ff;
+  --color-Primary-100: #dce9fe;
+  --color-Primary-200: #bbd6fe;
+  --color-Primary-300: #91c2fd;
+  --color-Primary-400: #62b0fd;
+  --color-Primary-500: #1a9df5;
+  --color-Primary-600: #1381cb;
+  --color-Primary-700: #0d65a0;
+  --color-Primary-800: #074c7b;
+  --color-Primary-900: #033354;
+
+  /* Mint Colors */
+  --color-mint-50: #e4fffa;
+  --color-mint-100: #b4fff2;
+  --color-mint-200: #05fee6;
+  --color-mint-300: #04eed7;
+  --color-mint-400: #04e1cc;
+  --color-mint-500: #03d1bd;
+  --color-mint-600: #02ab9b;
+  --color-mint-700: #018376;
+  --color-mint-800: #016056;
+  --color-mint-900: #003f38;
+
+  /* Grey Colors */
+  --color-grey-50: #eff1f3;
+  --color-grey-100: #dfe3e7;
+  --color-grey-200: #bbc5ce;
+  --color-grey-300: #9daab5;
+  --color-grey-400: #858f99;
+  --color-grey-500: #6c757d;
+  --color-grey-600: #5a6269;
+  --color-grey-700: #484e54;
+  --color-grey-800: #373c41;
+  --color-grey-900: #292d30;
+
+  /* Error Colors */
+  --color-error-50: #ffdbdb;
+  --color-error-400: #ff7575;
+  --color-error-600: #ff0f0f;
+
+  /* Confirm/Success Colors */
+  --color-confirm-50: #dbf0dc;
+  --color-confirm-400: #6dc070;
+  --color-confirm-600: #4caf50;
+
+  /* Warning Colors */
+  --color-warning-50: #fff2cc;
+  --color-warning-400: #d19d00;
+  --color-warning-600: #ffc107;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--color-BG);
+  color: var(--color-text);
+  font-family: var(--font-cairo);
+}
+
+/* ============================================
+   Typography Classes from Figma Design System
+   ============================================ */
+
+/* text-xs: 12px / 16px line-height */
+.text-xs-regular {
+  font-family: var(--font-cairo);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 400;
+}
+
+.text-xs-medium {
+  font-family: var(--font-cairo);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+}
+
+.text-xs-semibold {
+  font-family: var(--font-cairo);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+}
+
+.text-xs-bold {
+  font-family: var(--font-cairo);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 700;
+}
+
+/* text-sm: 14px / 20px line-height */
+.text-sm-regular {
+  font-family: var(--font-cairo);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 400;
+}
+
+.text-sm-medium {
+  font-family: var(--font-cairo);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+}
+
+.text-sm-semibold {
+  font-family: var(--font-cairo);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+}
+
+.text-sm-bold {
+  font-family: var(--font-cairo);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 700;
+}
+
+/* text-base: 16px / 24px line-height */
+.text-base-regular {
+  font-family: var(--font-cairo);
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+}
+
+.text-base-medium {
+  font-family: var(--font-cairo);
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 500;
+}
+
+.text-base-semibold {
+  font-family: var(--font-cairo);
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 600;
+}
+
+.text-base-bold {
+  font-family: var(--font-cairo);
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 700;
+}
+
+/* text-lg: 18px / 28px line-height */
+.text-lg-regular {
+  font-family: var(--font-cairo);
+  font-size: 18px;
+  line-height: 28px;
+  font-weight: 400;
+}
+
+.text-lg-medium {
+  font-family: var(--font-cairo);
+  font-size: 18px;
+  line-height: 28px;
+  font-weight: 500;
+}
+
+.text-lg-semibold {
+  font-family: var(--font-cairo);
+  font-size: 18px;
+  line-height: 28px;
+  font-weight: 600;
+}
+
+.text-lg-bold {
+  font-family: var(--font-cairo);
+  font-size: 18px;
+  line-height: 28px;
+  font-weight: 700;
+}
+
+/* text-xl: 20px / 28px line-height */
+.text-xl-regular {
+  font-family: var(--font-cairo);
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 400;
+}
+
+.text-xl-medium {
+  font-family: var(--font-cairo);
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 500;
+}
+
+.text-xl-semibold {
+  font-family: var(--font-cairo);
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 600;
+}
+
+.text-xl-bold {
+  font-family: var(--font-cairo);
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 700;
+}
+
+/* text-2xl: 24px / 32px line-height */
+.text-2xl-regular {
+  font-family: var(--font-cairo);
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 400;
+}
+
+.text-2xl-medium {
+  font-family: var(--font-cairo);
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 500;
+}
+
+.text-2xl-semibold {
+  font-family: var(--font-cairo);
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 600;
+}
+
+.text-2xl-bold {
+  font-family: var(--font-cairo);
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 700;
+}
+
+/* text-3xl: 30px / 38px line-height */
+.text-3xl-regular {
+  font-family: var(--font-cairo);
+  font-size: 30px;
+  line-height: 38px;
+  font-weight: 400;
+}
+
+.text-3xl-medium {
+  font-family: var(--font-cairo);
+  font-size: 30px;
+  line-height: 38px;
+  font-weight: 500;
+}
+
+.text-3xl-semibold {
+  font-family: var(--font-cairo);
+  font-size: 30px;
+  line-height: 38px;
+  font-weight: 600;
+}
+
+.text-3xl-bold {
+  font-family: var(--font-cairo);
+  font-size: 30px;
+  line-height: 38px;
+  font-weight: 700;
+}
+
+/* text-4xl: 36px / 44px line-height */
+.text-4xl-regular {
+  font-family: var(--font-cairo);
+  font-size: 36px;
+  line-height: 44px;
+  font-weight: 400;
+}
+
+.text-4xl-medium {
+  font-family: var(--font-cairo);
+  font-size: 36px;
+  line-height: 44px;
+  font-weight: 500;
+}
+
+.text-4xl-semibold {
+  font-family: var(--font-cairo);
+  font-size: 36px;
+  line-height: 44px;
+  font-weight: 600;
+}
+
+.text-4xl-bold {
+  font-family: var(--font-cairo);
+  font-size: 36px;
+  line-height: 44px;
+  font-weight: 700;
+}
+
+/* text-5xl: 48px / 60px line-height */
+.text-5xl-regular {
+  font-family: var(--font-cairo);
+  font-size: 48px;
+  line-height: 60px;
+  font-weight: 400;
+}
+
+.text-5xl-medium {
+  font-family: var(--font-cairo);
+  font-size: 48px;
+  line-height: 60px;
+  font-weight: 500;
+}
+
+.text-5xl-semibold {
+  font-family: var(--font-cairo);
+  font-size: 48px;
+  line-height: 60px;
+  font-weight: 600;
+}
+
+.text-5xl-bold {
+  font-family: var(--font-cairo);
+  font-size: 48px;
+  line-height: 60px;
+  font-weight: 700;
+}
+
+/* ============================================
+   Utility Classes
+   ============================================ */
+
+@layer utilities {
+  .shadow-card {
+    box-shadow: 4px 4px 11px 0px rgba(0, 0, 0, 0.25);
+  }
+
+  /* Make SVG icons white using brightness filter */
+  .icon-white {
+    filter: brightness(0) invert(1);
+  }
+}

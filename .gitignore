@@ -1,0 +1,22 @@
+# Next.js
+.next/
+out/
+
+# Node
+node_modules/
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+
+# Cursor / IDE
+.cursor/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
