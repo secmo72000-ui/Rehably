@@ -15,12 +15,122 @@
     "subscriptions": "الاشتراكات",
     "invoices": "الفواتير",
     "reports": "التقارير",
-    "loginRecords": "تسجيلات الدخول",
+    "loginRecords": "سجل الأنشطة",
     "settings": "الاعدادات",
     "logout": "تسجيل الخروج"
   },
   "navbar": {
     "notifications": "الإشعارات",
     "profile": "الملف الشخصي"
+  },
+  "table": {
+    "previous": "السابق",
+    "next": "التالي",
+    "loading": "جاري التحميل...",
+    "noData": "لا توجد بيانات"
+  },
+  "clinicManagement": {
+    "pageTitle": "إدارة العيادات",
+    "addClinic": "إضافة عيادة",
+    "totalClinics": "إجمالي العيادات",
+    "activePackages": "الباقات النشطة",
+    "clinicDetails": "تفاصيل العيادة",
+    "columns": {
+      "id": "ID",
+      "name": "اسم العيادة",
+      "package": "الباقة",
+      "subscriptionDate": "تاريخ الاشتراك",
+      "expiryDate": "تاريخ الانتهاء",
+      "paymentStatus": "حالة الدفع",
+      "doctorsCount": "عدد الأطباء",
+      "actions": "التفاصيل"
+    }
+  },
+  "subscriptions": {
+    "pageTitle": "الاشتراكات",
+    "addPackage": "إضافة خطة مالية",
+    "editPackage": "تعديل الخطة",
+    "deletePackage": "حذف الخطة",
+    "newest": "الأحدث",
+    "tabs": {
+      "subscriptions": "الاشتراكات",
+      "financialPlans": "حسابات الخطط المالية",
+      "customCategories": "الفئات الخاصة"
+    }
+  },
+  "invoices": {
+    "pageTitle": "الفواتير",
+    "invoiceTitle": "فاتورة اشتراك منصة Rehably",
+    "status": {
+      "paid": "مدفوع",
+      "rejected": "مرفوض",
+      "pending": "غير مدفوع"
+    },
+    "customerInfo": {
+      "title": "جهة الاستلام",
+      "name": "الاسم",
+      "email": "البريد",
+      "invoiceNumber": "رقم الاستلام",
+      "country": "الدولة"
+    },
+    "invoiceItems": {
+      "title": "بنود الفاتورة",
+      "subscriptionDetails": "تفاصيل الاشتراك",
+      "subscriptionPlan": "بيانات اشتراك",
+      "renewalType": "نوع الحجة"
+    },
+    "totals": {
+      "subtotal": "الإجمالي الفرعي",
+      "total": "الإجمالي",
+      "currency": "جنيها"
+    },
+    "footer": {
+      "footerText": "فاتورة اشتراك إلكترونية صادرة من منصة",
+      "platformName": "Rehably"
+    },
+    "downloadPDF": "تحميل الفاتورة كملف PDF"
+  },
+  "auditLogs": {
+    "pageTitle": "سجل الأنشطة",
+    "noData": "لا توجد سجلات",
+    "columns": {
+      "clinicName": "اسم العيادة",
+      "managerName": "اسم المدير",
+      "loginDate": "الدخول يوميا",
+      "failedLogins": "فشل التسجيل",
+      "users": "المستخدمون",
+      "storage": "مساحة التخزين",
+      "actions": "تفاصيل"
+    },
+    "actions": {
+      "view": "عرض",
+      "delete": "حذف"
+    }
+  },
+  "settings": {
+    "pageTitle": "الإعدادات",
+    "breadcrumb": "الإعدادات > الأدوار والصلاحيات",
+    "language": "اختيار اللغة",
+    "dataBackup": "استرجاع الداتا Backups",
+    "rolesAndPermissions": "الأدوار والصلاحيات",
+    "enabled": "مفعل",
+    "arabic": "اللغة العربية",
+    "english": "English"
+  },
+  "home": {
+    "welcome": "مرحبا بك دكتور",
+    "stats": {
+      "totalEntries": "اجمالي المدخلات",
+      "clinicsCount": "عدد العيادات",
+      "activeClinics": "العيادات النشطة",
+      "usersCount": "عدد المستخدمين",
+      "thisMonth": "هذا الشهر"
+    },
+    "charts": {
+      "subscriptions": "الاشتراكات",
+      "salesReport": "تقرير المبيعات",
+      "lastSubscriptions": "آخر الاشتراكات",
+      "viewAll": "رؤية الكل"
+    }
   }
 }
