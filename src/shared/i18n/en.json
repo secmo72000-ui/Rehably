@@ -15,12 +15,122 @@
     "subscriptions": "Subscriptions",
     "invoices": "Invoices",
     "reports": "Reports",
-    "loginRecords": "Login Records",
+    "loginRecords": "Audit Logs",
     "settings": "Settings",
     "logout": "Logout"
   },
   "navbar": {
     "notifications": "Notifications",
     "profile": "Profile"
+  },
+  "table": {
+    "previous": "Previous",
+    "next": "Next",
+    "loading": "Loading...",
+    "noData": "No data available"
+  },
+  "clinicManagement": {
+    "pageTitle": "Clinic Management",
+    "addClinic": "Add Clinic",
+    "totalClinics": "Total Clinics",
+    "activePackages": "Active Packages",
+    "clinicDetails": "Clinic Details",
+    "columns": {
+      "id": "ID",
+      "name": "Clinic Name",
+      "package": "Package",
+      "subscriptionDate": "Subscription Date",
+      "expiryDate": "Expiry Date",
+      "paymentStatus": "Payment Status",
+      "doctorsCount": "Doctors Count",
+      "actions": "Actions"
+    }
+  },
+  "subscriptions": {
+    "pageTitle": "Subscriptions",
+    "addPackage": "Add Financial Plan",
+    "editPackage": "Edit Plan",
+    "deletePackage": "Delete Plan",
+    "newest": "Newest",
+    "tabs": {
+      "subscriptions": "Subscriptions",
+      "financialPlans": "Financial Plans",
+      "customCategories": "Custom Categories"
+    }
+  },
+  "invoices": {
+    "pageTitle": "Invoices",
+    "invoiceTitle": "Rehably Platform Subscription Invoice",
+    "status": {
+      "paid": "Paid",
+      "rejected": "Rejected",
+      "pending": "Unpaid"
+    },
+    "customerInfo": {
+      "title": "Billing Information",
+      "name": "Name",
+      "email": "Email",
+      "invoiceNumber": "Invoice Number",
+      "country": "Country"
+    },
+    "invoiceItems": {
+      "title": "Invoice Items",
+      "subscriptionDetails": "Subscription Details",
+      "subscriptionPlan": "Subscription Plan",
+      "renewalType": "Renewal Type"
+    },
+    "totals": {
+      "subtotal": "Subtotal",
+      "total": "Total",
+      "currency": "EGP"
+    },
+    "footer": {
+      "footerText": "Electronic subscription invoice issued by",
+      "platformName": "Rehably"
+    },
+    "downloadPDF": "Download Invoice as PDF"
+  },
+  "auditLogs": {
+    "pageTitle": "Audit Logs",
+    "noData": "No logs found",
+    "columns": {
+      "clinicName": "Clinic Name",
+      "managerName": "Manager Name",
+      "loginDate": "Daily Login",
+      "failedLogins": "Failed Logins",
+      "users": "Users",
+      "storage": "Storage",
+      "actions": "Actions"
+    },
+    "actions": {
+      "view": "View",
+      "delete": "Delete"
+    }
+  },
+  "settings": {
+    "pageTitle": "Settings",
+    "breadcrumb": "Settings > Roles and Permissions",
+    "language": "Language Selection",
+    "dataBackup": "Data Backups",
+    "rolesAndPermissions": "Roles and Permissions",
+    "enabled": "Enabled",
+    "arabic": "Arabic",
+    "english": "English"
+  },
+  "home": {
+    "welcome": "Welcome Dr.",
+    "stats": {
+      "totalEntries": "Total Entries",
+      "clinicsCount": "Clinics Count",
+      "activeClinics": "Active Clinics",
+      "usersCount": "Users Count",
+      "thisMonth": "This Month"
+    },
+    "charts": {
+      "subscriptions": "Subscriptions",
+      "salesReport": "Sales Report",
+      "lastSubscriptions": "Latest Subscriptions",
+      "viewAll": "View All"
+    }
   }
 }
