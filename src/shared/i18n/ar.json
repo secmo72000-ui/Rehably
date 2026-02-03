@@ -35,6 +35,24 @@
     "totalClinics": "إجمالي العيادات",
     "activePackages": "الباقات النشطة",
     "clinicDetails": "تفاصيل العيادة",
+    "suspendClinic": "حظر العيادة",
+    "activateClinic": "تنشيط العيادة",
+    "status": {
+      "active": "نشط",
+      "suspended": "معلق"
+    },
+    "details": {
+      "patients": "المرضى",
+      "users": "المستخدمين",
+      "user": "مستخدم",
+      "noPlan": "بدون باقة",
+      "notSpecified": "غير محدد",
+      "description": "الوصف",
+      "address": "العنوان",
+      "storageFull": "% ممتلئ",
+      "storageUsage": "{used} جيجا من {total} جيجا مستخدمة",
+      "sendNotification": "إرسال إشعار"
+    },
     "columns": {
       "id": "ID",
       "name": "اسم العيادة",
@@ -42,8 +60,84 @@
       "subscriptionDate": "تاريخ الاشتراك",
       "expiryDate": "تاريخ الانتهاء",
       "paymentStatus": "حالة الدفع",
+      "status": "حالة العيادة",
       "doctorsCount": "عدد الأطباء",
       "actions": "التفاصيل"
+    },
+    "payment": {
+      "paid": "مدفوع",
+      "unpaid": "غير مدفوع"
+    },
+    "form": {
+      "submit": "إضافة عيادة",
+      "clinicName": {
+        "label": "اسم العيادة (بالإنجليزية)",
+        "placeholder": "Clinic Name"
+      },
+      "clinicNameArabic": {
+        "label": "اسم العيادة (بالعربي)",
+        "placeholder": "اسم العيادة"
+      },
+      "phone": {
+        "label": "رقم التليفون",
+        "placeholder": "+201000000000"
+      },
+      "email": {
+        "label": "البريد الإلكتروني",
+        "placeholder": "clinic@example.com"
+      },
+      "city": {
+        "label": "المدينة",
+        "placeholder": "مثال: القاهرة"
+      },
+      "country": {
+        "label": "الدولة",
+        "placeholder": "مثال: مصر"
+      },
+      "address": {
+        "label": "العنوان",
+        "placeholder": "العنوان بالتفصيل"
+      },
+      "logoUrl": {
+        "label": "رابط اللوجو",
+        "placeholder": "https://example.com/logo.png"
+      },
+      "packageId": {
+        "label": "الباقة",
+        "placeholder": "اختر الباقة"
+      },
+      "billingCycle": {
+        "label": "دورة الفوترة",
+        "placeholder": "اختر الدورة",
+        "monthly": "شهري",
+        "yearly": "سنوي"
+      },
+      "ownerEmail": {
+        "label": "بريد مدير العيادة",
+        "placeholder": "owner@example.com"
+      },
+      "ownerFirstName": {
+        "label": "الاسم الأول للمدير",
+        "placeholder": "الاسم الأول"
+      },
+      "ownerLastName": {
+        "label": "الاسم الأخير للمدير",
+        "placeholder": "الاسم الأخير"
+      }
+    },
+    "common": {
+      "loading": "جاري التحميل...",
+      "currency": "ج.م",
+      "month": "شهر"
+    },
+    "deleteClinicTitle": "حذف العيادة",
+    "deleteClinicConfirmationMessage": "هل تريد حقا القيام بحذف عيادة",
+    "confirmationModal": {
+      "confirm": "حذف العيادة",
+      "cancel": "الغاء",
+      "successTitle": "تم بنجاح!",
+      "successButton": "حسناً",
+      "retryButton": "المحاولة مرة أخرى"
     }
   },
   "subscriptions": {
@@ -132,5 +226,21 @@
       "lastSubscriptions": "آخر الاشتراكات",
       "viewAll": "رؤية الكل"
     }
+  },
+  "errors": {
+    "unknown": "حدث خطأ غير متوقع",
+    "network": "فشل في الاتصال بالانترنت، يرجى التحقق من اتصالك",
+    "server": "حدث خطأ في الخادم، يرجى المحاولة لاحقاً",
+    "notFound": "العنصر غير موجود أو تم حذفه مسبقاً",
+    "unauthorized": "غير مصرح لك بالقيام بهذا الإجراء",
+    "operationFailed": "حدث خطأ أثناء تنفيذ العملية، يرجى المحاولة مرة أخرى"
+  },
+  "confirmationModal": {
+    "successTitle": "تم بنجاح!",
+    "errorTitle": "حدث خطأ!",
+    "successButton": "حسناً",
+    "retryButton": "المحاولة مرة أخرى",
+    "confirm": "تأكيد",
+    "cancel": "إلغاء"
   }
 }

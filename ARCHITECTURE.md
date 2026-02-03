@@ -126,11 +126,232 @@ flowchart LR
 | Language | TypeScript |
 | Styling | TailwindCSS + CSS Variables |
 | State | Zustand (Client State) |
-| Auth | NextAuth.js + JWT from Backend |
+| Auth | Custom JWT Auth (not NextAuth) |
 | i18n | next-intl (Arabic RTL + English) |
 | Forms | React Hook Form + Zod |
 | Video | React Player (for exercises) |
 | UI Components | Custom Design System |
+| HTTP Client | Axios with interceptors |
+
+---
+
+## Multi-Tenant Subdomain Architecture
+
+### Domain Structure
+
+| Subdomain | Portal | Description |
+|-----------|--------|-------------|
+| `platform.rehably.com` | Owner Portal | Platform Admin dashboard |
+| `{clinic-slug}.rehably.com` | Clinic Portal | Clinic staff dashboard (e.g., `alnoor.rehably.com`) |
+| `portal.{clinic-slug}.rehably.com` | Patient Portal | Patient booking & exercises |
+| `{custom-domain.com}` | Clinic (Custom) | Clinic with custom domain |
+
+### Portal-Role Mapping
+
+| Portal | Allowed Roles | Login Method |
+|--------|---------------|--------------|
+| Owner | PlatformAdmin | Email + Password |
+| Clinic | ClinicOwner, ClinicAdmin, Doctor, Receptionist | Email + Password |
+| Patient | Patient | Phone + OTP (different UI) |
+
+### Tenant Detection Flow
+
+```
+Request comes in: clinic1.rehably.com/dashboard
+                          │
+                          ▼
+            ┌─────────────────────────┐
+            │  middleware.ts          │
+            │  Extract subdomain      │
+            │  subdomain = "clinic1"  │
+            └─────────────────────────┘
+                          │
+                          ▼
+            ┌─────────────────────────┐
+            │  Determine portal type  │
+            │  "platform" → Owner     │
+            │  "portal.*" → Patient   │
+            │  else → Clinic          │
+            └─────────────────────────┘
+                          │
+                          ▼
+            ┌─────────────────────────┐
+            │  Validate user role     │
+            │  matches portal type    │
+            └─────────────────────────┘
+```
+
+---
+
+## Authentication System
+
+### Backend API (http://rehably.runasp.net)
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/api/Auth/login` | POST | Login with email + password |
+| `/api/Auth/login-via-otp` | POST | Request OTP for phone login |
+| `/api/Auth/verify-otp-login` | POST | Verify OTP and get tokens |
+| `/api/Auth/logout` | POST | Logout (invalidate token) |
+| `/api/Auth/refresh` | POST | Refresh access token |
+| `/api/Auth/me` | GET | Get current user info |
+| `/api/Auth/forgot-password` | POST | Request password reset |
+| `/api/Auth/reset-password` | POST | Reset password with OTP |
+| `/api/Auth/resend-otp` | POST | Resend OTP |
+| `/api/Auth/change-password` | POST | Change password |
+
+### Token Structure
+
+**Login Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "accessToken": "eyJhbGciOiJIUzI1NiIs...",
+    "refreshToken": "5SBbgvGNzPw3V8AlbkHp...",
+    "expiresAt": "2026-02-01T06:26:28.888Z",
+    "mustChangePassword": false,
+    "emailVerified": true
+  }
+}
+```
+
+**User Response (/api/Auth/me):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "test-admin-001",
+    "email": "admin@rehably.com",
+    "firstName": "Platform",
+    "lastName": "Admin",
+    "fullName": "Platform Admin",
+    "roles": ["PlatformAdmin"],
+    "tenantId": null,
+    "clinicId": null,
+    "isActive": true,
+    "mustChangePassword": false,
+    "emailVerified": true
+  }
+}
+```
+
+### JWT Token Claims
+
+The access token contains:
+- `role`: User role (PlatformAdmin, ClinicOwner, etc.)
+- `Permission`: Array of permissions (dashboard.view, clinics.create, etc.)
+- `exp`: Expiration timestamp
+
+### Auth Flows
+
+**Flow 1: Owner/Clinic Staff Login (Email + Password)**
+```
+User enters email + password
+        │
+        ▼
+POST /api/Auth/login
+        │
+        ▼
+Receive { accessToken, refreshToken }
+        │
+        ▼
+Store tokens in localStorage + Zustand
+        │
+        ▼
+GET /api/Auth/me
+        │
+        ▼
+Get user data with roles
+        │
+        ▼
+Redirect based on role:
+  - PlatformAdmin → /home (Owner Portal)
+  - ClinicOwner/Admin/Doctor/Receptionist → /clinic/dashboard
+```
+
+**Flow 2: Patient Login (Phone + OTP)**
+```
+User enters phone number
+        │
+        ▼
+POST /api/Auth/login-via-otp
+        │
+        ▼
+OTP sent to phone
+        │
+        ▼
+User enters OTP
+        │
+        ▼
+POST /api/Auth/verify-otp-login
+        │
+        ▼
+Receive { accessToken, refreshToken }
+        │
+        ▼
+Redirect to /patient/home
+```
+
+**Flow 3: Password Reset**
+```
+User clicks "Forgot Password"
+        │
+        ▼
+Enter email → POST /api/Auth/forgot-password
+        │
+        ▼
+OTP sent to email
+        │
+        ▼
+Enter OTP + new password → POST /api/Auth/reset-password
+        │
+        ▼
+Redirect to login
+```
+
+### Token Storage Strategy
+
+| What | Where | Why |
+|------|-------|-----|
+| accessToken | localStorage + Zustand | API calls + persistence |
+| refreshToken | localStorage + Zustand | Token refresh |
+| user | Zustand (memory) | UI display, fetched fresh |
+
+### Auto Token Refresh
+
+```
+API request with accessToken
+        │
+        ▼
+Backend returns 401 (token expired)
+        │
+        ▼
+Axios interceptor catches 401
+        │
+        ▼
+POST /api/Auth/refresh with refreshToken
+        │
+        ▼
+Receive new accessToken
+        │
+        ▼
+Retry original request
+```
+
+### Frontend Auth Files
+
+```
+src/
+├── middleware.ts                    # Route protection + subdomain detection
+├── shared/types/auth.types.ts       # Auth interfaces
+├── shared/utils/subdomain.utils.ts  # Subdomain helpers
+├── services/api-client.ts           # Axios + interceptors
+├── services/auth.service.ts         # Auth API calls
+├── stores/auth.store.ts             # Zustand auth store
+└── ui/components/LoginForm/         # Login UI (email+password)
+    └── PatientLoginForm/            # Patient login UI (phone+OTP)
+```
 
 ---
 

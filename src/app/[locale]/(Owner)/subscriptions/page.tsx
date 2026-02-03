@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import { getTranslation } from '@/shared/i18n';
 import type { Locale } from '@/configs/i18n.config';
@@ -10,6 +10,7 @@ import {
     Drawer,
     ContentContainer,
     DynamicForm,
+    ConfirmationModal,
     type Tab,
     type PackageCardProps,
 } from '@/ui/components';
@@ -20,6 +21,9 @@ import {
     featureFormConfig,
     customCategoryFormConfig,
 } from './configs';
+import { usePackagesStore } from '@/stores/packages.store';
+import { useFeaturesStore } from '@/stores/features.store';
+import type { Package as PackageType, CreatePackageRequest } from '@/services/packages.service';
 
 // ========== Types ==========
 interface Package {
@@ -198,11 +202,71 @@ const mockCustomCategories: CustomCategory[] = [
     },
 ];
 
+// ========== Helper Functions ==========
+
+// Map displayOrder to badge color
+const getBadgeColor = (displayOrder: number): 'blue' | 'green' | 'gray' => {
+    switch (displayOrder) {
+        case 1: return 'gray';   // Starter
+        case 2: return 'blue';   // Pro
+        case 3: return 'green';  // Enterprise
+        default: return 'gray';
+    }
+};
+
+// Transform API package to local Package type
+const transformPackage = (pkg: PackageType): Package => ({
+    id: String(pkg.id),
+    badge: pkg.name,
+    badgeColor: getBadgeColor(pkg.displayOrder),
+    price: pkg.monthlyPrice,
+    description: pkg.description,
+    features: [
+        { text: `فترة تجريبية: ${pkg.trialDays} يوم` },
+        { text: `السعر السنوي: ${pkg.yearlyPrice} جنيها` },
+    ],
+    isFeatured: pkg.displayOrder === 2, // Pro is featured
+});
+
 // ========== Page Component ==========
 export default function SubscriptionsPage() {
     const params = useParams();
     const locale = params.locale as Locale;
     const t = (key: string) => getTranslation(locale, `subscriptions.${key}`);
+
+    // Store
+    const { packages, isLoading, isCreating, error, fetchPackages, archivePackage, createPackage } = usePackagesStore();
+    const { features, fetchFeatures } = useFeaturesStore();
+
+    // Fetch packages and features on mount
+    useEffect(() => {
+        fetchPackages();
+        fetchFeatures();
+    }, [fetchPackages, fetchFeatures]);
+
+    // Map features to options
+    const featureOptions = useMemo(() => {
+        return features.map(f => ({
+            value: String(f.id),
+            label: f.description || f.name // Use description as label if available, else name
+        }));
+    }, [features]);
+
+    // Dynamic Form Config
+    const dynamicFinancialPlanConfig = useMemo(() => {
+        const config = { ...financialPlanFormConfig };
+        // Find the planFeatures field and update its options
+        const rows = config.rows.map(row => ({
+            ...row,
+            fields: row.fields.map(field => {
+                if (field.name === 'planFeatures') {
+                    return { ...field, options: featureOptions };
+                }
+                return field;
+            })
+        }));
+        return { ...config, rows };
+    }, [featureOptions]);
 
     // Tabs state
     const [activeTab, setActiveTab] = useState('subscriptions');
@@ -210,6 +274,12 @@ export default function SubscriptionsPage() {
     // Drawer state
     const [drawerType, setDrawerType] = useState<DrawerType>(null);
     const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
+
+    // Delete confirmation modal state
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [packageToDelete, setPackageToDelete] = useState<string | null>(null);
+    const [deleteStatus, setDeleteStatus] = useState<'idle' | 'success' | 'error'>('idle');
+    const [deleteErrorMessage, setDeleteErrorMessage] = useState('');
 
     // Tabs configuration
     const tabs: Tab[] = [
@@ -236,10 +306,35 @@ export default function SubscriptionsPage() {
         setSelectedPackage(null);
     };
 
-    // Handle delete
+    // Handle delete - open confirmation modal
     const handleDelete = (pkgId: string) => {
-        console.log('Delete package:', pkgId);
-        // TODO: Implement delete logic
+        setPackageToDelete(pkgId);
+        setDeleteStatus('idle');
+        setDeleteErrorMessage('');
+        setDeleteModalOpen(true);
+    };
+
+    // Confirm delete
+    const confirmDelete = async () => {
+        if (packageToDelete) {
+            const success = await archivePackage(Number(packageToDelete));
+            if (success) {
+                setDeleteStatus('success');
+            } else {
+                setDeleteStatus('error');
+                setDeleteErrorMessage(error || 'حدث خطأ أثناء حذف الباقة');
+            }
+        }
+    };
+
+    // Close delete modal
+    const closeDeleteModal = () => {
+        setDeleteModalOpen(false);
+        // Delay clearing state to allow transition
+        setTimeout(() => {
+            setPackageToDelete(null);
+            setDeleteStatus('idle');
+        }, 300);
     };
 
     // Handle feature edit
@@ -266,11 +361,51 @@ export default function SubscriptionsPage() {
         // TODO: Implement category delete logic
     };
 
+    // Handle add package
+    const handleAddPackage = async (data: any) => {
+        // Transform form data to CreatePackageRequest
+        // The form returns:
+        // planName, planDetails, planFeatures (array of IDs), fullPrice, minimumPrice
+
+        // Default values as per requirements
+        const request: CreatePackageRequest = {
+            name: data.planName,
+            description: data.planDetails,
+            monthlyPrice: Number(data.fullPrice),
+            yearlyPrice: Number(data.fullPrice) * 10, // Assuming 10 months for yearly or similar rule, or maybe 12. User passed 0 in example.
+            // The user curl example had 0.
+            // Let's assume yearly is monthly * 12 for now or user input? 
+            // Form has "minimumPrice" -> maybe that's monthly?
+            // The form fields are: "fullPrice" (السعر الكامل), "minimumPrice" (السعر الأدنى)
+            // Let's assume "fullPrice" is monthlyPrice.
+            trialDays: 14, // Default
+            features: (data.planFeatures || []).map((featureId: string) => ({
+                featureId: Number(featureId), // The multiselect returns values (IDs)
+                quantity: 0,
+                calculatedPrice: 0,
+                isIncluded: true
+            })),
+            isPublic: true,
+            isCustom: false, // Adding standard plan
+            displayOrder: 0,
+            code: String(Math.floor(Math.random() * 1000)), // Random code for now
+        };
+
+        const success = await createPackage(request);
+        if (success) {
+            closeDrawer();
+        }
+    };
+
     // Handle form submit
     const handleFormSubmit = (data: any) => {
-        console.log('Form submitted:', data);
-        // TODO: Implement submit logic
-        closeDrawer();
+        if (activeTab === 'subscriptions' && drawerType === 'add') {
+            handleAddPackage(data);
+        } else {
+            console.log('Form submitted:', data);
+            // TODO: Implement other submit logic
+            closeDrawer();
+        }
     };
 
     return (
@@ -299,22 +434,33 @@ export default function SubscriptionsPage() {
                         filterLabel="الأحدث"
                         onFilterClick={() => console.log('Filter clicked')}
                     >
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {mockPackages.map((pkg) => (
-                                <PackageCard
-                                    key={pkg.id}
-                                    id={pkg.id}
-                                    badge={pkg.badge}
-                                    badgeColor={pkg.badgeColor}
-                                    price={pkg.price}
-                                    description={pkg.description}
-                                    features={pkg.features}
-                                    isFeatured={pkg.isFeatured}
-                                    onEdit={() => openEditDrawer(pkg)}
-                                    onDelete={() => handleDelete(pkg.id)}
-                                />
-                            ))}
-                        </div>
+                        {isLoading ? (
+                            <div className="flex justify-center items-center py-12">
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-Primary-500"></div>
+                            </div>
+                        ) : error ? (
+                            <div className="text-center py-12 text-red-500">{error}</div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {packages.map((apiPkg) => {
+                                    const pkg = transformPackage(apiPkg);
+                                    return (
+                                        <PackageCard
+                                            key={pkg.id}
+                                            id={pkg.id}
+                                            badge={pkg.badge}
+                                            badgeColor={pkg.badgeColor}
+                                            price={pkg.price}
+                                            description={pkg.description}
+                                            features={pkg.features}
+                                            isFeatured={pkg.isFeatured}
+                                            onEdit={() => openEditDrawer(pkg)}
+                                            onDelete={() => handleDelete(pkg.id)}
+                                        />
+                                    );
+                                })}
+                            </div>
+                        )}
                     </ContentContainer>
                 </>
             )}
@@ -405,7 +551,7 @@ export default function SubscriptionsPage() {
                             ? featureFormConfig
                             : activeTab === 'custom-categories'
                                 ? customCategoryFormConfig
-                                : financialPlanFormConfig),
+                                : dynamicFinancialPlanConfig),
                         submitLabel: activeTab === 'financial-plans'
                             ? drawerType === 'add' ? 'إضافة خاصية مالية' : 'حفظ التعديلات'
                             : activeTab === 'custom-categories'
@@ -414,8 +560,30 @@ export default function SubscriptionsPage() {
                     }}
                     onSubmit={handleFormSubmit}
                     onCancel={closeDrawer}
+                    isLoading={isCreating}
                 />
             </Drawer>
+
+            {/* Delete Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={deleteModalOpen}
+                onClose={closeDeleteModal}
+                onConfirm={confirmDelete}
+                title="ازالة خطة مالية"
+                confirmText="ازالة الخطة"
+                cancelText="الغاء"
+                variant="primary" // Blue as per image
+                isLoading={isLoading} // From store
+                status={deleteStatus}
+                errorMessage={deleteErrorMessage}
+                successMessage="تم حذف الخطة المالية بنجاح"
+                successButtonText="حسناً"
+                retryButtonText="المحاولة مرة أخرى"
+            >
+                <p className="text-gray-600 text-lg">
+                    هل تريد حقا القيام بازالة الخطة المالية
+                </p>
+            </ConfirmationModal>
         </div>
     );
 }

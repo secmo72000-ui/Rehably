@@ -35,6 +35,24 @@
     "totalClinics": "Total Clinics",
     "activePackages": "Active Packages",
     "clinicDetails": "Clinic Details",
+    "suspendClinic": "Suspend Clinic",
+    "activateClinic": "Activate Clinic",
+    "status": {
+      "active": "Active",
+      "suspended": "Suspended"
+    },
+    "details": {
+      "patients": "Patients",
+      "users": "Users",
+      "user": "User",
+      "noPlan": "No Plan",
+      "notSpecified": "Not Specified",
+      "description": "Description",
+      "address": "Address",
+      "storageFull": "% Full",
+      "storageUsage": "{used}GB of {total}GB used",
+      "sendNotification": "Send Notification"
+    },
     "columns": {
       "id": "ID",
       "name": "Clinic Name",
@@ -42,8 +60,84 @@
       "subscriptionDate": "Subscription Date",
       "expiryDate": "Expiry Date",
       "paymentStatus": "Payment Status",
+      "status": "Status",
       "doctorsCount": "Doctors Count",
       "actions": "Actions"
+    },
+    "payment": {
+      "paid": "Paid",
+      "unpaid": "Unpaid"
+    },
+    "form": {
+      "submit": "Add Clinic",
+      "clinicName": {
+        "label": "Clinic Name (English)",
+        "placeholder": "Clinic Name"
+      },
+      "clinicNameArabic": {
+        "label": "Clinic Name (Arabic)",
+        "placeholder": "Clinic Name (Arabic)"
+      },
+      "phone": {
+        "label": "Phone Number",
+        "placeholder": "+201000000000"
+      },
+      "email": {
+        "label": "Email",
+        "placeholder": "clinic@example.com"
+      },
+      "city": {
+        "label": "City",
+        "placeholder": "e.g. Cairo"
+      },
+      "country": {
+        "label": "Country",
+        "placeholder": "e.g. Egypt"
+      },
+      "address": {
+        "label": "Address",
+        "placeholder": "Full Address"
+      },
+      "logoUrl": {
+        "label": "Logo URL",
+        "placeholder": "https://example.com/logo.png"
+      },
+      "packageId": {
+        "label": "Package",
+        "placeholder": "Select Package"
+      },
+      "billingCycle": {
+        "label": "Billing Cycle",
+        "placeholder": "Select Cycle",
+        "monthly": "Monthly",
+        "yearly": "Yearly"
+      },
+      "ownerEmail": {
+        "label": "Manager Email",
+        "placeholder": "owner@example.com"
+      },
+      "ownerFirstName": {
+        "label": "Manager First Name",
+        "placeholder": "First Name"
+      },
+      "ownerLastName": {
+        "label": "Manager Last Name",
+        "placeholder": "Last Name"
+      }
+    },
+    "common": {
+      "loading": "Loading...",
+      "currency": "EGP",
+      "month": "Month"
+    },
+    "deleteClinicTitle": "Delete Clinic",
+    "deleteClinicConfirmationMessage": "Are you sure you want to delete clinic",
+    "confirmationModal": {
+      "confirm": "Delete Clinic",
+      "cancel": "Cancel",
+      "successTitle": "Success!",
+      "successButton": "OK",
+      "retryButton": "Retry"
     }
   },
   "subscriptions": {
@@ -132,5 +226,21 @@
       "lastSubscriptions": "Latest Subscriptions",
       "viewAll": "View All"
     }
+  },
+  "errors": {
+    "unknown": "An unexpected error occurred",
+    "network": "Network connection failed, please check your connection",
+    "server": "Server error, please try again later",
+    "notFound": "Item not found or already deleted",
+    "unauthorized": "You are not authorized to perform this action",
+    "operationFailed": "Operation failed, please try again"
+  },
+  "confirmationModal": {
+    "successTitle": "Success!",
+    "errorTitle": "Error!",
+    "successButton": "OK",
+    "retryButton": "Retry",
+    "confirm": "Confirm",
+    "cancel": "Cancel"
   }
 }

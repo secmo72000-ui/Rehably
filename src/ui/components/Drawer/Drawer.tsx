@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode } from "react"; // [2] ReactNode type للـ children
+import { ReactNode } from "react";
 import { cn } from "@/shared/utils/cn";
 
 interface DrawerProps {
@@ -20,13 +20,12 @@ function Drawer({
     size = 'md',
 }: DrawerProps) {
     const sizeClasses = {
-        sm: "w-[320px]",   // [12] صغير - 320 بكسل
-        md: "w-[550px]",   // [13] متوسط - 450 بكسل
-        lg: "w-[700px]",
+        sm: "w-full md:w-[320px]",   // Full width on mobile, 320px on MD+
+        md: "w-full md:w-[550px]",   // Full width on mobile, 550px on MD+
+        lg: "w-full md:w-[700px]",   // Full width on mobile, 700px on MD+
     };
     return (
         <>
-
             {isOpen && (
                 <div
                     className={cn(
@@ -46,13 +45,14 @@ function Drawer({
                     "fixed",
                     "top-4 pb-4",
 
-
                     isOpen
-                        ? "rtl:right-4 ltr:left-4"
-                        : "rtl:right-0 ltr:left-0",
+                        ? "rtl:right-0 md:rtl:right-4 ltr:left-0 md:ltr:left-4"
+                        : "rtl:right-0 ltr:left-0", // Off-screen handled by transform below
 
                     "h-[calc(100vh-2rem)]",
+                    // Apply width classes based on size prop
                     sizeClasses[size],
+
                     "bg-white",
                     "rounded-lg",
                     "shadow-2xl",
@@ -75,7 +75,6 @@ function Drawer({
                         "flex items-center",
                         "justify-between",
                         "p-3",
-
                     )}
                 >
                     {/* Support both string and ReactNode for title */}
@@ -114,11 +113,12 @@ function Drawer({
                         </svg>
                     </button>
                 </div>
+                {/* Content Container */}
                 <div
                     className={cn(
                         "p-5",
                         "overflow-y-auto",
-                        "h-[calc(100%-89px)]"
+                        "h-[calc(100%-60px)]" // Adjusted height calculation
                     )}
                 >
                     {children}
@@ -128,4 +128,4 @@ function Drawer({
     );
 }
 
-export default Drawer
+export default Drawer;

@@ -15,8 +15,8 @@ export function FormRow({ fields, formData, onChange, errors }: FormRowProps) {
   // Grid columns based on number of fields
   const gridCols: Record<number, string> = {
     1: "grid-cols-1",
-    2: "grid-cols-2",
-    3: "grid-cols-3",
+    2: "grid-cols-1 md:grid-cols-2",
+    3: "grid-cols-1 md:grid-cols-3",
   };
 
   return (

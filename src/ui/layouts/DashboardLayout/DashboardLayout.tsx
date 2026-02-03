@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import { cn } from "@/shared/utils/cn";
 import { Navbar, type NavbarProps } from "@/ui/components/Navbar";
 import { Sidebar, type SidebarItem, type SidebarProps } from "@/ui/components/Sidebar";
+import { useAuthStore } from "@/stores/auth.store";
 
 export interface DashboardLayoutProps {
   /** Page content */
@@ -16,7 +18,7 @@ export interface DashboardLayoutProps {
   isRtl?: boolean;
   /** Logout button label */
   logoutLabel?: string;
-  /** Logout click handler */
+  /** Logout click handler (optional - uses auth store by default) */
   onLogout?: () => void;
   /** Custom navbar props */
   navbarProps?: Partial<Omit<NavbarProps, "onToggleSidebar" | "isRtl">>;
@@ -37,10 +39,22 @@ export function DashboardLayout({
   sidebarProps,
   className,
 }: DashboardLayoutProps) {
+  const router = useRouter();
+  const { logout } = useAuthStore();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
   const closeSidebar = () => setIsSidebarOpen(false);
+
+  // Handle logout - use provided handler or default to auth store
+  const handleLogout = async () => {
+    if (onLogout) {
+      onLogout();
+    } else {
+      await logout();
+      router.push(`/${locale}/login`);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-BG">
@@ -59,7 +73,7 @@ export function DashboardLayout({
         onClose={closeSidebar}
         isRtl={isRtl}
         logoutLabel={logoutLabel}
-        onLogout={onLogout}
+        onLogout={handleLogout}
         {...sidebarProps}
       />
 

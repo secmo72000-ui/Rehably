@@ -99,7 +99,7 @@ text-base-bold gap-3 px-6 py-4 border-2 border-Primary-300 rounded-lg bg-white h
             )}
 
             {/* Table */}
-            <div className="overflow-hidden rounded-xl border-2 border-grey-100 ">
+            <div className="overflow-x-auto rounded-xl border-2 border-grey-100 ">
                 <table className="w-full">
                     {/* Table Header */}
                     <thead className="bg-[#EFF1F3] border-b-2 border-[#BBC5ce]">

@@ -1,6 +1,6 @@
 'use client';
 
-type StatusColor = 'success' | 'warning' | 'error' | 'info';
+type StatusColor = 'success' | 'warning' | 'error' | 'info' | 'default';
 
 interface StatusConfig {
   label: string;
@@ -19,6 +19,7 @@ const colorStyles: Record<StatusColor, string> = {
   warning: 'bg-warning-50 text-warning-600',
   error: 'bg-error-50 text-error-600',
   info: 'bg-Primary-50 text-Primary-600',
+  default: 'bg-grey-100 text-grey-600',
 };
 
 // Default config for common payment statuses
@@ -44,7 +45,7 @@ export function PaymentStatusBadge({ status, config }: PaymentStatusBadgeProps) 
 
   return (
     <span
-        className={`inline-block w-20 px-2 py-2 rounded-lg text-sm-regular text-center ${colorStyles[currentStatus.color]}`}
+      className={`inline-block w-20 px-2 py-2 rounded-lg text-sm-regular text-center ${colorStyles[currentStatus.color]}`}
     >
       {currentStatus.label}
     </span>

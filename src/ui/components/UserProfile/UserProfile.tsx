@@ -64,7 +64,7 @@ export function UserProfile({
             <div
                 className={cn(
                     "flex flex-col",
-                    isRtl ? "items-end" : "items-start"
+                    isRtl ? "items-start" : "items-end"
                 )}
             >
                 <span className={cn("font-semibold text-grey-800", config.nameText)}>

@@ -20,7 +20,7 @@ export function TableRowActions({ onView, onDelete }: TableRowActionsProps) {
       {onView && (
         <button
           onClick={(e) => handleClick(e, onView)}
-          className="p-1 rounded hover:bg-grey-100 transition-colors"
+          className="p-1 rounded hover:bg-grey-100 transition-colors shrink-0"
           aria-label="عرض التفاصيل"
         >
           <Image
@@ -34,7 +34,7 @@ export function TableRowActions({ onView, onDelete }: TableRowActionsProps) {
       {onDelete && (
         <button
           onClick={(e) => handleClick(e, onDelete)}
-          className="p-1 rounded hover:bg-error-50 transition-colors"
+          className="p-1 rounded hover:bg-error-50 transition-colors shrink-0"
           aria-label="حذف"
         >
           <Image

@@ -1,260 +1,25 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import { getTranslation } from '@/shared/i18n';
 import type { Locale } from '@/configs/i18n.config';
-import { Table, TableColumn, Drawer, DynamicForm, DynamicFormConfig, FormData } from '@/ui/components';
-import TableRowActions from '@/ui/components/TableRowActions';
-import PaymentStatusBadge from '@/ui/components/PaymentStatusBadge';
+import { Table, Drawer, DynamicForm, FormData, ConfirmationModal } from '@/ui/components';
 import { Button } from '@/ui/primitives';
 import { ClinicDetails } from './components';
-
-// ========== Types ==========
-interface Clinic {
-  id: string;
-  name: string;
-  email?: string;
-  managerName?: string;
-  phone?: string;
-  package: string;
-  location?: string;
-  subscriptionDate: string;
-  expiryDate: string;
-  paymentStatus: 'paid' | 'unpaid' | 'suspended' | 'refunded';
-  doctorsCount: number;
-  storageUsed?: number;
-  storageTotal?: number;
-}
+import { useClinicsStore } from '@/stores/clinics.store';
+import { Clinic, CreateClinicRequest } from '@/domains/clinics/clinics.types';
+import { packagesService, Package } from '@/services/packages.service';
+import { calculateActiveClinics } from '@/domains/clinics/clinics.utils';
+import { getAddClinicFormConfig } from './configs/form.config';
+import { getClinicsTableColumns } from './configs/table.config';
+import { sortByDate, getFriendlyErrorMessage } from '@/shared/utils';
 
 // Drawer types
 type DrawerType = 'add' | 'view' | null;
 
-// ========== Mock Data ==========
-const mockClinics: Clinic[] = [
-  {
-    id: 'CLN-001',
-    name: 'عيادة النور للعلاج الطبيعي',
-    email: 'alnoor@gmail.com',
-    managerName: 'د. أحمد محمود',
-    phone: '01000000000',
-    package: 'Package-1',
-    location: 'القاهرة',
-    subscriptionDate: '01/01/2025',
-    expiryDate: '01/01/2026',
-    paymentStatus: 'paid',
-    doctorsCount: 5,
-    storageUsed: 50,
-    storageTotal: 100,
-  },
-  {
-    id: 'CLN-002',
-    name: 'مركز الشفاء الطبي',
-    email: 'alshefa@gmail.com',
-    managerName: 'د. محمد علي',
-    phone: '01111111111',
-    package: 'Package-2',
-    location: 'الجيزة',
-    subscriptionDate: '15/02/2025',
-    expiryDate: '15/02/2026',
-    paymentStatus: 'paid',
-    doctorsCount: 8,
-    storageUsed: 75,
-    storageTotal: 150,
-  },
-  {
-    id: 'CLN-003',
-    name: 'عيادة الأمل',
-    email: 'alamal@gmail.com',
-    managerName: 'د. سارة محمد',
-    phone: '01222222222',
-    package: 'Package-1',
-    location: 'الإسكندرية',
-    subscriptionDate: '01/03/2025',
-    expiryDate: '01/03/2026',
-    paymentStatus: 'unpaid',
-    doctorsCount: 3,
-    storageUsed: 30,
-    storageTotal: 100,
-  },
-  {
-    id: 'CLN-004',
-    name: 'مركز الحياة للتأهيل',
-    email: 'alhayat@gmail.com',
-    managerName: 'د. خالد عبدالله',
-    phone: '01333333333',
-    package: 'Package-3',
-    location: 'المنصورة',
-    subscriptionDate: '20/12/2024',
-    expiryDate: '20/12/2025',
-    paymentStatus: 'suspended',
-    doctorsCount: 12,
-    storageUsed: 180,
-    storageTotal: 200,
-  },
-  {
-    id: 'CLN-005',
-    name: 'عيادة الرعاية المتكاملة',
-    email: 'alreaya@gmail.com',
-    managerName: 'د. فاطمة حسن',
-    phone: '01444444444',
-    package: 'Package-2',
-    location: 'طنطا',
-    subscriptionDate: '10/01/2025',
-    expiryDate: '10/01/2026',
-    paymentStatus: 'paid',
-    doctorsCount: 6,
-    storageUsed: 60,
-    storageTotal: 150,
-  },
-];
-
-// ========== Options ==========
-const governorates = [
-  { value: 'cairo', label: 'القاهرة' },
-  { value: 'giza', label: 'الجيزة' },
-  { value: 'alex', label: 'الإسكندرية' },
-  { value: 'dakahlia', label: 'الدقهلية' },
-  { value: 'sharqia', label: 'الشرقية' },
-];
-
-const cities = [
-  { value: 'nasr-city', label: 'مدينة نصر' },
-  { value: 'maadi', label: 'المعادي' },
-  { value: 'heliopolis', label: 'مصر الجديدة' },
-  { value: 'dokki', label: 'الدقي' },
-  { value: '6october', label: '6 أكتوبر' },
-];
-
-const subscriptionPlans = [
-  { value: 'basic', label: 'الباقة الأساسية' },
-  { value: 'pro', label: 'الباقة المتقدمة' },
-  { value: 'enterprise', label: 'باقة المؤسسات' },
-];
-
-const paymentMethods = [
-  { value: 'cash', label: 'نقدي' },
-  { value: 'card', label: 'بطاقة ائتمان' },
-  { value: 'bank', label: 'تحويل بنكي' },
-];
-
-// ========== Form Config ==========
-const addClinicFormConfig: DynamicFormConfig = {
-  rows: [
-    // Row 1: اسم العيادة
-    {
-      fields: [
-        {
-          name: 'name',
-          label: 'اسم العيادة',
-          type: 'text',
-          placeholder: 'اسم العيادة',
-          required: true,
-        },
-      ],
-    },
-    // Row 2: مدير العيادة
-    {
-      fields: [
-        {
-          name: 'managerName',
-          label: 'مدير العيادة',
-          type: 'text',
-          placeholder: 'اسم مدير العيادة',
-        },
-      ],
-    },
-    // Row 3: رقم التليفون
-    {
-      fields: [
-        {
-          name: 'phone',
-          label: 'رقم التليفون',
-          type: 'tel',
-          placeholder: 'رقم التليفون',
-          required: true,
-        },
-      ],
-    },
-    // Row 4: البريد الإلكتروني
-    {
-      fields: [
-        {
-          name: 'email',
-          label: 'البريد الإلكتروني',
-          type: 'email',
-          placeholder: 'البريد الإلكتروني',
-        },
-      ],
-    },
-    // Row 5: المحافظة + المدينة (2 fields)
-    {
-      fields: [
-        {
-          name: 'governorate',
-          label: 'المحافظة',
-          type: 'select',
-          placeholder: 'اختر محافظة',
-          options: governorates,
-        },
-        {
-          name: 'city',
-          label: 'المدينة',
-          type: 'select',
-          placeholder: 'اختر مدينة',
-          options: cities,
-        },
-      ],
-    },
-    // Row 6: العنوان
-    {
-      fields: [
-        {
-          name: 'address',
-          label: 'العنوان',
-          type: 'text',
-          placeholder: 'ادخل العنوان بالكامل',
-        },
-      ],
-    },
-    // Row 7: تعيين خطة اشتراكية
-    {
-      fields: [
-        {
-          name: 'subscriptionPlan',
-          label: 'تعيين خطة اشتراكية',
-          type: 'select',
-          placeholder: 'ادخل المنطقة',
-          options: subscriptionPlans,
-        },
-      ],
-    },
-    // Row 8: طريقة الدفع + حالة الدفع (2 fields)
-    {
-      fields: [
-        {
-          name: 'paymentMethod',
-          label: 'طريقة الدفع',
-          type: 'select',
-          placeholder: 'اختر طريقة الدفع',
-          options: paymentMethods,
-        },
-        {
-          name: 'paymentStatus',
-          label: 'حالة الدفع',
-          type: 'radio',
-          options: [
-            { value: 'paid', label: 'مدفوع', color: 'green' },
-            { value: 'unpaid', label: 'غير مدفوع', color: 'red' },
-          ],
-        },
-      ],
-    },
-  ],
-  submitLabel: 'إضافة عيادة',
-};
-
-
+// Sort types
+type SortDirection = 'asc' | 'desc';
 
 // ========== Page Component ==========
 export default function ClinicManagementPage() {
@@ -263,16 +28,59 @@ export default function ClinicManagementPage() {
   const t = (key: string) => getTranslation(locale, `clinicManagement.${key}`);
 
   const [currentPage, setCurrentPage] = useState(1);
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+
+  // Packages state
+  const [packages, setPackages] = useState<Package[]>([]);
+  const [packagesLoading, setPackagesLoading] = useState(false);
+
+  // Delete Modal State
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [clinicToDelete, setClinicToDelete] = useState<Clinic | null>(null);
+  const [deleteStatus, setDeleteStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [deleteErrorMessage, setDeleteErrorMessage] = useState('');
+
+  // Zustand store
+  const {
+    clinics,
+    isLoading,
+    isCreating,
+    error,
+    fetchClinics,
+    createClinic,
+    deleteClinic,
+    clearError,
+  } = useClinicsStore();
 
   // Drawer state
   const [drawerType, setDrawerType] = useState<DrawerType>(null);
   const [selectedClinic, setSelectedClinic] = useState<Clinic | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+
+  // Fetch clinics on mount
+  useEffect(() => {
+    fetchClinics(currentPage, 20);
+  }, [fetchClinics, currentPage]);
+
+  // Fetch packages when drawer opens
+  const fetchPackages = async () => {
+    if (packages.length > 0) return; // Already fetched
+    setPackagesLoading(true);
+    try {
+      const data = await packagesService.getActive();
+      setPackages(data);
+    } catch (err) {
+      console.error('Failed to fetch packages:', err);
+    } finally {
+      setPackagesLoading(false);
+    }
+  };
 
   // Open add drawer
   const openAddDrawer = () => {
     setDrawerType('add');
     setSelectedClinic(null);
+    clearError();
+    fetchPackages(); // Fetch packages when opening add drawer
   };
 
   // Open view drawer
@@ -285,26 +93,91 @@ export default function ClinicManagementPage() {
   const closeDrawer = () => {
     setDrawerType(null);
     setSelectedClinic(null);
+    clearError();
   };
 
   // Handle form submit
   const handleAddClinic = async (data: FormData) => {
-    setIsLoading(true);
-    try {
-      // Simulate API call
-      console.log('Adding clinic:', data);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+    // Build the request object with all required fields
+    const request: CreateClinicRequest = {
+      clinicName: data.clinicName as string,
+      clinicNameArabic: data.clinicNameArabic as string | undefined,
+      phone: data.phone as string,
+      email: data.email as string,
+      address: data.address as string | undefined,
+      city: data.city as string | undefined,
+      country: data.country as string | undefined,
+      logoUrl: data.logoUrl as string | undefined,
+      packageId: Number(data.packageId),
+      billingCycle: Number(data.billingCycle),
+      ownerEmail: data.ownerEmail as string,
+      ownerFirstName: data.ownerFirstName as string,
+      ownerLastName: data.ownerLastName as string,
+    };
 
-      // Close drawer on success
+    const result = await createClinic(request);
+    if (result) {
       closeDrawer();
-
-      // TODO: Refresh data or add to list
-    } catch (error) {
-      console.error('Error adding clinic:', error);
-    } finally {
-      setIsLoading(false);
     }
   };
+
+  // Open Delete Modal
+  const openDeleteModal = (clinic: Clinic) => {
+    setClinicToDelete(clinic);
+    setDeleteStatus('idle');
+    setDeleteErrorMessage('');
+    setIsDeleteModalOpen(true);
+  };
+
+  // Handle Confirm Delete
+  const handleConfirmDelete = async () => {
+    if (clinicToDelete) {
+      if (deleteStatus === 'error') {
+        // Retry scenario
+        // setDeleteStatus('idle');
+      }
+
+      const success = await deleteClinic(clinicToDelete.id);
+
+      if (success) {
+        setDeleteStatus('success');
+      } else {
+        const currentError = useClinicsStore.getState().error;
+        setDeleteErrorMessage(getFriendlyErrorMessage(currentError || '', t));
+        setDeleteStatus('error');
+      }
+    }
+  };
+
+  // Toggle sort direction
+  const handleSortToggle = () => {
+    setSortDirection((prev) => (prev === 'desc' ? 'asc' : 'desc'));
+  };
+
+  // Sort clinics
+  const sortedClinics = useMemo(() => {
+    return sortByDate(clinics, 'createdAt', sortDirection);
+  }, [clinics, sortDirection]);
+
+  // Calculate active clinics count using helper
+  const activeClinicsCount = calculateActiveClinics(clinics);
+
+  // Get table columns from config
+  const columns = useMemo(
+    () =>
+      getClinicsTableColumns({
+        t,
+        onView: openViewDrawer,
+        onDelete: openDeleteModal,
+      }),
+    [t]
+  );
+
+  // Get form config from config file
+  const addClinicFormConfig = useMemo(
+    () => getAddClinicFormConfig(packages, packagesLoading, t),
+    [packages, packagesLoading, t]
+  );
 
   // Drawer config based on type
   const getDrawerTitle = () => {
@@ -318,31 +191,6 @@ export default function ClinicManagementPage() {
     }
   };
 
-  // Define columns
-  const columns: TableColumn<Clinic>[] = [
-    { key: 'id', header: t('columns.id') },
-    { key: 'name', header: t('columns.name') },
-    { key: 'package', header: t('columns.package') },
-    { key: 'subscriptionDate', header: t('columns.subscriptionDate') },
-    { key: 'expiryDate', header: t('columns.expiryDate') },
-    {
-      key: 'paymentStatus',
-      header: t('columns.paymentStatus'),
-      render: (value) => <PaymentStatusBadge status={value as string} />,
-    },
-    { key: 'doctorsCount', header: t('columns.doctorsCount'), align: 'center' },
-    {
-      key: 'actions',
-      header: t('columns.actions'),
-      render: (_, row) => (
-        <TableRowActions
-          onView={() => openViewDrawer(row)}
-          onDelete={() => console.log('Delete:', row.id)}
-        />
-      ),
-    },
-  ];
-
   return (
     <div className="space-y-6">
       {/* Header with Add Button */}
@@ -353,24 +201,36 @@ export default function ClinicManagementPage() {
         </Button>
       </div>
 
+      {/* Error Message */}
+      {error && (
+        <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+          {error}
+        </div>
+      )}
+
       {/* Table */}
       <Table<Clinic>
         columns={columns}
-        data={mockClinics}
+        data={sortedClinics}
         rowKey="id"
+        loading={isLoading}
+        sorting={{
+          active: true,
+          direction: sortDirection,
+          onToggle: handleSortToggle,
+        }}
         pagination={{
           currentPage,
-          totalPages: 3,
+          totalPages: Math.ceil(clinics.length / 20) || 1, // Assumption: pageSize is 20
           onPageChange: setCurrentPage,
         }}
         footerContent={
           <div className="w-full flex justify-between items-center text-sm-medium">
             <span className="text-grey-600">
-              {t('totalClinics')}: {mockClinics.length}
+              {t('totalClinics')}: {clinics.length}
             </span>
             <span className="text-Primary-600">
-              {t('activePackages')}:{' '}
-              {mockClinics.filter((c) => c.paymentStatus === 'paid').length}
+              {t('activePackages')}: {activeClinicsCount}
             </span>
           </div>
         }
@@ -388,19 +248,54 @@ export default function ClinicManagementPage() {
           <DynamicForm
             config={addClinicFormConfig}
             onSubmit={handleAddClinic}
-            isLoading={isLoading}
+            isLoading={isCreating}
           />
         )}
 
         {/* View Clinic Details */}
-        {drawerType === 'view' && (
+        {drawerType === 'view' && selectedClinic && (
           <ClinicDetails
             clinic={selectedClinic}
-            onBlock={() => console.log('Block clinic:', selectedClinic?.id)}
-            onSendNotification={() => console.log('Send notification to:', selectedClinic?.id)}
+            onSendNotification={() =>
+              console.log('Send notification to:', selectedClinic?.id)
+            }
+          // No delete button in details view anymore
           />
         )}
       </Drawer>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          // Small delay to clear state after modal closes
+          setTimeout(() => {
+            setClinicToDelete(null);
+            setDeleteStatus('idle');
+          }, 300);
+        }}
+        onConfirm={handleConfirmDelete}
+        title={t('deleteClinicTitle') || "حذف العيادة"}
+        confirmText={t('confirmationModal.confirm')}
+        cancelText={t('confirmationModal.cancel')}
+        variant="danger"
+        isLoading={isLoading}
+        status={deleteStatus}
+        errorMessage={deleteErrorMessage}
+        successMessage={`${t('confirmationModal.successTitle')} ${clinicToDelete?.name}`}
+        successButtonText={t('confirmationModal.successButton')}
+        retryButtonText={t('confirmationModal.retryButton')}
+      >
+        <p className="text-gray-600 text-lg">
+          {t('deleteClinicConfirmationMessage') || "هل تريد حقا القيام بحذف عيادة"}
+          <br />
+          <span className="font-bold text-gray-900">
+            &quot;{clinicToDelete?.name}&quot;
+          </span>
+          ؟
+        </p>
+      </ConfirmationModal>
     </div>
   );
 }
