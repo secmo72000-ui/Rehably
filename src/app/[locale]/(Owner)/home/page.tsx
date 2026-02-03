@@ -7,6 +7,7 @@ import type { Locale } from '@/configs/i18n.config';
 import { StatsCard, Table, type TableColumn, PaymentStatusBadge } from '@/ui/components';
 import { SubscriptionsChart, SalesChart } from './components';
 import Image from 'next/image';
+import { useAuthStore } from '@/stores/auth.store';
 
 // ========== Types ==========
 interface Subscription {
@@ -92,6 +93,7 @@ export default function HomePage() {
   const locale = params.locale as Locale;
   const t = (key: string) => getTranslation(locale, `home.${key}`);
   const tGlobal = (key: string) => getTranslation(locale, `${key}`);
+  const { user } = useAuthStore();
 
   // Translation Helpers for dynamic keys
   const getStatTitle = (index: number) => {
@@ -128,7 +130,7 @@ export default function HomePage() {
       {/* Welcome Message */}
       <div className="flex justify-start mb-6">
         <h1 className="text-2xl font-bold text-[#101828]">
-          {t('welcome')} أيمن
+          {t('welcome')} {user?.firstName || 'User'}
         </h1>
       </div>
 
@@ -155,7 +157,7 @@ export default function HomePage() {
             percentage="+15%"
           />
         </div>
-         {/* Bar Chart (Subscriptions) - Takes ~70% */}
+        {/* Bar Chart (Subscriptions) - Takes ~70% */}
         <div className="w-full lg:w-[70%]">
           <SubscriptionsChart
             title={t('charts.subscriptions')}
@@ -167,7 +169,7 @@ export default function HomePage() {
       {/* Recent Subscriptions Table */}
       <div className="pt-4 bg-white rounded-2xl  shadow-sm">
         <div className="flex items-center justify-between mb-4 px-6 ">
-          
+
           <h3 className=" text-xl-bold text-text">{t('charts.lastSubscriptions')}</h3>
           {/* View All Button - styled as link */}
           <button className=" text-primary-500 text-base-regular  underline cursor-pointer">
@@ -175,13 +177,13 @@ export default function HomePage() {
           </button>
         </div>
 
-          <Table
-            data={mockSubscriptions}
-            columns={columns}
-            rowKey="id"
-            // Simplified table without complex pagination/sorting visuals for this widget view if needed
-            className="shadow-none border-none"
-          />
+        <Table
+          data={mockSubscriptions}
+          columns={columns}
+          rowKey="id"
+          // Simplified table without complex pagination/sorting visuals for this widget view if needed
+          className="shadow-none border-none"
+        />
       </div>
     </div>
   );

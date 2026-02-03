@@ -40,7 +40,7 @@ export function DashboardLayout({
   className,
 }: DashboardLayoutProps) {
   const router = useRouter();
-  const { logout } = useAuthStore();
+  const { logout, user } = useAuthStore();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
@@ -62,6 +62,11 @@ export function DashboardLayout({
       <Navbar
         onToggleSidebar={toggleSidebar}
         isRtl={isRtl}
+        user={user ? {
+          name: user.fullName || `${user.firstName} ${user.lastName}`,
+          email: user.email,
+          avatarUrl: undefined
+        } : undefined}
         {...navbarProps}
       />
 
