@@ -35,6 +35,12 @@ export function getSubdomain(): string | null {
   if (parts.length <= 2) {
     return null;
   }
+
+  // Special handling for Vercel deployments (e.g. rehably-omega.vercel.app)
+  // If it ends with vercel.app and has 3 parts, it's the root domain (no subdomain)
+  if (hostname.endsWith('.vercel.app') && parts.length === 3) {
+    return null;
+  }
   
   // Return everything except the last 2 parts (domain + tld)
   return parts.slice(0, -2).join('.');

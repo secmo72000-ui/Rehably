@@ -31,6 +31,24 @@ function getSubdomainFromHost(hostname: string): string | null {
     return null;
   }
 
+  // Special handling for Vercel deployments
+  if (hostname.endsWith('.vercel.app')) {
+    const parts = hostname.split('.');
+    // rehably-omega.vercel.app -> 3 parts -> no subdomain (owner)
+    if (parts.length === 3) {
+      return null;
+    }
+    // portal.rehably-omega.vercel.app -> 4 parts -> portal (patient)
+    if (parts.length >= 4) {
+      // Return the first part combined with potential second part logic if needed
+      // But based on portal check logic below, we just need the prefix
+      if (parts[0] === 'portal') {
+         return `portal.${parts[1]}`;
+      }
+      return parts[0];
+    }
+  }
+
   const cleanHost = hostname.split(':')[0];
   const parts = cleanHost.split('.');
   
