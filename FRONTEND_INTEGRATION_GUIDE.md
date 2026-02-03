@@ -1,4 +1,4 @@
-# Rehably Backend API - Frontend Integration Guide
+g# Rehably Backend API - Frontend Integration Guide
 
 **Version:** 1.0
 **Last Updated:** 2026-01-29

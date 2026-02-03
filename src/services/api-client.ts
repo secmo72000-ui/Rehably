@@ -1,6 +1,14 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://rehably.runasp.net';
+const getBaseUrl = () => {
+  if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL;
+  if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
+    return '/api-proxy';
+  }
+  return 'http://rehably.runasp.net';
+};
+
+const API_URL = getBaseUrl();
 
 export const apiClient = axios.create({
   baseURL: API_URL,
