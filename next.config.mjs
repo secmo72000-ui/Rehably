@@ -4,7 +4,7 @@ const nextConfig = {
     return [
       {
         source: '/api-proxy/:path*',
-        destination: 'http://rehably.runasp.net/api/:path*',
+        destination: 'http://rehably.runasp.net/:path*',
       },
     ];
   },
