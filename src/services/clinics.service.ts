@@ -1,19 +1,22 @@
 import { apiClient } from '@/services/api-client';
 import { 
   Clinic, 
-  CreateClinicRequest, 
+  CreateClinicRequest,
+  CreateClinicResponse, 
   UpdateClinicRequest, 
-  ClinicListParams 
+  ClinicListParams,
+  PaginatedClinicsResponse 
 } from '@/domains/clinics/clinics.types';
 
 export const clinicsService = {
   /**
    * Get all clinics (paginated)
+   * Returns paginated response with items array and pagination metadata
    */
-  getAll: async (params: ClinicListParams = {}) => {
-    const { page = 1, pageSize = 20 } = params;
-    const response = await apiClient.get<Clinic[]>('/api/admin/Clinics', {
-      params: { page, pageSize },
+  getAll: async (params: ClinicListParams = {}): Promise<PaginatedClinicsResponse> => {
+    const { page = 1, pageSize = 20, ...restParams } = params;
+    const response = await apiClient.get<PaginatedClinicsResponse>('/api/admin/Clinics', {
+      params: { Page: page, PageSize: pageSize, ...restParams },
     });
     return response.data;
   },
@@ -28,9 +31,10 @@ export const clinicsService = {
 
   /**
    * Create a new clinic
+   * Returns clinic, subscription, and paymentTransactionId
    */
-  create: async (data: CreateClinicRequest) => {
-    const response = await apiClient.post<Clinic>('/api/admin/Clinics', data);
+  create: async (data: CreateClinicRequest): Promise<CreateClinicResponse> => {
+    const response = await apiClient.post<CreateClinicResponse>('/api/admin/Clinics', data);
     return response.data;
   },
 

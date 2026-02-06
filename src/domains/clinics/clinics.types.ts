@@ -44,6 +44,13 @@ export enum SubscriptionStatus {
 
 // ============ Create Clinic Request (POST) ============
 
+export interface ClinicDocument {
+  documentType: number;
+  base64Content: string;
+  fileName: string;
+  contentType: string;
+}
+
 export interface CreateClinicRequest {
   clinicName: string;
   clinicNameArabic?: string;
@@ -58,7 +65,25 @@ export interface CreateClinicRequest {
   ownerEmail: string;
   ownerFirstName: string;
   ownerLastName: string;
+  documents?: ClinicDocument[];
+  customTrialDays?: number;
   settings?: Record<string, string>;
+}
+
+// ============ Create Clinic Response (POST) ============
+
+export interface CreateClinicResponse {
+  clinic: Clinic;
+  subscription: {
+    id: number;
+    status: string;
+    startDate: string;
+    endDate: string;
+    trialEndsAt: string | null;
+    packageId: number;
+    packageName: string;
+  };
+  paymentTransactionId: string;
 }
 
 // ============ Update Clinic Request (PUT) ============
@@ -80,6 +105,25 @@ export interface UpdateClinicRequest {
 export interface ClinicListParams {
   page?: number;
   pageSize?: number;
+  search?: string;
+  status?: number;
+  subscriptionStatus?: number;
+  packageId?: number;
+  includeDeleted?: boolean;
+  sortBy?: string;
+  sortDesc?: boolean;
+}
+
+// ============ Paginated Clinics Response ============
+
+export interface PaginatedClinicsResponse {
+  items: Clinic[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+  hasPrevious: boolean;
+  hasNext: boolean;
 }
 
 // ============ Business Rules ============

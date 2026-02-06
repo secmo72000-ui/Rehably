@@ -3,7 +3,8 @@ import { clinicsService } from '@/services/clinics.service';
 import { 
   Clinic, 
   CreateClinicRequest, 
-  UpdateClinicRequest 
+  UpdateClinicRequest,
+  PaginatedClinicsResponse 
 } from '@/domains/clinics/clinics.types';
 
 // ============ Clinics Store Interface ============
@@ -23,6 +24,10 @@ interface ClinicsState {
   // Pagination
   currentPage: number;
   pageSize: number;
+  totalCount: number;
+  totalPages: number;
+  hasPrevious: boolean;
+  hasNext: boolean;
   
   // Error
   error: string | null;
@@ -49,17 +54,26 @@ export const useClinicsStore = create<ClinicsState>((set, get) => ({
   isTogglingStatus: false,
   currentPage: 1,
   pageSize: 20,
+  totalCount: 0,
+  totalPages: 1,
+  hasPrevious: false,
+  hasNext: false,
   error: null,
 
   // ============ Fetch Clinics ============
   fetchClinics: async (page = 1, pageSize = 20) => {
     set({ isLoading: true, error: null });
     try {
-      const clinics = await clinicsService.getAll({ page, pageSize });
+      const response = await clinicsService.getAll({ page, pageSize });
+      // Extract items array and pagination metadata from the response
       set({ 
-        clinics, 
-        currentPage: page, 
-        pageSize,
+        clinics: response.items, 
+        currentPage: response.page, 
+        pageSize: response.pageSize,
+        totalCount: response.totalCount,
+        totalPages: response.totalPages,
+        hasPrevious: response.hasPrevious,
+        hasNext: response.hasNext,
         isLoading: false 
       });
     } catch (error: any) {
@@ -92,10 +106,17 @@ export const useClinicsStore = create<ClinicsState>((set, get) => ({
   createClinic: async (data: CreateClinicRequest) => {
     set({ isCreating: true, error: null });
     try {
-      const newClinic = await clinicsService.create(data);
-      // Add to local state
+      const response = await clinicsService.create(data);
+      // Merge subscription data into clinic object since backend returns
+      // subscriptionPlanId/subscriptionPlanName as null in clinic but correctly in subscription
+      const newClinic: Clinic = {
+        ...response.clinic,
+        subscriptionPlanId: response.subscription?.packageId ?? response.clinic.subscriptionPlanId,
+        subscriptionPlanName: response.subscription?.packageName ?? response.clinic.subscriptionPlanName,
+      };
       set((state) => ({
         clinics: [newClinic, ...state.clinics],
+        totalCount: state.totalCount + 1,
         isCreating: false,
       }));
       return newClinic;

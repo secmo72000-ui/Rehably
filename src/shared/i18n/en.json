@@ -142,7 +142,9 @@
   },
   "subscriptions": {
     "pageTitle": "Subscriptions",
-    "addPackage": "Add Financial Plan",
+    "addPackage": "+ Add Financial Plan",
+    "addFeature": "+ Add Feature",
+    "addCustomCategory": "+ Add Custom Category",
     "editPackage": "Edit Plan",
     "deletePackage": "Delete Plan",
     "newest": "Newest",
@@ -150,6 +152,43 @@
       "subscriptions": "Subscriptions",
       "financialPlans": "Financial Plans",
       "customCategories": "Custom Categories"
+    },
+    "drawer": {
+      "addFinancialPlan": "Add Financial Plan",
+      "editFinancialPlan": "Edit Plan",
+      "addFeature": "Add Financial Feature",
+      "editFeature": "Edit Feature",
+      "addCustomPlan": "Add Custom Financial Plan",
+      "editCustomCategory": "Edit Custom Category"
+    },
+    "form": {
+      "addFinancialPlan": "Add Financial Plan",
+      "addFeature": "Add Financial Feature",
+      "saveChanges": "Save Changes"
+    },
+    "deleteModal": {
+      "title": "Remove Financial Plan",
+      "confirmText": "Remove Plan",
+      "cancelText": "Cancel",
+      "message": "Are you sure you want to remove this financial plan?",
+      "successMessage": "Financial plan deleted successfully",
+      "successButton": "OK",
+      "retryButton": "Retry",
+      "errorMessage": "An error occurred while deleting the package"
+    },
+    "package": {
+      "trialDays": "Trial Period",
+      "yearlyPrice": "Yearly Price",
+      "currency": "EGP",
+      "day": "day"
+    },
+    "feature": {
+      "currency": "EGP"
+    },
+    "customCategory": {
+      "features": "Features",
+      "editPlan": "Edit Plan",
+      "currency": "EGP"
     }
   },
   "invoices": {
@@ -225,6 +264,96 @@
       "salesReport": "Sales Report",
       "lastSubscriptions": "Latest Subscriptions",
       "viewAll": "View All"
+    }
+  },
+  "roles": {
+    "pageTitle": "Roles and Permissions",
+    "tabs": {
+      "roles": "Roles",
+      "users": "Users"
+    },
+    "addRole": "Add Role",
+    "rolesList": "Roles",
+    "roleNames": {
+      "admin": "Admin",
+      "assistant1": "Assistant 1",
+      "assistant2": "Assistant 2"
+    },
+    "userCount": "user",
+    "permissions": {
+      "main": "Main",
+      "clinicsManagement": "Clinics Management",
+      "subscriptions": "Subscriptions",
+      "invoices": "Invoices",
+      "loginRecords": "Login Records",
+      "settings": "Settings",
+      "read": "Read",
+      "edit": "Edit",
+      "delete": "Delete",
+      "view": "View",
+      "create": "Create",
+      "update": "Update",
+      "clinics": "Clinics",
+      "patients": "Patients",
+      "appointments": "Appointments",
+      "payments": "Payments",
+      "reports": "Reports",
+      "users": "Users",
+      "roles": "Roles",
+      "platform": "Platform"
+    },
+    "drawer": {
+      "addRole": "Add Role"
+    },
+    "form": {
+      "roleName": "Role Name",
+      "roleNamePlaceholder": "e.g. Admin Assistant",
+      "selectPermissions": "Permissions"
+    },
+    "validation": {
+      "nameRequired": "Role name is required"
+    },
+    "pagination": {
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "selectRolePrompt": "Select a role to view permissions"
+  },
+  "usersPage": {
+    "title": "User Management",
+    "addUser": "Add User",
+    "table": {
+      "name": "Name",
+      "email": "Email",
+      "phone": "Phone Number",
+      "role": "Role",
+      "actions": "Actions"
+    },
+    "drawer": {
+      "title": "Add User",
+      "nameLabel": "User Name",
+      "namePlaceholder": "e.g. Ahmed",
+      "emailLabel": "Email",
+      "emailPlaceholder": "e.g. xx@gmail.com",
+      "phoneLabel": "Phone Number",
+      "phonePlaceholder": "e.g. 0100000000",
+      "passwordLabel": "Set Password",
+      "passwordPlaceholder": "e.g. **********",
+      "assignRoleLabel": "Assign Role",
+      "selectRolePlaceholder": "Select Role",
+      "submit": "Add User"
+    },
+    "validation": {
+      "required": "Required"
+    },
+    "deleteModal": {
+      "title": "Delete User",
+      "message": "Are you sure you want to delete this user? This action cannot be undone.",
+      "confirmText": "Yes, Delete",
+      "cancelText": "Cancel",
+      "successMessage": "User deleted successfully",
+      "successButton": "Done",
+      "retryButton": "Retry"
     }
   },
   "errors": {

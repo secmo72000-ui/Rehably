@@ -14,3 +14,4 @@ export * from './ContentContainer';
 export * from './TabNavigator';
 export * from './PackageCard';
 export * from './Modal';
+export * from './DataCell';

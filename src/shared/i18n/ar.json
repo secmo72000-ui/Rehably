@@ -142,7 +142,9 @@
   },
   "subscriptions": {
     "pageTitle": "الاشتراكات",
-    "addPackage": "إضافة خطة مالية",
+    "addPackage": "+ إضافة خطة مالية",
+    "addFeature": "+ إضافة خاصية",
+    "addCustomCategory": "+ إضافة فئة خاصة",
     "editPackage": "تعديل الخطة",
     "deletePackage": "حذف الخطة",
     "newest": "الأحدث",
@@ -150,6 +152,43 @@
       "subscriptions": "الاشتراكات",
       "financialPlans": "حسابات الخطط المالية",
       "customCategories": "الفئات الخاصة"
+    },
+    "drawer": {
+      "addFinancialPlan": "إضافة خطة مالية",
+      "editFinancialPlan": "تعديل الخطة",
+      "addFeature": "إضافة خاصية مالية",
+      "editFeature": "تعديل الخاصية",
+      "addCustomPlan": "إضافة خطة مالية خاصة",
+      "editCustomCategory": "تعديل الفئة الخاصة"
+    },
+    "form": {
+      "addFinancialPlan": "إضافة خطة مالية",
+      "addFeature": "إضافة خاصية مالية",
+      "saveChanges": "حفظ التعديلات"
+    },
+    "deleteModal": {
+      "title": "ازالة خطة مالية",
+      "confirmText": "ازالة الخطة",
+      "cancelText": "الغاء",
+      "message": "هل تريد حقا القيام بازالة الخطة المالية",
+      "successMessage": "تم حذف الخطة المالية بنجاح",
+      "successButton": "حسناً",
+      "retryButton": "المحاولة مرة أخرى",
+      "errorMessage": "حدث خطأ أثناء حذف الباقة"
+    },
+    "package": {
+      "trialDays": "فترة تجريبية",
+      "yearlyPrice": "السعر السنوي",
+      "currency": "جنيها",
+      "day": "يوم"
+    },
+    "feature": {
+      "currency": "جنيها"
+    },
+    "customCategory": {
+      "features": "المميزات",
+      "editPlan": "تعديل الخطة",
+      "currency": "جنيها"
     }
   },
   "invoices": {
@@ -225,6 +264,96 @@
       "salesReport": "تقرير المبيعات",
       "lastSubscriptions": "آخر الاشتراكات",
       "viewAll": "رؤية الكل"
+    }
+  },
+  "roles": {
+    "pageTitle": "الأدوار والصلاحيات",
+    "tabs": {
+      "roles": "الأدوار",
+      "users": "المستخدمين"
+    },
+    "addRole": "اضافة دور",
+    "rolesList": "الأدوار",
+    "roleNames": {
+      "admin": "ادمن",
+      "assistant1": "مساعد1",
+      "assistant2": "مساعد2"
+    },
+    "userCount": "مستخدم",
+    "permissions": {
+      "main": "الرئيسية",
+      "clinicsManagement": "ادارة العيادات",
+      "subscriptions": "الاشتراكات",
+      "invoices": "الفواتير",
+      "loginRecords": "تسجيلات الدخول",
+      "settings": "الاعدادات",
+      "read": "قراءة",
+      "edit": "تعديل",
+      "delete": "أزالة",
+      "view": "عرض",
+      "create": "إنشاء",
+      "update": "تحديث",
+      "clinics": "العيادات",
+      "patients": "المرضى",
+      "appointments": "المواعيد",
+      "payments": "المدفوعات",
+      "reports": "التقارير",
+      "users": "المستخدمين",
+      "roles": "الأدوار",
+      "platform": "المنصة"
+    },
+    "drawer": {
+      "addRole": "اضافة دور"
+    },
+    "form": {
+      "roleName": "اسم الدور",
+      "roleNamePlaceholder": "مثال : مساعد ادمن",
+      "selectPermissions": "الصلاحيات"
+    },
+    "validation": {
+      "nameRequired": "اسم الدور مطلوب"
+    },
+    "pagination": {
+      "previous": "السابق",
+      "next": "التالي"
+    },
+    "selectRolePrompt": "اختر دور لعرض الصلاحيات"
+  },
+  "usersPage": {
+    "title": "ادارة المستخدمين",
+    "addUser": "اضافة مستخدم",
+    "table": {
+      "name": "الاسم",
+      "email": "البريد الالكتروني",
+      "phone": "رقم التليفون",
+      "role": "الدور",
+      "actions": "تفاصيل"
+    },
+    "drawer": {
+      "title": "اضافة مستخدم",
+      "nameLabel": "اسم المستخدم",
+      "namePlaceholder": "مثال : احمد",
+      "emailLabel": "البريد الالكتروني",
+      "emailPlaceholder": "مثال : xx@gmail.com",
+      "phoneLabel": "رقم التليفون",
+      "phonePlaceholder": "مثال : 0100000000",
+      "passwordLabel": "تعيين كلمة مرور",
+      "passwordPlaceholder": "مثال : **********",
+      "assignRoleLabel": "تعيين دور",
+      "selectRolePlaceholder": "اختر دور",
+      "submit": "اضافة مستخدم"
+    },
+    "validation": {
+      "required": "مطلوب"
+    },
+    "deleteModal": {
+      "title": "حذف مستخدم",
+      "message": "هل أنت متأكد أنك تريد حذف هذا المستخدم؟ لا يمكن التراجع عن هذا الإجراء.",
+      "confirmText": "نعم، حذف",
+      "cancelText": "إلغاء",
+      "successMessage": "تم حذف المستخدم بنجاح",
+      "successButton": "تم",
+      "retryButton": "إعادة المحاولة"
     }
   },
   "errors": {

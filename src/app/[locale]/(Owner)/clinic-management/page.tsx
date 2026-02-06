@@ -46,6 +46,8 @@ export default function ClinicManagementPage() {
     isLoading,
     isCreating,
     error,
+    totalCount,
+    totalPages,
     fetchClinics,
     createClinic,
     deleteClinic,
@@ -154,13 +156,15 @@ export default function ClinicManagementPage() {
     setSortDirection((prev) => (prev === 'desc' ? 'asc' : 'desc'));
   };
 
-  // Sort clinics
+  // Sort clinics - use Array.isArray protection in case of API issues
   const sortedClinics = useMemo(() => {
-    return sortByDate(clinics, 'createdAt', sortDirection);
+    const clinicsArray = Array.isArray(clinics) ? clinics : [];
+    return sortByDate(clinicsArray, 'createdAt', sortDirection);
   }, [clinics, sortDirection]);
 
-  // Calculate active clinics count using helper
-  const activeClinicsCount = calculateActiveClinics(clinics);
+  // Calculate active clinics count using helper - with array protection
+  const clinicsArray = Array.isArray(clinics) ? clinics : [];
+  const activeClinicsCount = calculateActiveClinics(clinicsArray);
 
   // Get table columns from config
   const columns = useMemo(
@@ -221,13 +225,13 @@ export default function ClinicManagementPage() {
         }}
         pagination={{
           currentPage,
-          totalPages: Math.ceil(clinics.length / 20) || 1, // Assumption: pageSize is 20
+          totalPages: totalPages || 1, // Use server-side pagination
           onPageChange: setCurrentPage,
         }}
         footerContent={
           <div className="w-full flex justify-between items-center text-sm-medium">
             <span className="text-grey-600">
-              {t('totalClinics')}: {clinics.length}
+              {t('totalClinics')}: {totalCount}
             </span>
             <span className="text-Primary-600">
               {t('activePackages')}: {activeClinicsCount}

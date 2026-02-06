@@ -20,6 +20,17 @@ export interface Package {
   trialDays: number;
   createdAt: string;
   updatedAt: string | null;
+  features?: Array<{
+    featureId: number;
+    quantity: number;
+    calculatedPrice: number;
+    isIncluded: boolean;
+    feature?: {
+        id: number;
+        name: string;
+        description: string;
+    }
+  }>;
 }
 
 // ============ Create Package Request ============
@@ -45,6 +56,10 @@ export interface CreatePackageRequest {
     displayOrder?: number;
 }
 
+export interface UpdatePackageRequest extends CreatePackageRequest {
+    id: number;
+}
+
 // ============ Packages Service ============
 
 export const packagesService = {
@@ -61,6 +76,14 @@ export const packagesService = {
    */
   create: async (data: CreatePackageRequest): Promise<Package> => {
     const response = await apiClient.post<Package>('/api/admin/packages', data);
+    return response.data;
+  },
+
+  /**
+   * Update an existing package
+   */
+  update: async (id: number, data: UpdatePackageRequest): Promise<Package> => {
+    const response = await apiClient.put<Package>(`/api/admin/packages/${id}`, data);
     return response.data;
   },
 
@@ -85,6 +108,14 @@ export const packagesService = {
    */
   archive: async (id: number): Promise<{ message: string }> => {
     const response = await apiClient.post<{ message: string }>(`/api/admin/packages/${id}/archive`);
+    return response.data;
+  },
+
+  /**
+   * Activate a package (reactivate from draft/archived status)
+   */
+  activate: async (id: number): Promise<{ message: string }> => {
+    const response = await apiClient.post<{ message: string }>(`/api/admin/packages/${id}/activate`);
     return response.data;
   },
 };
