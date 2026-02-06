@@ -14,9 +14,10 @@ interface UsersListProps {
         onPageChange: (page: number) => void;
     };
     onDelete: (id: string, name: string) => void;
+    onView: (user: PlatformUser) => void;
 }
 
-export function UsersList({ users, locale, pagination, onDelete }: UsersListProps) {
+export function UsersList({ users, locale, pagination, onDelete, onView }: UsersListProps) {
     const t = (key: string) => getTranslation(locale, `usersPage.${key}`);
 
     return (
@@ -63,7 +64,11 @@ export function UsersList({ users, locale, pagination, onDelete }: UsersListProp
 
                             {/* Actions */}
                             <div className="flex-1 flex justify-center items-center gap-3">
-                                <button className="p-1 hover:bg-gray-100 rounded-full transition-colors" title="View">
+                                <button
+                                    className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                                    onClick={() => onView(user)}
+                                    title="View"
+                                >
                                     <Image src="/shered/table/eye.svg" alt="View" width={20} height={20} />
                                 </button>
                                 <button

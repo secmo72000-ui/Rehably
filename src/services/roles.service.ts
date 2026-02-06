@@ -21,7 +21,7 @@ export const rolesService = {
      */
     getPermissions: async () => {
         const response = await apiClient.get<PermissionResponse>('/api/admin/permissions?page=1&pageSize=1000');
-        return response.data.items;
+        return response.data.items || [];
     },
 
     /**

@@ -354,6 +354,16 @@
       "successMessage": "User deleted successfully",
       "successButton": "Done",
       "retryButton": "Retry"
+    },
+    "detailsDrawer": {
+      "title": "User Details",
+      "permissionsTitle": "Permissions",
+      "phone": "Phone Number",
+      "role": "Role",
+      "editButton": "Edit Details",
+      "saveButton": "Save Changes",
+      "cancelButton": "Cancel",
+      "changeRole": "Change Role"
     }
   },
   "errors": {

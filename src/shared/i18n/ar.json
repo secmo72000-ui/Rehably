@@ -354,6 +354,16 @@
       "successMessage": "تم حذف المستخدم بنجاح",
       "successButton": "تم",
       "retryButton": "إعادة المحاولة"
+    },
+    "detailsDrawer": {
+      "title": "تفاصيل المستخدم",
+      "permissionsTitle": "الخصائص والصلاحيات",
+      "phone": "رقم التليفون",
+      "role": "الدور",
+      "editButton": "تعديل البيانات",
+      "saveButton": "حفظ التعديلات",
+      "cancelButton": "إلغاء",
+      "changeRole": "تغيير الدور"
     }
   },
   "errors": {

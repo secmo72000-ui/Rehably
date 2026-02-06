@@ -31,7 +31,7 @@ export function PermissionsView({
     // Group permissions by resource
     const groupedPermissions = useMemo(() => {
         const groups: Record<string, Permission[]> = {};
-        allPermissions.forEach(p => {
+        (allPermissions || []).forEach(p => {
             if (!groups[p.resource]) {
                 groups[p.resource] = [];
             }

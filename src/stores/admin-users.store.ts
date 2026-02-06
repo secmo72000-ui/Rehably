@@ -9,12 +9,15 @@ interface AdminUsersState {
   roles: Role[];
   isLoading: boolean;
   isCreating: boolean;
+  isUpdating: boolean;
   error: string | null;
   
   fetchUsers: () => Promise<void>;
   fetchRoles: () => Promise<void>;
   createUser: (payload: { email: string; firstName: string; lastName: string; roleId: string }) => Promise<void>;
   deleteUser: (id: string) => Promise<void>;
+  updateUser: (id: string, payload: { firstName?: string; lastName?: string; isActive?: boolean }) => Promise<void>;
+  updateUserRole: (id: string, roleId: string) => Promise<void>;
 }
 
 export const useAdminUsersStore = create<AdminUsersState>((set, get) => ({
@@ -22,6 +25,7 @@ export const useAdminUsersStore = create<AdminUsersState>((set, get) => ({
   roles: [],
   isLoading: false,
   isCreating: false,
+  isUpdating: false,
   error: null,
 
   fetchUsers: async () => {
@@ -68,6 +72,32 @@ export const useAdminUsersStore = create<AdminUsersState>((set, get) => ({
     } catch (error: any) {
       set({ error: error.message || 'Failed to delete user', isLoading: false });
       throw error;
+    }
+  },
+
+  updateUser: async (id, payload) => {
+    set({ isUpdating: true, error: null });
+    try {
+      await adminUsersService.update(id, payload);
+      await get().fetchUsers(); // Refresh list to get updated user
+    } catch (error: any) {
+      set({ error: error.message || 'Failed to update user' });
+      throw error;
+    } finally {
+      set({ isUpdating: false });
+    }
+  },
+
+  updateUserRole: async (id, roleId) => {
+    set({ isUpdating: true, error: null });
+    try {
+      await adminUsersService.updateRole(id, roleId);
+      await get().fetchUsers(); // Refresh list to get updated role
+    } catch (error: any) {
+      set({ error: error.message || 'Failed to update user role' });
+      throw error;
+    } finally {
+      set({ isUpdating: false });
     }
   }
 }));

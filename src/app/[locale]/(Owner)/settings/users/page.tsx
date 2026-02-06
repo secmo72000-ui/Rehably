@@ -8,6 +8,7 @@ import { getTranslation } from '@/shared/i18n';
 import type { Locale } from '@/configs/i18n.config';
 import { UsersList } from './_components/UsersList';
 import { UserDrawer } from './_components/UserDrawer';
+import { UserDetailsDrawer } from './_components/UserDetailsDrawer';
 import { useUsersPage } from './useUsersPage';
 
 export default function UsersPage() {
@@ -71,6 +72,7 @@ export default function UsersPage() {
                     onPageChange: controller.setCurrentPage
                 }}
                 onDelete={controller.handleDeleteUser}
+                onView={controller.openDetailsDrawer}
             />
 
             {/* Add User Drawer */}
@@ -81,6 +83,18 @@ export default function UsersPage() {
                 roles={controller.roles}
                 isLoading={controller.isCreating}
                 onSubmit={controller.handleCreateUser}
+            />
+
+            {/* User Details Drawer */}
+            <UserDetailsDrawer
+                isOpen={controller.isDetailsDrawerOpen}
+                onClose={controller.closeDetailsDrawer}
+                user={controller.selectedUser}
+                roles={controller.roles}
+                allPermissions={controller.allPermissions}
+                locale={locale}
+                isUpdating={controller.isUpdating}
+                onUpdateRole={controller.handleUpdateUserRole}
             />
 
             {/* Delete Confirmation Modal */}
