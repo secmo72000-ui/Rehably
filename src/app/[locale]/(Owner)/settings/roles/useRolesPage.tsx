@@ -2,7 +2,7 @@
 
 
 import { useEffect, useState, useCallback } from 'react';
-import { useRolesStore } from '@/stores/roles.store';
+import { useRolesStore } from '@/domains/roles/roles.store';
 import type { CreateRolePayload } from '@/domains/roles/roles.types';
 
 export function useRolesPage() {

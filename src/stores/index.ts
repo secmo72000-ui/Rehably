@@ -1,6 +1,6 @@
 /**
  * Stores barrel export
+ * Domain stores now live in src/domains/{domain}/{domain}.store.ts
+ * Only non-domain stores remain here.
  */
-export { useAuthStore } from './auth.store';
-export { useClinicsStore } from './clinics.store';
 export { useThemeStore } from './theme.store';

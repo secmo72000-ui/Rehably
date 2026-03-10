@@ -1,4 +1,33 @@
 {
+  "auth": {
+    "forgotPassword": {
+      "title": "نسيت كلمة المرور؟",
+      "subtitle": "الرجاء إدخال البريد الإلكتروني الخاص بك لإعادة تعيين كلمة المرور",
+      "email": "البريد الإلكتروني",
+      "emailPlaceholder": "example@email.com",
+      "submit": "تأكيد",
+      "backToLogin": "الخروج",
+      "successMessage": "سنقوم بإرسال رمز الأمان إلى البريد الإلكتروني الخاص بك"
+    },
+    "verifyOtp": {
+      "title": "تأكيد البريد الالكتروني الخاص بك",
+      "subtitle": "سنقوم بارسال رمز الامان الى البريد الالكتروني الخاص بك",
+      "resendCode": "اعادة ارسال الرمز",
+      "expired": "Expired",
+      "submit": "تأكيد",
+      "backToLogin": "الخروج"
+    },
+    "resetPassword": {
+      "title": "اعادة انشاء كلمة المرور الخاصة بك",
+      "newPassword": "كلمة المرور الجديدة",
+      "newPasswordPlaceholder": "كلمة المرور",
+      "confirmPassword": "تأكيد كلمة المرور",
+      "confirmPasswordPlaceholder": "كلمة المرور",
+      "submit": "تأكيد كلمة المرور",
+      "backToLogin": "الخروج",
+      "passwordMismatch": "كلمتا المرور غير متطابقتين"
+    }
+  },
   "login": {
     "pageTitle": "كل أدواتك لإدارة العيادة في مكان واحد.",
     "welcomeTitle": "مرحبا بك",
@@ -51,22 +80,115 @@
       "address": "العنوان",
       "storageFull": "% ممتلئ",
       "storageUsage": "{used} جيجا من {total} جيجا مستخدمة",
-      "sendNotification": "إرسال إشعار"
+      "sendNotification": "إرسال إشعار",
+      "manager": "مدير العيادة",
+      "subscriptionPlan": "باقة الاشتراك",
+      "addonFeature": "+ adon Feature",
+      "certificate": "Certificate",
+      "idDocument": "ID",
+      "managerPlaceholder": "اسم مدير العيادة",
+      "defaultAddress": "العنوان بالتفصيل , مدينة , محافظة"
     },
     "columns": {
-      "id": "ID",
       "name": "اسم العيادة",
-      "package": "الباقة",
-      "subscriptionDate": "تاريخ الاشتراك",
-      "expiryDate": "تاريخ الانتهاء",
+      "package": "Package",
+      "managerName": "اسم المدير",
+      "email": "البريد الالكتروني",
+      "createdAt": "تاريخ الانشاء",
+      "region": "المنطقة",
       "paymentStatus": "حالة الدفع",
-      "status": "حالة العيادة",
-      "doctorsCount": "عدد الأطباء",
+      "registrationRequest": "طلب التسجيل",
       "actions": "التفاصيل"
+    },
+    "registrationStatus": {
+      "accepted": "مقبول",
+      "pending": "قيد المراجعة",
+      "rejected": "مرفوض",
+      "suspended": "موقوف"
     },
     "payment": {
       "paid": "مدفوع",
       "unpaid": "غير مدفوع"
+    },
+    "wizard": {
+      "titleAdd": "اضافة عيادة",
+      "titleEdit": "تعديل عيادة",
+      "next": "التالي",
+      "back": "رجوع",
+      "submit": "حفظ",
+      "edit": "تعديل",
+      "removeClinic": "ازالة العيادة",
+      "confirmEditTitle": "تأكيد التعديل",
+      "confirmEditButton": "تأكيد",
+      "confirmEditMessage": "هل تريد تأكيد تعديل بيانات العيادة؟",
+      "validation": {
+        "required": "هذا الحقل مطلوب",
+        "arabicOnly": "يجب أن يكون الاسم بالعربية فقط بدون أرقام أو حروف إنجليزية",
+        "invalidEmail": "البريد الإلكتروني غير صحيح",
+        "egyptianPhone": "رقم التليفون يجب أن يكون مصري (01xxxxxxxxx)",
+        "slugEnglish": "slug يجب أن يكون بالإنجليزية فقط (حروف صغيرة وشرطات)"
+      },
+      "steps": {
+        "createClinic": "انشاء عيادة",
+        "verifyClinic": "توثيق العيادة",
+        "subscription": "باقة اشتراك"
+      },
+      "step1": {
+        "clinicNameAr": "الأسم العيادة بالعربي",
+        "clinicNameArPlaceholder": "اسم العيادة",
+        "clinicNameEn": "اسم العيادة بالانجليزية",
+        "clinicNameEnPlaceholder": "اسم العيادة",
+        "clinicManager": "مدير العيادة",
+        "clinicManagerPlaceholder": "اسم مدير العيادة",
+        "email": "البريد الالكتروني",
+        "emailPlaceholder": "البريد الالكتروني",
+        "phone": "رقم التليفون",
+        "phonePlaceholder": "رقم التليفون",
+        "governorate": "المحافظة",
+        "governoratePlaceholder": "اختر محافظة",
+        "city": "المدينة",
+        "cityPlaceholder": "ادخل مدينة",
+        "address": "العنوان",
+        "addressPlaceholder": "ادخل العنوان بالكامل",
+        "slugPlaceholder": "ادخل slug الخاص بالعيادة"
+      },
+      "step2": {
+        "idCard": "صورة البطاقة الشخصية",
+        "idCardHint": "يرجي رفع صورة واضحة للبطاقة الشخصية مع وضوح الرقم القومي",
+        "syndicateCard": "صورة كارنيه النقابة",
+        "uploadPlaceholder": "ارفع صورة"
+      },
+      "step3": {
+        "assignPlan": "تعيين خطة اشتراكية",
+        "existingPlan": "الباقات الحالية",
+        "customPlan": "باقة مخصصة",
+        "monthly": "شهري",
+        "yearly": "سنوي",
+        "currency": "جنيها",
+        "features": "الامتيازات",
+        "activationTime": "تعيين وقت تفعيل الاشتراك",
+        "startDate": "تاريخ بداية الاشتراك",
+        "endDate": "تاريخ نهاية الاشتراك",
+        "paymentMethod": "طريقة الدفع",
+        "paymentMethodPlaceholder": "اختر طريقة الدفع",
+        "paymentCash": "كاش",
+        "paymentOnline": "أونلاين (Stripe/PayMob)",
+        "paymentFree": "مجاني",
+        "paymentStatus": "حالة الدفع",
+        "paid": "مدفوع",
+        "unpaid": "غير مدفوع",
+        "choosePrefix": "اختر",
+        "quantityPlaceholder": "حدود الباقة",
+        "customPrice": "سعر الباقة",
+        "customPricePlaceholder": "ادخل السعر المخصص للباقة",
+        "chooseLibraries": "اختر المكتبات",
+        "libTreatments": "مكتبة العلاجات",
+        "libExercises": "مكتبة التمارين",
+        "libModalities": "مكتبة الأجهزة والعلاج الطبيعي",
+        "libAssessments": "مكتبة التقييمات",
+        "libDevices": "مكتبة الأجهزة",
+        "libBodyRegions": "مكتبة مناطق الجسم"
+      }
     },
     "form": {
       "submit": "إضافة عيادة",
@@ -123,12 +245,32 @@
       "ownerLastName": {
         "label": "الاسم الأخير للمدير",
         "placeholder": "الاسم الأخير"
+      },
+      "paymentType": {
+        "label": "طريقة الدفع",
+        "placeholder": "اختر طريقة الدفع",
+        "cash": "نقدي",
+        "stripe": "Stripe",
+        "paymob": "PayMob"
       }
     },
     "common": {
       "loading": "جاري التحميل...",
       "currency": "ج.م",
-      "month": "شهر"
+      "month": "شهر",
+      "error": "حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى."
+    },
+    "addonDrawer": {
+      "title": "اضافة خاصية اضافية",
+      "chooseFeatures": "اختر خصائص",
+      "chooseLibraries": "اختر المكتبات",
+      "packageLimit": "حدود الباقة",
+      "submitButton": "اضافة خاصية اضافية",
+      "validation": {
+        "required": "يجب اختيار خاصية واحدة على الأقل",
+        "dateOrder": "تاريخ النهاية يجب أن يكون بعد تاريخ البداية لـ: "
+      },
+      "defaultFeatureName": "خاصية إضافية"
     },
     "deleteClinicTitle": "حذف العيادة",
     "deleteClinicConfirmationMessage": "هل تريد حقا القيام بحذف عيادة",
@@ -143,28 +285,47 @@
   "subscriptions": {
     "pageTitle": "الاشتراكات",
     "addPackage": "+ إضافة خطة مالية",
+    "addFinancialPlan": "اضافة خطة مالية",
     "addFeature": "+ إضافة خاصية",
-    "addCustomCategory": "+ إضافة فئة خاصة",
     "editPackage": "تعديل الخطة",
     "deletePackage": "حذف الخطة",
-    "newest": "الأحدث",
-    "tabs": {
-      "subscriptions": "الاشتراكات",
-      "financialPlans": "حسابات الخطط المالية",
-      "customCategories": "الفئات الخاصة"
+    "newest": "الاحدث",
+    "monthly": "شهري",
+    "yearly": "سنوي",
+    "planName": "اسم الخطة المالية",
+    "planDetails": "تفاصيل الخطة المالية",
+    "features": "خصائص الخطة المالية",
+    "chooseFeatures": "اختر خصائص",
+    "libraries": "اختر المكتبات",
+    "billingCycle": "تحديد مدة الاشتراك",
+    "price": "سعر الخطة المالية",
+    "limitPlaceholder": "حدود الباقة",
+    "billingMonthly": "باقة شهرية",
+    "billingYearly": "باقة سنوية",
+    "noFeatures": "لا يوجد مميزات",
+    "validation": {
+      "planNameRequired": "يرجى إدخال اسم الخطة",
+      "atLeastOneFeature": "يجب اختيار خاصية واحدة على الأقل",
+      "validPrice": "يرجى إدخال سعر صحيح"
+    },
+    "placeholders": {
+      "planName": "مثال : خبير",
+      "planDetails": "مثال : تناسب العيادات المبتدأة",
+      "price": "مثال : 1200 جنيها"
     },
     "drawer": {
       "addFinancialPlan": "إضافة خطة مالية",
-      "editFinancialPlan": "تعديل الخطة",
+      "editFinancialPlan": "تعديل خطة مالية",
       "addFeature": "إضافة خاصية مالية",
-      "editFeature": "تعديل الخاصية",
-      "addCustomPlan": "إضافة خطة مالية خاصة",
-      "editCustomCategory": "تعديل الفئة الخاصة"
+      "editFeature": "تعديل الخاصية"
     },
     "form": {
       "addFinancialPlan": "إضافة خطة مالية",
       "addFeature": "إضافة خاصية مالية",
-      "saveChanges": "حفظ التعديلات"
+      "saveChanges": "حفظ التعديلات",
+      "cancel": "الغاء",
+      "save": "حفظ",
+      "saving": "جاري الحفظ..."
     },
     "deleteModal": {
       "title": "ازالة خطة مالية",
@@ -183,11 +344,6 @@
       "day": "يوم"
     },
     "feature": {
-      "currency": "جنيها"
-    },
-    "customCategory": {
-      "features": "المميزات",
-      "editPlan": "تعديل الخطة",
       "currency": "جنيها"
     }
   },
@@ -227,13 +383,20 @@
     "pageTitle": "سجل الأنشطة",
     "noData": "لا توجد سجلات",
     "columns": {
-      "clinicName": "اسم العيادة",
-      "managerName": "اسم المدير",
-      "loginDate": "الدخول يوميا",
-      "failedLogins": "فشل التسجيل",
-      "users": "المستخدمون",
-      "storage": "مساحة التخزين",
-      "actions": "تفاصيل"
+      "id": "ID",
+      "userName": "اسم المستخدم",
+      "userRole": "الرول",
+      "userEmail": "البريد الالكتروني",
+      "time": "التوقيت",
+      "date": "التاريخ",
+      "registrationCode": "كود التسجيل",
+      "category": "الفئة",
+      "message": "الرسالة",
+      "status": "الحالة"
+    },
+    "status": {
+      "success": "ناجح",
+      "failed": "فشل"
     },
     "actions": {
       "view": "عرض",

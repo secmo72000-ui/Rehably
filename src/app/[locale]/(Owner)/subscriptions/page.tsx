@@ -3,14 +3,9 @@
 import { useParams } from 'next/navigation';
 import { getTranslation } from '@/shared/i18n';
 import type { Locale } from '@/configs/i18n.config';
-import {
-    TabNavigator,
-    Drawer,
-    DynamicForm,
-    ConfirmationModal,
-} from '@/ui/components';
-import { useFeaturesStore } from '@/stores/features.store';
-import { SubscriptionsTab, CustomCategoriesTab, FinancialPlansTab } from './_components/tabs';
+import { Drawer, ConfirmationModal } from '@/ui/components';
+import { SubscriptionsTab } from './_components/tabs';
+import { FinancialPlanForm } from './_components/FinancialPlanForm';
 import { useSubscriptionsPage } from './useSubscriptionsPage';
 
 // ========== Page Component ==========
@@ -18,54 +13,19 @@ export default function SubscriptionsPage() {
     const params = useParams();
     const locale = params.locale as Locale;
     const t = (key: string) => getTranslation(locale, `subscriptions.${key}`);
-    const { isLoading: isFeaturesLoading } = useFeaturesStore();
-
     const controller = useSubscriptionsPage();
 
     return (
         <div className="space-y-6">
-            {/* Tab Navigator */}
-            <TabNavigator
-                tabs={controller.tabs}
-                activeTab={controller.activeTab}
-                onTabChange={controller.setActiveTab}
-            />
-
             {/* Subscriptions Tab Content */}
-            {controller.activeTab === 'subscriptions' && (
-                <SubscriptionsTab
-                    packages={controller.packages}
-                    isLoading={controller.isLoading}
-                    error={controller.error}
-                    onAddClick={controller.openAddDrawer}
-                    onEdit={controller.openEditDrawer}
-                    onDelete={controller.handleDelete}
-                />
-            )}
-
-            {/* Financial Plans Tab Content */}
-            {controller.activeTab === 'financial-plans' && (
-                <FinancialPlansTab
-                    features={controller.features}
-                    isLoading={isFeaturesLoading}
-                    onAddClick={controller.openAddDrawer}
-                    onEdit={controller.handleFeatureEdit}
-                    onDelete={controller.handleFeatureDelete}
-                />
-            )}
-
-            {/* Custom Categories Tab Content */}
-            {controller.activeTab === 'custom-categories' && (
-                <CustomCategoriesTab
-                    customPackages={controller.customPackages}
-                    clinics={controller.clinics}
-                    isLoading={controller.isLoadingCustom}
-                    onAddClick={controller.openAddDrawer}
-                    onEdit={controller.openEditDrawer}
-                    onDelete={controller.handleDelete}
-                    onActivate={controller.activatePackage}
-                />
-            )}
+            <SubscriptionsTab
+                packages={controller.packages}
+                isLoading={controller.isLoading}
+                error={controller.error}
+                onAddClick={controller.openAddDrawer}
+                onEdit={controller.openEditDrawer}
+                onDelete={controller.handleDelete}
+            />
 
             {/* Drawer */}
             <Drawer
@@ -74,17 +34,18 @@ export default function SubscriptionsPage() {
                 title={controller.getDrawerTitle()}
                 size="lg"
             >
-                <DynamicForm
-                    config={{
-                        ...controller.getFormConfig(),
-                        submitLabel: controller.getFormSubmitLabel()
-                    }}
-                    onSubmit={controller.handleFormSubmit}
-                    onCancel={controller.closeDrawer}
-                    isLoading={controller.isCreating || controller.isUpdating}
-                    defaultValues={controller.getDefaultValues()}
-                    key={`${controller.drawerType}-${controller.selectedPackage?.id || 'new'}-${controller.activeTab}`}
-                />
+                {!!controller.drawerType && (
+                    <FinancialPlanForm
+                        features={controller.features}
+                        categories={controller.categories}
+                        initialValues={controller.getDefaultValues()}
+                        onSubmit={controller.handleFormSubmit}
+                        onCancel={controller.closeDrawer}
+                        isLoading={controller.isCreating || controller.isUpdating}
+                        t={t}
+                        key={controller.selectedPackage?.id || 'new'}
+                    />
+                )}
             </Drawer>
 
             {/* Delete Confirmation Modal */}

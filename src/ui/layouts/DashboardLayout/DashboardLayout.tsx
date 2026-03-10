@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/shared/utils/cn";
 import { Navbar, type NavbarProps } from "@/ui/components/Navbar";
 import { Sidebar, type SidebarItem, type SidebarProps } from "@/ui/components/Sidebar";
-import { useAuthStore } from "@/stores/auth.store";
+import { useAuthStore } from "@/domains/auth/auth.store";
 
 export interface DashboardLayoutProps {
   /** Page content */

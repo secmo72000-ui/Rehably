@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { useAdminUsersStore } from '@/stores/admin-users.store';
-import { useRolesStore } from '@/stores/roles.store';
+import { useAdminUsersStore } from '@/domains/users/admin-users.store';
+import { useRolesStore } from '@/domains/roles/roles.store';
 import type { PlatformUser } from '@/domains/users/admin-users.types';
 
 export function useUsersPage() {

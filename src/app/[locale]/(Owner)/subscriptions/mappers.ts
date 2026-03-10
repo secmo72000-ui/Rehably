@@ -1,54 +1,60 @@
-import type { CreatePackageRequest, UpdatePackageRequest, Package } from '@/services/packages.service';
-import type { PublicPackageFormValues, CustomPackageFormValues } from './types';
+import type { CreatePackageRequest, UpdatePackageRequest, Package } from '@/domains/packages/packages.types';
+import type { FinancialPlanFormValues } from './types';
 
-/**
- * Build CreatePackageRequest from public package form values
- */
-export function buildCreatePublicPackageRequest(
-    form: PublicPackageFormValues
-): CreatePackageRequest {
-    return {
-        name: form.planName,
-        description: form.planDetails,
-        monthlyPrice: Number(form.fullPrice),
-        yearlyPrice: Number(form.fullPrice) * 10,
-        trialDays: 14,
-        features: (form.planFeatures || []).map((featureId) => ({
-            featureId: Number(featureId),
-            quantity: 0,
+function slugify(text: string): string {
+    return text
+        .toString()
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, '-')       // Replace spaces with -
+        .replace(/[^\w\-]+/g, '')   // Remove all non-word chars
+        .replace(/\-\-+/g, '-')     // Replace multiple - with single -
+        .replace(/^-+/, '')         // Trim - from start of text
+        .replace(/-+$/, '');        // Trim - from end of text
+}
+
+function buildFeaturesList(form: FinancialPlanFormValues): CreatePackageRequest['features'] {
+    const toFeatureId = (id: string): number | string => {
+        const num = Number(id);
+        return Number.isNaN(num) ? id : num;
+    };
+    return [
+        ...form.selectedFeatures.map((f) => ({
+            featureId: toFeatureId(f.featureId),
+            quantity: f.limit || 0,
             calculatedPrice: 0,
             isIncluded: true
         })),
-        isPublic: true,
-        isCustom: false,
-        displayOrder: 0,
-        code: String(Math.floor(Math.random() * 1000)),
-    };
+        ...form.selectedLibraries.map((libId) => ({
+            featureId: toFeatureId(libId),
+            quantity: 0,
+            calculatedPrice: 0,
+            isIncluded: true
+        }))
+    ];
 }
 
 /**
- * Build CreatePackageRequest from custom package form values
+ * Build CreatePackageRequest from financial plan form values
  */
-export function buildCreateCustomPackageRequest(
-    form: CustomPackageFormValues
+export function buildCreatePackageRequest(
+    form: FinancialPlanFormValues
 ): CreatePackageRequest {
+    const isYearly = form.billingCycle === 'yearly';
+    const price = Number(form.price);
+    const features = buildFeaturesList(form);
+
     return {
-        name: form.packageName,
-        description: form.packageName,
-        monthlyPrice: Number(form.monthlyPrice),
-        yearlyPrice: Number(form.yearlyPrice) || Number(form.monthlyPrice) * 10,
-        trialDays: Number(form.trialDays) || 0,
-        features: (form.categoryFeatures || []).map((featureId) => ({
-            featureId: Number(featureId),
-            quantity: 0,
-            calculatedPrice: 0,
-            isIncluded: true
-        })),
-        isPublic: false,
-        isCustom: true,
-        forClinicId: Number(form.selectedClinic),
+        name: form.planName,
+        description: form.planDetails,
+        monthlyPrice: isYearly ? Math.round(price / 12) : price, // Adjust logic based on API expectation, or maybe just send what is requested
+        yearlyPrice: isYearly ? price : price * 12,
+        trialDays: 0,
+        features,
+        isPublic: true,
+        isCustom: false,
         displayOrder: 0,
-        code: String(Math.floor(Math.random() * 1000)),
+        code: `${slugify(form.planName) || 'pkg'}-${Date.now()}`,
     };
 }
 
@@ -57,40 +63,20 @@ export function buildCreateCustomPackageRequest(
  */
 export function buildUpdatePackageRequest(
     pkg: Package,
-    form: PublicPackageFormValues | CustomPackageFormValues
+    form: FinancialPlanFormValues
 ): UpdatePackageRequest {
-    // Determine if it's a public or custom package form
-    const isPublicForm = 'planName' in form;
-    
-    const name = isPublicForm 
-        ? (form as PublicPackageFormValues).planName 
-        : (form as CustomPackageFormValues).packageName;
-    
-    const description = isPublicForm 
-        ? (form as PublicPackageFormValues).planDetails 
-        : (form as CustomPackageFormValues).packageName;
-    
-    const monthlyPrice = isPublicForm 
-        ? Number((form as PublicPackageFormValues).fullPrice)
-        : Number((form as CustomPackageFormValues).monthlyPrice);
-    
-    const features = isPublicForm
-        ? (form as PublicPackageFormValues).planFeatures
-        : (form as CustomPackageFormValues).categoryFeatures;
+    const isYearly = form.billingCycle === 'yearly';
+    const price = Number(form.price);
+    const features = buildFeaturesList(form);
 
     return {
         id: pkg.id,
-        name,
-        description,
-        monthlyPrice,
-        yearlyPrice: monthlyPrice * 10,
-        trialDays: pkg.trialDays || 14,
-        features: (features || []).map((featureId) => ({
-            featureId: Number(featureId),
-            quantity: 0,
-            calculatedPrice: 0,
-            isIncluded: true
-        })),
+        name: form.planName,
+        description: form.planDetails,
+        monthlyPrice: isYearly ? Math.round(price / 12) : price,
+        yearlyPrice: isYearly ? price : price * 12,
+        trialDays: pkg.trialDays || 0,
+        features,
         isPublic: pkg.isPublic,
         isCustom: pkg.isCustom,
         displayOrder: pkg.displayOrder,

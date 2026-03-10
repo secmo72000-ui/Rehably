@@ -7,7 +7,7 @@ import { getTranslation } from "@/shared/i18n";
 import type { Locale } from "@/configs/i18n.config";
 import { Input, Button, Checkbox } from "@/ui/primitives";
 import { EmailIcon, LockIcon, EyeIcon, EyeOffIcon } from "@/ui/icons";
-import { useAuthStore } from "@/stores/auth.store";
+import { useAuthStore } from "@/domains/auth/auth.store";
 
 interface LoginFormProps {
   locale: Locale;

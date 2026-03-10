@@ -1,43 +1,23 @@
-import type { Package } from '@/services/packages.service';
+import type { Package } from '@/domains/packages/packages.types';
 
 // ========== Drawer Types ==========
 export type DrawerType = 'add' | 'edit' | null;
-export type TabType = 'subscriptions' | 'financial-plans' | 'custom-categories';
+export type TabType = 'subscriptions';
 export type DeleteStatus = 'idle' | 'deleting' | 'success' | 'error';
 
 // ========== Form Value Types ==========
-
-/**
- * Form values for creating/editing public packages
- * Fields match financialPlanFormConfig
- */
-export interface PublicPackageFormValues {
+export interface FinancialPlanFormValues {
     planName: string;
     planDetails: string;
-    fullPrice: string;
-    planFeatures: string[];
+    billingCycle: 'monthly' | 'yearly';
+    price: string;
+    selectedFeatures: Array<{ featureId: string; limit: number }>;
+    selectedLibraries: string[];
 }
 
-/**
- * Form values for creating/editing custom category packages
- * Fields match customCategoryFormConfig
- */
-export interface CustomPackageFormValues {
-    packageName: string;
-    monthlyPrice: string;
-    yearlyPrice: string;
-    trialDays: string;
-    selectedClinic: string;
-    categoryFeatures: string[];
-}
-
-/**
- * Union type for any form submission
- */
-export type PackageFormValues = PublicPackageFormValues | CustomPackageFormValues;
+export type PackageFormValues = FinancialPlanFormValues;
 
 // ========== Controller State Types ==========
-
 export interface DrawerState {
     type: DrawerType;
     selectedPackage: Package | null;

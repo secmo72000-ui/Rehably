@@ -1,7 +1,41 @@
+import type { PaymentType, BillingCycle } from '@/shared/types';
+
+// ============ Clinic Status Enum ============
+
+/**
+ * حالة العيادة — يطابق ClinicStatus في الباك اند
+ * @see api-reference.md
+ */
+export enum ClinicStatus {
+  PendingEmailVerification = 0,
+  PendingDocumentsAndPackage = 1,
+  PendingApproval = 2,
+  PendingPayment = 3,
+  Active = 4,
+  Suspended = 5,
+  Cancelled = 6,
+  Banned = 7,
+  PendingCustomPackageReview = 8,
+}
+
+// ============ Subscription Status Enum ============
+
+/**
+ * حالة الاشتراك — يطابق SubscriptionStatus في الباك اند
+ * @see api-reference.md
+ */
+export enum SubscriptionStatus {
+  Trial = 0,
+  Active = 1,
+  Suspended = 2,
+  Cancelled = 3,
+  Expired = 4,
+}
+
 // ============ Clinic Entity (GET Response) ============
 
 export interface Clinic {
-  id: number;
+  id: string;
   name: string;
   nameArabic: string | null;
   slug: string;
@@ -12,7 +46,14 @@ export interface Clinic {
   address: string | null;
   city: string | null;
   country: string | null;
-  subscriptionPlanId: number | null;
+  status: ClinicStatus;
+  isDeleted: boolean;
+  deletedAt: string | null;
+  isBanned: boolean;
+  banReason: string | null;
+  bannedAt: string | null;
+  bannedBy: string | null;
+  subscriptionPlanId: string | null;
   subscriptionPlanName: string | null;
   subscriptionStatus: SubscriptionStatus;
   subscriptionStartDate: string;
@@ -27,19 +68,12 @@ export interface Clinic {
   storageUsedPercentage: number;
   patientsUsedPercentage: number;
   usersUsedPercentage: number;
-  tempPassword: string | null;
+  ownerFirstName: string;
+  ownerLastName: string;
+  ownerEmail: string;
+  paymentMethod: string | null;
   createdAt: string;
   updatedAt: string | null;
-}
-
-// ============ Subscription Status Enum ============
-
-export enum SubscriptionStatus {
-  Active = 0,
-  Inactive = 1,
-  Trial = 2,
-  Expired = 3,
-  Cancelled = 4,
 }
 
 // ============ Create Clinic Request (POST) ============
@@ -60,11 +94,12 @@ export interface CreateClinicRequest {
   city?: string;
   country?: string;
   logoUrl?: string;
-  packageId?: number;
-  billingCycle?: number;
+  packageId?: string;
+  billingCycle?: BillingCycle;
   ownerEmail: string;
   ownerFirstName: string;
   ownerLastName: string;
+  paymentType?: PaymentType;
   documents?: ClinicDocument[];
   customTrialDays?: number;
   settings?: Record<string, string>;
@@ -72,18 +107,27 @@ export interface CreateClinicRequest {
 
 // ============ Create Clinic Response (POST) ============
 
-export interface CreateClinicResponse {
-  clinic: Clinic;
-  subscription: {
-    id: number;
-    status: string;
-    startDate: string;
-    endDate: string;
-    trialEndsAt: string | null;
-    packageId: number;
-    packageName: string;
-  };
+export interface CreateClinicResponseData {
+  id: string;
+  name: string;
+  nameArabic?: string | null;
+  slug: string;
+  email: string;
+  phone: string;
+  status: number;
+  subscriptionId: string;
+  packageName: string;
+  subscriptionStatus: number;
+  subscriptionStartDate: string;
+  subscriptionEndDate: string | null;
+  paymentType: string;
   paymentTransactionId: string;
+  createdAt: string;
+}
+
+export interface CreateClinicResponse {
+  success: boolean;
+  data: CreateClinicResponseData;
 }
 
 // ============ Update Clinic Request (PUT) ============
@@ -108,7 +152,7 @@ export interface ClinicListParams {
   search?: string;
   status?: number;
   subscriptionStatus?: number;
-  packageId?: number;
+  packageId?: string;
   includeDeleted?: boolean;
   sortBy?: string;
   sortDesc?: boolean;
@@ -155,4 +199,27 @@ export function getStorageUsagePercent(clinic: Clinic): number {
  */
 export function isNearStorageLimit(clinic: Clinic): boolean {
   return clinic.storageUsedPercentage >= 80;
+}
+
+// ============ Add-Ons ============
+
+export interface AddOnDto {
+  id: string;
+  featureId: string;
+  featureName: string;
+  limit: number;
+  price: number;
+  paymentType: number;
+  status: number;
+  startDate: string;
+  endDate: string;
+}
+
+export interface CreateAddOnRequestDto {
+  featureId: string;
+  limit: number;
+  price: number;
+  startDate: string;
+  endDate: string;
+  paymentType: number;
 }

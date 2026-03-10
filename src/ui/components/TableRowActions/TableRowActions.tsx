@@ -5,32 +5,20 @@ import Image from 'next/image';
 interface TableRowActionsProps {
   /** Callback when view icon is clicked */
   onView?: () => void;
+  /** Callback when edit icon is clicked */
+  onEdit?: () => void;
   /** Callback when delete icon is clicked */
   onDelete?: () => void;
 }
 
-export function TableRowActions({ onView, onDelete }: TableRowActionsProps) {
+export function TableRowActions({ onView, onEdit, onDelete }: TableRowActionsProps) {
   const handleClick = (e: React.MouseEvent, callback?: () => void) => {
     e.stopPropagation(); // Prevent row click
     callback?.();
   };
 
   return (
-    <div className="flex items-center gap-3">
-      {onView && (
-        <button
-          onClick={(e) => handleClick(e, onView)}
-          className="p-1 rounded hover:bg-grey-100 transition-colors shrink-0"
-          aria-label="عرض التفاصيل"
-        >
-          <Image
-            src="/shered/table/eye.svg"
-            alt="عرض"
-            width={20}
-            height={20}
-          />
-        </button>
-      )}
+    <div className="flex items-center ">
       {onDelete && (
         <button
           onClick={(e) => handleClick(e, onDelete)}
@@ -45,10 +33,36 @@ export function TableRowActions({ onView, onDelete }: TableRowActionsProps) {
           />
         </button>
       )}
+      {onEdit && (
+        <button
+          onClick={(e) => handleClick(e, onEdit)}
+          className="p-1 rounded hover:bg-grey-100 transition-colors shrink-0"
+          aria-label="تعديل"
+        >
+          <Image
+            src="/shered/table/edit.svg"
+            alt="تعديل"
+            width={20}
+            height={20}
+          />
+        </button>
+      )}
+      {onView && (
+        <button
+          onClick={(e) => handleClick(e, onView)}
+          className="p-1 rounded hover:bg-grey-100 transition-colors shrink-0"
+          aria-label="عرض التفاصيل"
+        >
+          <Image
+            src="/shered/table/eye.svg"
+            alt="عرض"
+            width={20}
+            height={20}
+          />
+        </button>
+      )}
     </div>
   );
 }
 
 export default TableRowActions;
-
-

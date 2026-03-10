@@ -1,4 +1,33 @@
 {
+  "auth": {
+    "forgotPassword": {
+      "title": "Forgot Password?",
+      "subtitle": "Please enter your email to reset your password",
+      "email": "Email",
+      "emailPlaceholder": "example@email.com",
+      "submit": "Confirm",
+      "backToLogin": "Logout",
+      "successMessage": "We will send a security code to your email"
+    },
+    "verifyOtp": {
+      "title": "Confirm your email",
+      "subtitle": "We will send a security code to your email",
+      "resendCode": "Resend code",
+      "expired": "Expired",
+      "submit": "Confirm",
+      "backToLogin": "Logout"
+    },
+    "resetPassword": {
+      "title": "Reset your password",
+      "newPassword": "New Password",
+      "newPasswordPlaceholder": "Password",
+      "confirmPassword": "Confirm Password",
+      "confirmPasswordPlaceholder": "Password",
+      "submit": "Confirm Password",
+      "backToLogin": "Logout",
+      "passwordMismatch": "Passwords do not match"
+    }
+  },
   "login": {
     "pageTitle": "All your clinic management tools in one place.",
     "welcomeTitle": "Welcome",
@@ -51,22 +80,115 @@
       "address": "Address",
       "storageFull": "% Full",
       "storageUsage": "{used}GB of {total}GB used",
-      "sendNotification": "Send Notification"
+      "sendNotification": "Send Notification",
+      "manager": "Clinic Manager",
+      "subscriptionPlan": "Subscription Plan",
+      "addonFeature": "+ Addon Feature",
+      "certificate": "Certificate",
+      "idDocument": "ID",
+      "managerPlaceholder": "Clinic Manager Name",
+      "defaultAddress": "Detailed Address, City, Governorate"
     },
     "columns": {
-      "id": "ID",
       "name": "Clinic Name",
       "package": "Package",
-      "subscriptionDate": "Subscription Date",
-      "expiryDate": "Expiry Date",
+      "managerName": "Manager Name",
+      "email": "Email",
+      "createdAt": "Created At",
+      "region": "Region",
       "paymentStatus": "Payment Status",
-      "status": "Status",
-      "doctorsCount": "Doctors Count",
+      "registrationRequest": "Registration Request",
       "actions": "Actions"
+    },
+    "registrationStatus": {
+      "accepted": "Accepted",
+      "pending": "Pending",
+      "rejected": "Rejected",
+      "suspended": "Suspended"
     },
     "payment": {
       "paid": "Paid",
       "unpaid": "Unpaid"
+    },
+    "wizard": {
+      "titleAdd": "Add Clinic",
+      "titleEdit": "Edit Clinic",
+      "next": "Next",
+      "back": "Back",
+      "submit": "Save",
+      "edit": "Edit",
+      "removeClinic": "Remove Clinic",
+      "confirmEditTitle": "Confirm Editing",
+      "confirmEditButton": "Confirm",
+      "confirmEditMessage": "Are you sure you want to confirm editing this clinic's data?",
+      "validation": {
+        "required": "This field is required",
+        "arabicOnly": "Name must be in Arabic only, no numbers or English letters",
+        "invalidEmail": "Invalid email address",
+        "egyptianPhone": "Phone must be Egyptian format (01xxxxxxxxx)",
+        "slugEnglish": "Slug must be English only (lowercase letters, numbers, and hyphens)"
+      },
+      "steps": {
+        "createClinic": "Create Clinic",
+        "verifyClinic": "Verify Clinic",
+        "subscription": "Subscription"
+      },
+      "step1": {
+        "clinicNameAr": "Clinic Name (Arabic)",
+        "clinicNameArPlaceholder": "Clinic Name",
+        "clinicNameEn": "Clinic Name (English)",
+        "clinicNameEnPlaceholder": "Clinic Name",
+        "clinicManager": "Clinic Manager",
+        "clinicManagerPlaceholder": "Clinic Manager Name",
+        "email": "Email",
+        "emailPlaceholder": "Email Address",
+        "phone": "Phone Number",
+        "phonePlaceholder": "Phone Number",
+        "governorate": "Governorate",
+        "governoratePlaceholder": "Select Governorate",
+        "city": "City",
+        "cityPlaceholder": "Enter City",
+        "address": "Address",
+        "addressPlaceholder": "Enter Full Address",
+        "slugPlaceholder": "Enter clinic slug"
+      },
+      "step2": {
+        "idCard": "ID Card Photo",
+        "idCardHint": "Please upload a clear photo of the ID card with visible national ID number",
+        "syndicateCard": "Syndicate Card Photo",
+        "uploadPlaceholder": "Upload Photo"
+      },
+      "step3": {
+        "assignPlan": "Assign Subscription Plan",
+        "existingPlan": "Existing Plans",
+        "customPlan": "Custom Plan",
+        "monthly": "Monthly",
+        "yearly": "Yearly",
+        "currency": "EGP",
+        "features": "Features",
+        "activationTime": "Set Activation Time",
+        "startDate": "Subscription Start Date",
+        "endDate": "Subscription End Date",
+        "paymentMethod": "Payment Method",
+        "paymentMethodPlaceholder": "Select Payment Method",
+        "paymentCash": "Cash",
+        "paymentOnline": "Online (Stripe/PayMob)",
+        "paymentFree": "Free",
+        "paymentStatus": "Payment Status",
+        "paid": "Paid",
+        "unpaid": "Unpaid",
+        "choosePrefix": "Choose",
+        "quantityPlaceholder": "Package limit",
+        "customPrice": "Package Price",
+        "customPricePlaceholder": "Enter custom package price",
+        "chooseLibraries": "Choose Libraries",
+        "libTreatments": "Treatments Library",
+        "libExercises": "Exercises Library",
+        "libModalities": "Modalities Library",
+        "libAssessments": "Assessments Library",
+        "libDevices": "Devices Library",
+        "libBodyRegions": "Body Regions Library"
+      }
     },
     "form": {
       "submit": "Add Clinic",
@@ -123,12 +245,32 @@
       "ownerLastName": {
         "label": "Manager Last Name",
         "placeholder": "Last Name"
+      },
+      "paymentType": {
+        "label": "Payment Type",
+        "placeholder": "Select Payment Type",
+        "cash": "Cash",
+        "stripe": "Stripe",
+        "paymob": "PayMob"
       }
     },
     "common": {
       "loading": "Loading...",
       "currency": "EGP",
-      "month": "Month"
+      "month": "Month",
+      "error": "An unexpected error occurred. Please try again."
+    },
+    "addonDrawer": {
+      "title": "Add Additional Feature",
+      "chooseFeatures": "Choose Features",
+      "chooseLibraries": "Choose Libraries",
+      "packageLimit": "Package Limit",
+      "submitButton": "Add Feature",
+      "validation": {
+        "required": "At least one feature must be selected",
+        "dateOrder": "End date must be after start date for: "
+      },
+      "defaultFeatureName": "Additional Feature"
     },
     "deleteClinicTitle": "Delete Clinic",
     "deleteClinicConfirmationMessage": "Are you sure you want to delete clinic",
@@ -143,28 +285,47 @@
   "subscriptions": {
     "pageTitle": "Subscriptions",
     "addPackage": "+ Add Financial Plan",
+    "addFinancialPlan": "Add Financial Plan",
     "addFeature": "+ Add Feature",
-    "addCustomCategory": "+ Add Custom Category",
     "editPackage": "Edit Plan",
     "deletePackage": "Delete Plan",
     "newest": "Newest",
-    "tabs": {
-      "subscriptions": "Subscriptions",
-      "financialPlans": "Financial Plans",
-      "customCategories": "Custom Categories"
+    "monthly": "Monthly",
+    "yearly": "Yearly",
+    "planName": "Financial Plan Name",
+    "planDetails": "Financial Plan Details",
+    "features": "Financial Plan Features",
+    "chooseFeatures": "Choose features",
+    "libraries": "Choose Libraries",
+    "billingCycle": "Set Subscription Duration",
+    "price": "Financial Plan Price",
+    "limitPlaceholder": "Package limit",
+    "billingMonthly": "Monthly Plan",
+    "billingYearly": "Yearly Plan",
+    "noFeatures": "No features",
+    "validation": {
+      "planNameRequired": "Please enter a plan name",
+      "atLeastOneFeature": "At least one feature must be selected",
+      "validPrice": "Please enter a valid price"
+    },
+    "placeholders": {
+      "planName": "e.g. Expert",
+      "planDetails": "e.g. Suitable for beginner clinics",
+      "price": "e.g. 1200 EGP"
     },
     "drawer": {
       "addFinancialPlan": "Add Financial Plan",
-      "editFinancialPlan": "Edit Plan",
+      "editFinancialPlan": "Edit Financial Plan",
       "addFeature": "Add Financial Feature",
-      "editFeature": "Edit Feature",
-      "addCustomPlan": "Add Custom Financial Plan",
-      "editCustomCategory": "Edit Custom Category"
+      "editFeature": "Edit Feature"
     },
     "form": {
       "addFinancialPlan": "Add Financial Plan",
       "addFeature": "Add Financial Feature",
-      "saveChanges": "Save Changes"
+      "saveChanges": "Save Changes",
+      "cancel": "Cancel",
+      "save": "Save",
+      "saving": "Saving..."
     },
     "deleteModal": {
       "title": "Remove Financial Plan",
@@ -183,11 +344,6 @@
       "day": "day"
     },
     "feature": {
-      "currency": "EGP"
-    },
-    "customCategory": {
-      "features": "Features",
-      "editPlan": "Edit Plan",
       "currency": "EGP"
     }
   },
@@ -227,13 +383,20 @@
     "pageTitle": "Audit Logs",
     "noData": "No logs found",
     "columns": {
-      "clinicName": "Clinic Name",
-      "managerName": "Manager Name",
-      "loginDate": "Daily Login",
-      "failedLogins": "Failed Logins",
-      "users": "Users",
-      "storage": "Storage",
-      "actions": "Actions"
+      "id": "ID",
+      "userName": "User Name",
+      "userRole": "Role",
+      "userEmail": "Email",
+      "time": "Time",
+      "date": "Date",
+      "registrationCode": "Registration Code",
+      "category": "Category",
+      "message": "Message",
+      "status": "Status"
+    },
+    "status": {
+      "success": "Success",
+      "failed": "Failed"
     },
     "actions": {
       "view": "View",

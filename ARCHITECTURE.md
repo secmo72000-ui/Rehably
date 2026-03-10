@@ -387,18 +387,20 @@ src/
 ```
 src/
 ├── app/
-│   ├── [locale]/                 # i18n routing
+│   ├── [locale]/                 # i18n routing (pages only)
 │   │   ├── (auth)/              # Login, OTP, Reset, Create Password
-│   │   ├── (owner)/             # Platform Owner Portal
+│   │   ├── (Owner)/             # Platform Owner Portal
 │   │   ├── (clinic)/            # Clinic Staff Portal
 │   │   └── (patient)/           # Patient Portal
-│   ├── api/auth/[...nextauth]/   # NextAuth API
 │   └── globals.css
 │
-├── domains/                      # Business Logic
-│   ├── auth/
+├── domains/                      # Domain-First: each domain owns its types, service, store
+│   ├── auth/                    # Types + Service + Store + Utils
 │   ├── users/
 │   ├── clinics/
+│   ├── roles/
+│   ├── packages/
+│   ├── features/
 │   ├── appointments/
 │   ├── patients/
 │   ├── exercises/
@@ -408,13 +410,37 @@ src/
 │   ├── audit/
 │   └── notifications/
 │
+├── services/                    # Shared infrastructure only (api-client)
+├── stores/                      # Non-domain stores only (theme)
 ├── permissions/
-├── services/
 ├── ui/
 ├── shared/
-├── stores/
 └── configs/
 ```
+
+> **Architecture Decision (2026-03-06): Domain-First**
+>
+> Each domain folder contains ALL related files: types, service (API calls),
+> store (Zustand state), utils, and constants. This enables:
+> - **Colocation**: Everything for a feature in one folder
+> - **Scalability**: 11+ domains stay organized
+> - **Extractability**: A domain can be moved to a separate package/app trivially
+> - **Encapsulation**: Cross-domain coupling is explicit and visible
+>
+> Only truly shared infrastructure lives outside domains:
+> - `src/services/api-client.ts` — Axios instance (used by all domain services)
+> - `src/stores/theme.store.ts` — UI theme (not domain-specific)
+>
+> Domain folder structure:
+> ```
+> src/domains/{domain}/
+> ├── {domain}.types.ts      — Interfaces, enums, type definitions
+> ├── {domain}.service.ts    — API calls (imports api-client)
+> ├── {domain}.store.ts      — Zustand store (imports service + types)
+> ├── {domain}.utils.ts      — Pure helper functions (optional)
+> ├── {domain}.constants.ts  — Enums, constants (optional)
+> └── index.ts               — Barrel export
+> ```
 
 ### 1.2 Core Configuration Files
 
@@ -789,11 +815,42 @@ src/
 │   ├── api/auth/[...nextauth]/
 │   └── globals.css
 │
-├── domains/                      # Business Logic (Pure TS)
+├── domains/                      # Domain-First: types + service + store per domain
 │   ├── auth/
 │   │   ├── auth.types.ts
+│   │   ├── auth.service.ts
+│   │   ├── auth.store.ts
 │   │   ├── auth.rules.ts        # OTP required, first-visit password
-│   │   └── auth.utils.ts
+│   │   └── index.ts
+│   ├── clinics/
+│   │   ├── clinics.types.ts
+│   │   ├── clinics.service.ts
+│   │   ├── clinics.store.ts
+│   │   ├── clinics.utils.ts
+│   │   └── index.ts
+│   ├── roles/
+│   │   ├── roles.types.ts
+│   │   ├── roles.service.ts
+│   │   ├── roles.store.ts
+│   │   └── index.ts
+│   ├── users/
+│   │   ├── users.types.ts
+│   │   ├── users.service.ts
+│   │   ├── users.store.ts
+│   │   ├── admin-users.types.ts
+│   │   ├── admin-users.service.ts
+│   │   ├── admin-users.store.ts
+│   │   └── index.ts
+│   ├── packages/
+│   │   ├── packages.types.ts
+│   │   ├── packages.service.ts
+│   │   ├── packages.store.ts
+│   │   └── index.ts
+│   ├── features/
+│   │   ├── features.types.ts
+│   │   ├── features.service.ts
+│   │   ├── features.store.ts
+│   │   └── index.ts
 │   ├── appointments/
 │   │   ├── appointments.types.ts
 │   │   ├── appointments.rules.ts # 24h reschedule rule
@@ -803,7 +860,6 @@ src/
 │   │   ├── visits.rules.ts      # Session lifecycle
 │   │   └── soap.types.ts
 │   ├── billing/
-│   ├── clinics/
 │   ├── doctors/
 │   ├── exercises/
 │   ├── patients/
@@ -817,17 +873,8 @@ src/
 │   └── hooks.ts                 # usePermission, useRole
 │
 ├── services/
-│   ├── api-client.ts
-│   ├── auth.service.ts
-│   ├── appointments.service.ts
-│   ├── billing.service.ts
-│   ├── clinics.service.ts
-│   ├── doctors.service.ts
-│   ├── exercises.service.ts
-│   ├── patients.service.ts
-│   ├── subscriptions.service.ts
-│   ├── visits.service.ts
-│   └── mocks/                   # Mock data for development
+│   ├── api-client.ts            # Shared Axios instance (only shared infra)
+│   └── index.ts                 # Re-exports api-client
 │
 ├── ui/
 │   ├── primitives/
@@ -872,9 +919,8 @@ src/
 │       └── en.json
 │
 ├── stores/
-│   ├── auth.store.ts
-│   ├── theme.store.ts
-│   └── ui.store.ts
+│   ├── theme.store.ts           # Non-domain store (UI theme)
+│   └── index.ts                 # Re-exports from domains
 │
 └── configs/
     ├── navigation.ts            # Menu items per role

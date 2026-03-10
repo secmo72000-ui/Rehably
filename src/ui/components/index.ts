@@ -15,3 +15,7 @@ export * from './TabNavigator';
 export * from './PackageCard';
 export * from './Modal';
 export * from './DataCell';
+export * from './FeatureSelection';
+export * from './ForgotPasswordForm';
+export * from './VerifyOtpForm';
+export * from './ResetPasswordForm';

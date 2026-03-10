@@ -23,10 +23,14 @@ export interface PackageCardProps {
     features: PackageFeature[];
     /** Is this package featured/highlighted */
     isFeatured?: boolean;
-    /** Edit handler */
-    onEdit: () => void;
-    /** Delete handler */
-    onDelete: () => void;
+    /** Edit handler (management mode) */
+    onEdit?: () => void;
+    /** Delete handler (management mode) */
+    onDelete?: () => void;
+    /** Select handler (selection mode — for wizard) */
+    onSelect?: () => void;
+    /** Whether this card is selected (selection mode) */
+    isSelected?: boolean;
     /** Additional className */
     className?: string;
 }
@@ -47,16 +51,23 @@ export function PackageCard({
     isFeatured = false,
     onEdit,
     onDelete,
+    onSelect,
+    isSelected = false,
     className,
 }: PackageCardProps) {
+    const highlighted = isFeatured || isSelected;
+    const isSelectable = !!onSelect;
+
     return (
         <div
+            onClick={isSelectable ? onSelect : undefined}
             className={cn(
                 "relative bg-white rounded-3xl p-6 transition-all duration-200",
                 "border-2",
-                isFeatured
+                highlighted
                     ? "border-Primary-500 shadow-lg"
                     : "border-gray-200 hover:border-Primary-300 hover:shadow-md",
+                isSelectable && "cursor-pointer",
                 className
             )}
         >
@@ -106,37 +117,41 @@ export function PackageCard({
                 ))}
             </ul>
 
-            {/* Action Buttons - Edit and Delete */}
-            <div className="flex items-center gap-3">
-            
-
-                {/* Edit Button */}
-                <button
-                    onClick={onEdit}
-                    className={cn(
-                        "flex-1 py-3 rounded-lg font-medium text-sm transition-colors",
-                        isFeatured
-                            ? "bg-Primary-500 text-white hover:bg-Primary-600"
-                            : "border-2 border-Primary-500 text-Primary-600 hover:bg-Primary-50"
+            {/* Action Buttons - Only in management mode */}
+            {(onEdit || onDelete) && (
+                <div className="flex items-center gap-3">
+                    {/* Edit Button */}
+                    {onEdit && (
+                        <button
+                            onClick={(e) => { e.stopPropagation(); onEdit(); }}
+                            className={cn(
+                                "flex-1 py-3 rounded-lg font-medium text-sm transition-colors",
+                                highlighted
+                                    ? "bg-Primary-500 text-white hover:bg-Primary-600"
+                                    : "border-2 border-Primary-500 text-Primary-600 hover:bg-Primary-50"
+                            )}
+                        >
+                            تعديل الخطة
+                        </button>
                     )}
-                >
-                    تعديل الخطة
-                </button>
                     {/* Delete Button */}
-                <button
-                    onClick={onDelete}
-                    className="p-3 hover:bg-red-50 rounded-lg transition-colors group border border-gray-300"
-                    aria-label="Delete package"
-                >
-                    <Image
-                        src="/shered/trash.svg"
-                        alt="Delete"
-                        width={20}
-                        height={20}
-                        className="opacity-60 group-hover:opacity-100"
-                    />
-                </button>
-            </div>
+                    {onDelete && (
+                        <button
+                            onClick={(e) => { e.stopPropagation(); onDelete(); }}
+                            className="p-3 hover:bg-red-50 rounded-lg transition-colors group border border-gray-300"
+                            aria-label="Delete package"
+                        >
+                            <Image
+                                src="/shered/trash.svg"
+                                alt="Delete"
+                                width={20}
+                                height={20}
+                                className="opacity-60 group-hover:opacity-100"
+                            />
+                        </button>
+                    )}
+                </div>
+            )}
         </div>
     );
 }

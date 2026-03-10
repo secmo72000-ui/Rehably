@@ -1,5 +1,5 @@
 import { DynamicFormConfig } from '@/ui/components';
-import { Package } from '@/services/packages.service';
+import type { Package } from '@/domains/packages/packages.types';
 
 const billingCycleOptions = (t: (key: string) => string) => [
   { value: '0', label: t('form.billingCycle.monthly') },
@@ -83,7 +83,7 @@ export const getAddClinicFormConfig = (
         },
       ],
     },
-    // Row 5: اللوجو
+
     {
       fields: [
         {
@@ -94,7 +94,7 @@ export const getAddClinicFormConfig = (
         },
       ],
     },
-    // Row 6: الباقة + دورة الفوترة
+  
     {
       fields: [
         {
@@ -118,7 +118,23 @@ export const getAddClinicFormConfig = (
         },
       ],
     },
-    // Row 7: بريد مدير العيادة
+  
+    {
+      fields: [
+        {
+          name: 'paymentType',
+          label: t('form.paymentType.label'),
+          type: 'select',
+          placeholder: t('form.paymentType.placeholder'),
+          required: true,
+          options: [
+            { value: '0', label: t('form.paymentType.cash') },
+            { value: '1', label: t('form.paymentType.stripe') },
+            { value: '2', label: t('form.paymentType.paymob') },
+          ],
+        },
+      ],
+    },
     {
       fields: [
         {

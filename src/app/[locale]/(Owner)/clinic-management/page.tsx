@@ -1,25 +1,17 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import { getTranslation } from '@/shared/i18n';
 import type { Locale } from '@/configs/i18n.config';
-import { Table, Drawer, DynamicForm, FormData, ConfirmationModal } from '@/ui/components';
+import { Table, Drawer, ConfirmationModal } from '@/ui/components';
 import { Button } from '@/ui/primitives';
-import { ClinicDetails } from './components';
-import { useClinicsStore } from '@/stores/clinics.store';
-import { Clinic, CreateClinicRequest } from '@/domains/clinics/clinics.types';
-import { packagesService, Package } from '@/services/packages.service';
+import { ClinicDetails, ClinicWizard } from './components';
+import { Clinic } from '@/domains/clinics/clinics.types';
 import { calculateActiveClinics } from '@/domains/clinics/clinics.utils';
-import { getAddClinicFormConfig } from './configs/form.config';
 import { getClinicsTableColumns } from './configs/table.config';
-import { sortByDate, getFriendlyErrorMessage } from '@/shared/utils';
-
-// Drawer types
-type DrawerType = 'add' | 'view' | null;
-
-// Sort types
-type SortDirection = 'asc' | 'desc';
+import { sortByDate } from '@/shared/utils';
+import { useClinicManagement } from './hooks/useClinicManagement';
 
 // ========== Page Component ==========
 export default function ClinicManagementPage() {
@@ -27,129 +19,49 @@ export default function ClinicManagementPage() {
   const locale = params.locale as Locale;
   const t = (key: string) => getTranslation(locale, `clinicManagement.${key}`);
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
-
-  // Packages state
-  const [packages, setPackages] = useState<Package[]>([]);
-  const [packagesLoading, setPackagesLoading] = useState(false);
-
-  // Delete Modal State
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [clinicToDelete, setClinicToDelete] = useState<Clinic | null>(null);
-  const [deleteStatus, setDeleteStatus] = useState<'idle' | 'success' | 'error'>('idle');
-  const [deleteErrorMessage, setDeleteErrorMessage] = useState('');
-
-  // Zustand store
+  // All logic is inside the hook
   const {
     clinics,
     isLoading,
     isCreating,
+    isUpdating,
     error,
     totalCount,
     totalPages,
+    pageView,
+    editingClinic,
+    packages,
+    packagesLoading,
+    features,
+    categories,
+    featuresLoading,
+    selectedClinic,
+    isDeleteModalOpen,
+    clinicToDelete,
+    deleteStatus,
+    deleteErrorMessage,
+    currentPage,
+    sortDirection,
+    setCurrentPage,
+    setSortDirection,
     fetchClinics,
-    createClinic,
-    deleteClinic,
-    clearError,
-  } = useClinicsStore();
-
-  // Drawer state
-  const [drawerType, setDrawerType] = useState<DrawerType>(null);
-  const [selectedClinic, setSelectedClinic] = useState<Clinic | null>(null);
+    openAddWizard,
+    openEditWizard,
+    closeWizard,
+    openViewDrawer,
+    closeViewDrawer,
+    openDeleteModal,
+    setIsDeleteModalOpen,
+    setClinicToDelete,
+    setDeleteStatus,
+    handleConfirmDelete,
+    handleWizardSubmit,
+  } = useClinicManagement(t);
 
   // Fetch clinics on mount
   useEffect(() => {
     fetchClinics(currentPage, 20);
   }, [fetchClinics, currentPage]);
-
-  // Fetch packages when drawer opens
-  const fetchPackages = async () => {
-    if (packages.length > 0) return; // Already fetched
-    setPackagesLoading(true);
-    try {
-      const data = await packagesService.getActive();
-      setPackages(data);
-    } catch (err) {
-      console.error('Failed to fetch packages:', err);
-    } finally {
-      setPackagesLoading(false);
-    }
-  };
-
-  // Open add drawer
-  const openAddDrawer = () => {
-    setDrawerType('add');
-    setSelectedClinic(null);
-    clearError();
-    fetchPackages(); // Fetch packages when opening add drawer
-  };
-
-  // Open view drawer
-  const openViewDrawer = (clinic: Clinic) => {
-    setDrawerType('view');
-    setSelectedClinic(clinic);
-  };
-
-  // Close drawer
-  const closeDrawer = () => {
-    setDrawerType(null);
-    setSelectedClinic(null);
-    clearError();
-  };
-
-  // Handle form submit
-  const handleAddClinic = async (data: FormData) => {
-    // Build the request object with all required fields
-    const request: CreateClinicRequest = {
-      clinicName: data.clinicName as string,
-      clinicNameArabic: data.clinicNameArabic as string | undefined,
-      phone: data.phone as string,
-      email: data.email as string,
-      address: data.address as string | undefined,
-      city: data.city as string | undefined,
-      country: data.country as string | undefined,
-      logoUrl: data.logoUrl as string | undefined,
-      packageId: Number(data.packageId),
-      billingCycle: Number(data.billingCycle),
-      ownerEmail: data.ownerEmail as string,
-      ownerFirstName: data.ownerFirstName as string,
-      ownerLastName: data.ownerLastName as string,
-    };
-
-    const result = await createClinic(request);
-    if (result) {
-      closeDrawer();
-    }
-  };
-
-  // Open Delete Modal
-  const openDeleteModal = (clinic: Clinic) => {
-    setClinicToDelete(clinic);
-    setDeleteStatus('idle');
-    setDeleteErrorMessage('');
-    setIsDeleteModalOpen(true);
-  };
-
-  // Handle Confirm Delete
-  const handleConfirmDelete = async () => {
-    if (clinicToDelete) {
-      if (deleteStatus === 'error') {
-        // Retry scenario
-        // setDeleteStatus('idle');
-      }
-
-      const success = await deleteClinic(clinicToDelete.id);
-
-      if (success) {
-        setDeleteStatus('success');
-      } else {
-        const currentError = useClinicsStore.getState().error;
-        setDeleteErrorMessage(getFriendlyErrorMessage(currentError || '', t));
-        setDeleteStatus('error');
-      }
-    }
-  };
 
   // Toggle sort direction
   const handleSortToggle = () => {
@@ -172,35 +84,96 @@ export default function ClinicManagementPage() {
       getClinicsTableColumns({
         t,
         onView: openViewDrawer,
+        onEdit: openEditWizard,
         onDelete: openDeleteModal,
       }),
-    [t]
+    [t, openViewDrawer, openEditWizard, openDeleteModal]
   );
 
-  // Get form config from config file
-  const addClinicFormConfig = useMemo(
-    () => getAddClinicFormConfig(packages, packagesLoading, t),
-    [packages, packagesLoading, t]
+  // Render Delete Modal shared across views
+  const renderDeleteModal = () => (
+    <ConfirmationModal
+      isOpen={isDeleteModalOpen}
+      onClose={() => {
+        setIsDeleteModalOpen(false);
+        // Small delay to clear state after modal closes
+        setTimeout(() => {
+          setClinicToDelete(null);
+          setDeleteStatus('idle');
+        }, 300);
+      }}
+      onConfirm={handleConfirmDelete}
+      title={t('deleteClinicTitle') || "حذف العيادة"}
+      confirmText={t('confirmationModal.confirm')}
+      cancelText={t('confirmationModal.cancel')}
+      variant="danger"
+      isLoading={isLoading}
+      status={deleteStatus}
+      errorMessage={deleteErrorMessage}
+      successMessage={`${t('confirmationModal.successTitle')} ${clinicToDelete?.name}`}
+      successButtonText={t('confirmationModal.successButton')}
+      retryButtonText={t('confirmationModal.retryButton')}
+    >
+      <p className="text-gray-600 text-lg">
+        {t('deleteClinicConfirmationMessage') || "هل تريد حقا القيام بحذف عيادة"}
+        <br />
+        <span className="font-bold text-gray-900">
+          &quot;{clinicToDelete?.name}&quot;
+        </span>
+        ؟
+      </p>
+    </ConfirmationModal>
   );
 
-  // Drawer config based on type
-  const getDrawerTitle = () => {
-    switch (drawerType) {
-      case 'add':
-        return t('addClinic');
-      case 'view':
-        return t('clinicDetails');
-      default:
-        return '';
-    }
-  };
+  // If wizard is active, show it instead of the table
+  if (pageView === 'wizard') {
+    return (
+      <>
+        <ClinicWizard
+          clinic={editingClinic}
+          packages={packages}
+          packagesLoading={packagesLoading}
+          features={features}
+          categories={categories}
+          featuresLoading={featuresLoading}
+          t={t}
+          isRtl={locale === 'ar'}
+          isSubmitting={isCreating || isUpdating}
+          onSubmit={handleWizardSubmit}
+          onClose={closeWizard}
+        />
+        {renderDeleteModal()}
+      </>
+    );
+  }
+
+  // If details view is active, show the details directly
+  if (pageView === 'details' && selectedClinic) {
+    const clinicPackage = packages.find(p => String(p.id) === String(selectedClinic.subscriptionPlanId));
+
+    return (
+      <>
+        <ClinicDetails
+          clinic={selectedClinic}
+          packageDetails={clinicPackage}
+          features={features}
+          categories={categories}
+          featuresLoading={featuresLoading}
+          onClose={closeViewDrawer}
+          onEdit={() => openEditWizard(selectedClinic)}
+          onDelete={() => openDeleteModal(selectedClinic)}
+        />
+        {renderDeleteModal()}
+      </>
+    );
+  }
 
   return (
     <div className="space-y-6">
       {/* Header with Add Button */}
       <div className="flex justify-between items-center">
         <h1 className="text-xl font-bold text-gray-900">{t('pageTitle')}</h1>
-        <Button onClick={openAddDrawer} variant="primary">
+        <Button onClick={openAddWizard} variant="primary">
           {t('addClinic')}
         </Button>
       </div>
@@ -225,7 +198,7 @@ export default function ClinicManagementPage() {
         }}
         pagination={{
           currentPage,
-          totalPages: totalPages || 1, // Use server-side pagination
+          totalPages: totalPages || 1,
           onPageChange: setCurrentPage,
         }}
         footerContent={
@@ -240,66 +213,8 @@ export default function ClinicManagementPage() {
         }
       />
 
-      {/* Drawer */}
-      <Drawer
-        isOpen={!!drawerType}
-        onClose={closeDrawer}
-        title={getDrawerTitle()}
-        size="lg"
-      >
-        {/* Add Clinic Form */}
-        {drawerType === 'add' && (
-          <DynamicForm
-            config={addClinicFormConfig}
-            onSubmit={handleAddClinic}
-            isLoading={isCreating}
-          />
-        )}
-
-        {/* View Clinic Details */}
-        {drawerType === 'view' && selectedClinic && (
-          <ClinicDetails
-            clinic={selectedClinic}
-            onSendNotification={() =>
-              console.log('Send notification to:', selectedClinic?.id)
-            }
-          // No delete button in details view anymore
-          />
-        )}
-      </Drawer>
-
       {/* Delete Confirmation Modal */}
-      <ConfirmationModal
-        isOpen={isDeleteModalOpen}
-        onClose={() => {
-          setIsDeleteModalOpen(false);
-          // Small delay to clear state after modal closes
-          setTimeout(() => {
-            setClinicToDelete(null);
-            setDeleteStatus('idle');
-          }, 300);
-        }}
-        onConfirm={handleConfirmDelete}
-        title={t('deleteClinicTitle') || "حذف العيادة"}
-        confirmText={t('confirmationModal.confirm')}
-        cancelText={t('confirmationModal.cancel')}
-        variant="danger"
-        isLoading={isLoading}
-        status={deleteStatus}
-        errorMessage={deleteErrorMessage}
-        successMessage={`${t('confirmationModal.successTitle')} ${clinicToDelete?.name}`}
-        successButtonText={t('confirmationModal.successButton')}
-        retryButtonText={t('confirmationModal.retryButton')}
-      >
-        <p className="text-gray-600 text-lg">
-          {t('deleteClinicConfirmationMessage') || "هل تريد حقا القيام بحذف عيادة"}
-          <br />
-          <span className="font-bold text-gray-900">
-            &quot;{clinicToDelete?.name}&quot;
-          </span>
-          ؟
-        </p>
-      </ConfirmationModal>
+      {renderDeleteModal()}
     </div>
   );
 }

@@ -7,7 +7,7 @@ import type { Locale } from '@/configs/i18n.config';
 import { StatsCard, Table, type TableColumn, PaymentStatusBadge } from '@/ui/components';
 import { SubscriptionsChart, SalesChart } from './components';
 import Image from 'next/image';
-import { useAuthStore } from '@/stores/auth.store';
+import { useAuthStore } from '@/domains/auth/auth.store';
 
 // ========== Types ==========
 interface Subscription {
@@ -57,7 +57,7 @@ const mockSubscriptions: Subscription[] = [
     invoiceNumber: 'INV-001'
   },
   {
-    id: 'Sub-10',
+    id: 'Sub-11',
     clinicName: 'أحمد منصور',
     package: 'Package-1',
     paymentDate: '01/02/2025',
@@ -67,7 +67,7 @@ const mockSubscriptions: Subscription[] = [
     invoiceNumber: 'INV-002'
   },
   {
-    id: 'Sub-10',
+    id: 'Sub-12',
     clinicName: 'أحمد منصور',
     package: 'Package-1',
     paymentDate: '01/02/2025',
@@ -77,7 +77,7 @@ const mockSubscriptions: Subscription[] = [
     invoiceNumber: 'INV-003'
   },
   {
-    id: 'Sub-10',
+    id: 'Sub-13',
     clinicName: 'أحمد منصور',
     package: 'Package-1',
     paymentDate: '01/02/2025',

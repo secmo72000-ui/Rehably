@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { getTranslation } from "@/shared/i18n";
 import type { Locale } from "@/configs/i18n.config";
 import { Input, Button } from "@/ui/primitives";
-import { useAuthStore } from "@/stores/auth.store";
+import { useAuthStore } from "@/domains/auth/auth.store";
 
 interface PatientLoginFormProps {
   locale: Locale;
