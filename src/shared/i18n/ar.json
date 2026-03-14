@@ -463,14 +463,32 @@
       "reports": "التقارير",
       "users": "المستخدمين",
       "roles": "الأدوار",
-      "platform": "المنصة"
+      "platform": "المنصة",
+      "dashboard": "الرئيسية",
+      "audit_logs": "تسجيلات الدخول",
+      "platform_users": "مديرين المنصة",
+      "packages": "الباقات",
+      "features": "الميزات"
     },
+    "edit": "تعديل",
+    "delete": "حذف",
+    "updateRole": "تحديث الدور",
+    "deleteRole": "حذف الدور",
+    "confirmDelete": "حذف",
+    "cancel": "إلغاء",
+    "deleteSuccess": "تم حذف الدور بنجاح",
+    "deleteError": "حدث خطأ أثناء حذف الدور",
+    "deleteConfirmMessage": "هل أنت متأكد من حذف الدور",
+    "deleteWarningUsers": "هذا الدور مرتبط بمستخدمين نشطين",
     "drawer": {
-      "addRole": "اضافة دور"
+      "addRole": "اضافة دور",
+      "editRole": "تعديل الدور"
     },
     "form": {
       "roleName": "اسم الدور",
       "roleNamePlaceholder": "مثال : مساعد ادمن",
+      "roleDescription": "وصف الدور",
+      "roleDescriptionPlaceholder": "وصف مختصر للدور",
       "selectPermissions": "الصلاحيات"
     },
     "validation": {

@@ -463,14 +463,32 @@
       "reports": "Reports",
       "users": "Users",
       "roles": "Roles",
-      "platform": "Platform"
+      "platform": "Platform",
+      "dashboard": "Dashboard",
+      "audit_logs": "Login Records",
+      "platform_users": "Platform Admins",
+      "packages": "Packages",
+      "features": "Features"
     },
+    "edit": "Edit",
+    "delete": "Delete",
+    "updateRole": "Update Role",
+    "deleteRole": "Delete Role",
+    "confirmDelete": "Delete",
+    "cancel": "Cancel",
+    "deleteSuccess": "Role deleted successfully",
+    "deleteError": "An error occurred while deleting the role",
+    "deleteConfirmMessage": "Are you sure you want to delete the role",
+    "deleteWarningUsers": "This role has active users assigned to it",
     "drawer": {
-      "addRole": "Add Role"
+      "addRole": "Add Role",
+      "editRole": "Edit Role"
     },
     "form": {
       "roleName": "Role Name",
       "roleNamePlaceholder": "e.g. Admin Assistant",
+      "roleDescription": "Role Description",
+      "roleDescriptionPlaceholder": "Brief description of the role",
       "selectPermissions": "Permissions"
     },
     "validation": {
