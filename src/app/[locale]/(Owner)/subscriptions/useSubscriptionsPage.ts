@@ -115,6 +115,11 @@ export function useSubscriptionsPage(): UseSubscriptionsPageReturn {
             const success = await archivePackage(packageToDelete);
             if (success) {
                 setDeleteStatus('success');
+                setTimeout(() => {
+                    setDeleteModalOpen(false);
+                    setPackageToDelete(null);
+                    setDeleteStatus('idle');
+                }, 1500);
             } else {
                 setDeleteStatus('error');
                 setDeleteErrorMessage(error || t('deleteModal.errorMessage'));
@@ -181,7 +186,7 @@ export function useSubscriptionsPage(): UseSubscriptionsPageReturn {
             billingCycle: 'monthly', // default
             selectedFeatures: allFeatures.map(f => ({
                 featureId: String(f.featureId),
-                limit: f.quantity || 0
+                limit: f.limit || 0
             })),
             selectedLibraries: [] // form should handle identifying which features are libraries
         };

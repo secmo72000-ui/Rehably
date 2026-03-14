@@ -21,13 +21,13 @@ function buildFeaturesList(form: FinancialPlanFormValues): CreatePackageRequest[
     return [
         ...form.selectedFeatures.map((f) => ({
             featureId: toFeatureId(f.featureId),
-            quantity: f.limit || 0,
+            limit: f.limit || 0,
             calculatedPrice: 0,
             isIncluded: true
         })),
         ...form.selectedLibraries.map((libId) => ({
             featureId: toFeatureId(libId),
-            quantity: 0,
+            limit: 0,
             calculatedPrice: 0,
             isIncluded: true
         }))
