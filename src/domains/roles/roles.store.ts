@@ -1,16 +1,18 @@
 import { create } from 'zustand';
 import { rolesService } from './roles.service';
-import { Role, Permission, CreateRolePayload, UpdateRolePayload } from './roles.types';
+import { Role, Permission, PlatformPermissionMatrix, CreateRolePayload, UpdateRolePayload } from './roles.types';
 
 interface RolesState {
     roles: Role[];
     permissions: Permission[];
+    platformPermissions: PlatformPermissionMatrix | null;
     isLoading: boolean;
     error: string | null;
-    
+
     // Actions
     fetchRoles: () => Promise<void>;
     fetchPermissions: () => Promise<void>;
+    fetchPlatformPermissions: () => Promise<void>;
     createRole: (data: CreateRolePayload) => Promise<void>;
     updateRole: (id: string, data: UpdateRolePayload) => Promise<void>;
     deleteRole: (id: string) => Promise<void>;
@@ -19,6 +21,7 @@ interface RolesState {
 export const useRolesStore = create<RolesState>((set, get) => ({
     roles: [],
     permissions: [],
+    platformPermissions: null,
     isLoading: false,
     error: null,
 
@@ -35,13 +38,25 @@ export const useRolesStore = create<RolesState>((set, get) => ({
     fetchPermissions: async () => {
         // Don't refetch if already loaded
         if (get().permissions.length > 0) return;
-        
+
         set({ isLoading: true, error: null });
         try {
             const permissions = await rolesService.getPermissions();
             set({ permissions, isLoading: false });
         } catch (error: any) {
             set({ isLoading: false, error: error.message || 'Failed to fetch permissions' });
+        }
+    },
+
+    fetchPlatformPermissions: async () => {
+        if (get().platformPermissions) return;
+
+        set({ isLoading: true, error: null });
+        try {
+            const matrix = await rolesService.getPlatformPermissions();
+            set({ platformPermissions: matrix, isLoading: false });
+        } catch (error: any) {
+            set({ isLoading: false, error: error.message || 'Failed to fetch platform permissions' });
         }
     },
 
@@ -73,9 +88,9 @@ export const useRolesStore = create<RolesState>((set, get) => ({
         set({ isLoading: true, error: null });
         try {
             await rolesService.delete(id);
-            set(state => ({ 
+            set(state => ({
                 roles: state.roles.filter(r => r.id !== id),
-                isLoading: false 
+                isLoading: false
             }));
         } catch (error: any) {
             set({ isLoading: false, error: error.message || 'Failed to delete role' });

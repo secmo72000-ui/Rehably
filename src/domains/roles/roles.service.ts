@@ -1,50 +1,58 @@
 import { apiClient } from '@/services/api-client';
-import { 
-    CreateRolePayload, 
-    UpdateRolePayload, 
-    RolesResponse, 
-    PermissionResponse 
+import type { ApiResponse, PaginatedResponse } from '@/shared/types/common.types';
+import {
+    CreateRolePayload,
+    UpdateRolePayload,
+    Role,
+    Permission,
+    PlatformPermissionMatrix
 } from './roles.types';
 
 export const rolesService = {
     /**
      * Get all platform roles
      */
-    getAll: async () => {
-        const response = await apiClient.get<RolesResponse>('/api/admin/roles');
-        return response.data.value;
+    getAll: async (): Promise<Role[]> => {
+        const response = await apiClient.get<ApiResponse<Role[]>>('/api/admin/roles');
+        return response.data.data;
     },
 
     /**
-     * Get all available permissions
-     * Uses /api/admin/permissions with high pageSize to get all permissions
+     * Get all available permissions (generic endpoint)
      */
-    getPermissions: async () => {
-        const response = await apiClient.get<PermissionResponse>('/api/admin/permissions?page=1&pageSize=1000');
-        return response.data.items || [];
+    getPermissions: async (): Promise<Permission[]> => {
+        const response = await apiClient.get<ApiResponse<PaginatedResponse<Permission>>>('/api/admin/permissions?page=1&pageSize=1000');
+        return response.data.data.items || [];
+    },
+
+    /**
+     * Get platform permission matrix (structured with localized names)
+     */
+    getPlatformPermissions: async (): Promise<PlatformPermissionMatrix> => {
+        const response = await apiClient.get<ApiResponse<PlatformPermissionMatrix>>('/api/admin/permissions/platform');
+        return response.data.data;
     },
 
     /**
      * Create a new platform role
      */
     create: async (data: CreateRolePayload) => {
-        const response = await apiClient.post('/api/admin/roles', data);
-        return response.data;
+        const response = await apiClient.post<ApiResponse<Role>>('/api/admin/roles', data);
+        return response.data.data;
     },
 
     /**
      * Update an existing role
      */
     update: async (id: string, data: UpdateRolePayload) => {
-        const response = await apiClient.put(`/api/admin/roles/${id}`, data);
-        return response.data;
+        const response = await apiClient.put<ApiResponse<Role>>(`/api/admin/roles/${id}`, data);
+        return response.data.data;
     },
 
     /**
      * Delete a role
      */
     delete: async (id: string) => {
-        const response = await apiClient.delete(`/api/admin/roles/${id}`);
-        return response.data;
+        await apiClient.delete(`/api/admin/roles/${id}`);
     }
 };

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { TabNavigator, Drawer } from '@/ui/components';
+import { TabNavigator, Drawer, ConfirmationModal } from '@/ui/components';
 import { Button, GeneralInput } from '@/ui/primitives';
 import { getTranslation } from '@/shared/i18n';
 import type { Locale } from '@/configs/i18n.config';
@@ -27,6 +27,8 @@ export default function RolesPage() {
             router.push(`/${locale}/settings/users`);
         }
     };
+
+    const isEditMode = controller.editingRole !== null;
 
     return (
         <div className="space-y-6">
@@ -62,6 +64,8 @@ export default function RolesPage() {
                         roles={controller.paginatedRoles}
                         selectedRoleId={controller.selectedRoleId}
                         onSelectRole={controller.setSelectedRoleId}
+                        onEdit={controller.openEditDrawer}
+                        onDelete={controller.handleDeleteRole}
                         locale={locale}
                         pagination={{
                             currentPage: controller.currentPage,
@@ -75,17 +79,20 @@ export default function RolesPage() {
                 <div className="md:col-span-9">
                     <PermissionsView
                         role={controller.selectedRole}
-                        allPermissions={controller.permissions}
+                        allPermissions={controller.platformPermissionsList}
                         locale={locale}
                     />
                 </div>
             </div>
 
-            {/* Add Role Drawer */}
+            {/* Add/Edit Role Drawer */}
             <Drawer
                 isOpen={controller.isDrawerOpen}
                 onClose={controller.closeDrawer}
-                title={t('drawer.addRole') || 'اضافة دور'}
+                title={isEditMode
+                    ? (t('drawer.editRole') || 'تعديل الدور')
+                    : (t('drawer.addRole') || 'اضافة دور')
+                }
                 size="lg"
             >
                 <div className="space-y-6">
@@ -99,8 +106,24 @@ export default function RolesPage() {
                             value={controller.newRoleName}
                             onChange={controller.setNewRoleName}
                             placeholder={t('form.roleNamePlaceholder') || 'مثال : مساعد ادمن'}
+                            disabled={isEditMode}
                         />
                     </div>
+
+                    {/* Role Description Input (shown in edit mode) */}
+                    {isEditMode && (
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                {t('form.roleDescription') || 'وصف الدور'}
+                            </label>
+                            <GeneralInput
+                                type="text"
+                                value={controller.newRoleDescription}
+                                onChange={controller.setNewRoleDescription}
+                                placeholder={t('form.roleDescriptionPlaceholder') || 'وصف مختصر للدور'}
+                            />
+                        </div>
+                    )}
 
                     {/* Permissions Selection using PermissionsView (editable mode) */}
                     <div>
@@ -109,9 +132,7 @@ export default function RolesPage() {
                         </label>
                         <div className="max-h-[400px] overflow-y-auto">
                             <PermissionsView
-                                allPermissions={controller.permissions.filter(p =>
-                                    ['dashboard', 'clinics', 'subscriptions', 'invoices', 'audit_logs', 'settings', 'roles', 'packages', 'features', 'platform_users'].includes(p.resource)
-                                )}
+                                allPermissions={controller.platformPermissionsList}
                                 locale={locale}
                                 editable={true}
                                 selectedPermissions={controller.selectedFormPermissions}
@@ -124,14 +145,43 @@ export default function RolesPage() {
                     <Button
                         type="button"
                         fullWidth
-                        isLoading={controller.isCreating}
-                        disabled={controller.isCreating || !controller.newRoleName.trim()}
-                        onClick={controller.handleCreateRole}
+                        isLoading={controller.isSubmitting}
+                        disabled={controller.isSubmitting || (!isEditMode && !controller.newRoleName.trim())}
+                        onClick={controller.handleSubmit}
                     >
-                        {t('addRole') || 'اضافة دور'}
+                        {isEditMode
+                            ? (t('updateRole') || 'تحديث الدور')
+                            : (t('addRole') || 'اضافة دور')
+                        }
                     </Button>
                 </div>
             </Drawer>
+
+            {/* Delete Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={controller.deleteModalOpen}
+                onClose={controller.closeDeleteModal}
+                onConfirm={controller.confirmDelete}
+                title={t('deleteRole') || 'حذف الدور'}
+                confirmText={t('confirmDelete') || 'حذف'}
+                cancelText={t('cancel') || 'إلغاء'}
+                isLoading={controller.isDeleting}
+                variant="danger"
+                status={controller.deleteStatus}
+                successMessage={t('deleteSuccess') || 'تم حذف الدور بنجاح'}
+                errorMessage={t('deleteError') || 'حدث خطأ أثناء حذف الدور'}
+            >
+                <p className="text-gray-600">
+                    {t('deleteConfirmMessage') || 'هل أنت متأكد من حذف الدور'}
+                    {' '}
+                    <strong>{controller.roleToDelete?.name}</strong>؟
+                </p>
+                {(controller.roleToDelete?.userCount ?? 0) > 0 && (
+                    <p className="text-red-500 text-sm mt-2">
+                        {t('deleteWarningUsers') || `هذا الدور مرتبط بـ ${controller.roleToDelete?.userCount} مستخدم`}
+                    </p>
+                )}
+            </ConfirmationModal>
         </div>
     );
 }

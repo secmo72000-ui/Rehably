@@ -27,12 +27,6 @@ export interface Role {
     createdAt?: string;
 }
 
-// Response from /api/admin/roles
-export interface RolesResponse {
-    value: Role[];
-    isSuccess: boolean;
-}
-
 // Payload for creating a role
 export interface CreateRolePayload {
     name: string;
@@ -43,4 +37,23 @@ export interface CreateRolePayload {
 export interface UpdateRolePayload {
     description?: string;
     permissions: string[];
+}
+
+// Platform permission matrix from /api/admin/permissions/platform
+export interface PlatformPermissionAction {
+    action: string;       // e.g., "view"
+    permission: string;   // e.g., "clinics.view"
+    nameEn: string;       // e.g., "View"
+    nameAr: string;       // e.g., "قراءة"
+}
+
+export interface PlatformPermissionResource {
+    resource: string;     // e.g., "clinics"
+    nameEn: string;       // e.g., "Clinic Management"
+    nameAr: string;       // e.g., "ادارة العيادات"
+    actions: PlatformPermissionAction[];
+}
+
+export interface PlatformPermissionMatrix {
+    resources: PlatformPermissionResource[];
 }
