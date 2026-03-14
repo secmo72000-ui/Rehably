@@ -33,16 +33,6 @@ export const packagesService = {
     return response.data.data;
   },
 
-  /** Get features for a specific package (public endpoint, no auth needed) */
-  getPackageFeatures: async (packageId: number | string): Promise<Package['features']> => {
-    const response = await apiClient.get(`/api/public/packages/${packageId}/features`);
-    const result = response.data;
-    // Handle ApiResponse envelope
-    if (result && Array.isArray(result.data)) return result.data;
-    if (Array.isArray(result)) return result;
-    return [];
-  },
-
   archive: async (id: number | string): Promise<void> => {
     await apiClient.post(`/api/admin/packages/${id}/archive`);
   },
