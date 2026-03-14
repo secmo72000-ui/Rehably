@@ -370,6 +370,8 @@
     },
     "totals": {
       "subtotal": "Subtotal",
+      "tax": "Tax",
+      "addOns": "Add-ons",
       "total": "Total",
       "currency": "EGP"
     },
