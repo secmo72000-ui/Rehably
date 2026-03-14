@@ -1,4 +1,5 @@
 import { apiClient } from '@/services/api-client';
+import type { ApiResponse } from '@/shared/types/common.types';
 import { AuditLogsResponse, GetAuditLogsParams } from './audit.types';
 
 export const auditService = {
@@ -10,8 +11,8 @@ export const auditService = {
             queryParams[key] = value;
         }
     });
-    
-    const response = await apiClient.get<AuditLogsResponse>('/api/admin/audit-logs', { params: queryParams });
-    return response.data;
+
+    const response = await apiClient.get<ApiResponse<AuditLogsResponse>>('/api/admin/audit-logs', { params: queryParams });
+    return response.data.data;
   },
 };

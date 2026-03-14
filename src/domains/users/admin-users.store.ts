@@ -31,8 +31,8 @@ export const useAdminUsersStore = create<AdminUsersState>((set, get) => ({
   fetchUsers: async () => {
     set({ isLoading: true, error: null });
     try {
-      const response = await adminUsersService.getAll();
-      set({ users: response.value || [], isLoading: false });
+      const users = await adminUsersService.getAll();
+      set({ users: users || [], isLoading: false });
     } catch (error: any) {
       set({ error: error.message || 'Failed to fetch users', isLoading: false });
     }

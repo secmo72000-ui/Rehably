@@ -16,7 +16,7 @@ export interface TransformedPackage {
 export function mapPackageFeaturesToDisplay(pkg: Package) {
     return (
         pkg.features?.map((f) => ({
-            text: `${f.feature?.name || ''}${f.quantity > 0 ? `: ${f.quantity}` : ''}`,
+            text: `${f.featureName || ''}${f.limit && f.limit > 0 ? `: ${f.limit}` : ''}`,
         })) || []
     );
 }

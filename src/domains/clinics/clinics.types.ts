@@ -78,13 +78,6 @@ export interface Clinic {
 
 // ============ Create Clinic Request (POST) ============
 
-export interface ClinicDocument {
-  documentType: number;
-  base64Content: string;
-  fileName: string;
-  contentType: string;
-}
-
 export interface CreateClinicRequest {
   clinicName: string;
   clinicNameArabic?: string;
@@ -100,9 +93,9 @@ export interface CreateClinicRequest {
   ownerFirstName: string;
   ownerLastName: string;
   paymentType?: PaymentType;
-  documents?: ClinicDocument[];
+  ownerIdDocument?: File;
+  medicalLicenseDocument?: File;
   customTrialDays?: number;
-  settings?: Record<string, string>;
 }
 
 // ============ Create Clinic Response (POST) ============

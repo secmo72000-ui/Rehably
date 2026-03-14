@@ -27,15 +27,17 @@ export interface Package {
   createdAt: string;
   updatedAt: string | null;
   features?: Array<{
+    id?: number | string;
+    packageId?: number | string;
     featureId: number | string;
-    quantity: number;
-    calculatedPrice: number;
+    featureName?: string;
+    featureCode?: string;
+    featurePrice?: number;
+    pricingType?: number;
+    perUnitPrice?: number | null;
     isIncluded: boolean;
-    feature?: {
-        id: number | string;
-        name: string;
-        description: string;
-    }
+    limit?: number | null;
+    calculatedPrice: number;
   }>;
 }
 
@@ -47,8 +49,8 @@ export interface CreatePackageRequest {
     trialDays: number;
     features: Array<{
         featureId: number | string;
-        quantity: number;
-        calculatedPrice: number;
+        limit?: number | null;
+        calculatedPrice?: number;
         isIncluded: boolean;
     }>;
     code?: string;
