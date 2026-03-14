@@ -61,18 +61,7 @@ export function useClinicManagement(t: (key: string) => string) {
             const fetchPackagesTask = async () => {
                 if (packages.length > 0) return;
                 const data = await packagesService.getActive();
-                const packagesWithFeatures = await Promise.all(
-                    data.map(async (pkg: Package) => {
-                        if (pkg.features && pkg.features.length > 0) return pkg;
-                        try {
-                            const features = await packagesService.getPackageFeatures(pkg.id);
-                            return { ...pkg, features: features || [] };
-                        } catch {
-                            return pkg;
-                        }
-                    })
-                );
-                setPackages(packagesWithFeatures);
+                setPackages(data);
             };
 
             const fetchFeaturesTask = async () => {
@@ -141,6 +130,11 @@ export function useClinicManagement(t: (key: string) => string) {
         const success = await deleteClinic(clinicToDelete.id);
         if (success) {
             setDeleteStatus('success');
+            setTimeout(() => {
+                setIsDeleteModalOpen(false);
+                setClinicToDelete(null);
+                setDeleteStatus('idle');
+            }, 1500);
         } else {
             const currentError = useClinicsStore.getState().error;
             setDeleteErrorMessage(getFriendlyErrorMessage(currentError || '', t));
@@ -169,6 +163,14 @@ export function useClinicManagement(t: (key: string) => string) {
             } else {
                 let clinicData = { ...data };
 
+                // Attach document files for form-data upload
+                if (documents.idCard) {
+                    clinicData.ownerIdDocument = documents.idCard;
+                }
+                if (documents.syndicateCard) {
+                    clinicData.medicalLicenseDocument = documents.syndicateCard;
+                }
+
                 if (customPackage && customPackage.features.length > 0) {
                     try {
                         const pkgCode = `custom-${data.clinicName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-${Date.now()}`;
@@ -183,7 +185,7 @@ export function useClinicManagement(t: (key: string) => string) {
                             isPublic: false,
                             features: customPackage.features.map((f) => ({
                                 featureId: f.featureId,
-                                quantity: f.quantity,
+                                limit: f.quantity,
                                 calculatedPrice: 0,
                                 isIncluded: true,
                             })),
