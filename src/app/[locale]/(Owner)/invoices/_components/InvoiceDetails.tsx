@@ -4,44 +4,18 @@ import React from 'react';
 import { Button } from '@/ui/primitives';
 import { useLocale } from '@/shared/hooks';
 import { getTranslation } from '@/shared/i18n';
+import { AdminInvoice, getPaymentStatusKey } from '@/domains/invoices';
 
 export interface InvoiceDetailsProps {
-    id: string;
-    amount: number;
-    status: 'paid' | 'rejected' | 'pending';
-    issueDate: string;
-    dueDate: string;
-    customerName: string;
-    customerEmail: string;
-    invoiceNumber: string;
-    country: string;
-    subscriptionPlan: string;
-    renewalType: string;
-    billingPeriod: string;
-    subtotal: number;
-    total: number;
-    description?: string;
+    invoice: AdminInvoice;
+    onDownloadPdf: () => void;
 }
 
-export function InvoiceDetails({
-    id,
-    amount,
-    status,
-    issueDate,
-    dueDate,
-    customerName,
-    customerEmail,
-    invoiceNumber,
-    country,
-    subscriptionPlan,
-    renewalType,
-    billingPeriod,
-    subtotal,
-    total,
-    description,
-}: InvoiceDetailsProps) {
+export function InvoiceDetails({ invoice, onDownloadPdf }: InvoiceDetailsProps) {
     const { locale } = useLocale();
     const t = (key: string) => getTranslation(locale, `invoices.${key}`);
+
+    const statusKey = getPaymentStatusKey(invoice.paymentStatus);
 
     const statusConfig = {
         paid: { label: t('status.paid'), color: 'bg-confirm-50 text-confirm-600' },
@@ -49,33 +23,35 @@ export function InvoiceDetails({
         pending: { label: t('status.pending'), color: 'bg-warning-50 text-warning-600' },
     };
 
-    const statusInfo = statusConfig[status];
+    const statusInfo = statusConfig[statusKey];
 
-    const handleDownloadPDF = () => {
-        console.log('Download PDF for invoice:', id);
-        // TODO: Implement PDF download
+    const formatDate = (dateStr: string) => {
+        try {
+            return new Date(dateStr).toLocaleDateString(locale === 'ar' ? 'en-GB' : locale);
+        } catch {
+            return dateStr;
+        }
     };
+
+    const billingPeriod = `${formatDate(invoice.billingPeriodStart)} - ${formatDate(invoice.billingPeriodEnd)}`;
 
     return (
         <div className="space-y-6">
             {/* Header Row: Title + Price */}
             <div className="flex items-start justify-between pb-4">
-
-
-                {/* Title and Dates - Right side in RTL */}
                 <div className="flex flex-col items-start">
                     <h2 className="text-2xl-bold text-text">{t('invoiceTitle')}</h2>
                     <div className="flex items-center gap-2 mt-2">
-                        <span className="text-sm-regular text-subtitle">{dueDate}</span>
+                        <span className="text-sm-regular text-subtitle">{formatDate(invoice.dueDate)}</span>
                         <span className="text-subtitle">|</span>
-                        <span className="text-sm-regular text-subtitle">{issueDate}</span>
+                        <span className="text-sm-regular text-subtitle">
+                            {invoice.paidAt ? formatDate(invoice.paidAt) : formatDate(invoice.billingPeriodStart)}
+                        </span>
                     </div>
                 </div>
 
-
-                {/* Price and Status - Left side in RTL */}
                 <div className="flex flex-col items-end gap-2">
-                    <h3 className="text-5xl-bold text-text">${amount}</h3>
+                    <h3 className="text-5xl-bold text-text">{invoice.totalAmount} {invoice.currency}</h3>
                     <span className={`px-3 py-1 rounded-full text-sm-medium ${statusInfo.color}`}>
                         {statusInfo.label}
                     </span>
@@ -84,14 +60,14 @@ export function InvoiceDetails({
             <div className="bg-[#F8F9FA] p-4 space-y-6">
 
                 {/* Customer Information */}
-                <div className=" rounded-xl ">
+                <div className="rounded-xl">
                     <h4 className="text-lg-bold text-text mb-4 text-start">{t('customerInfo.title')}</h4>
                     <div className="bg-white py-3 px-6 rounded-lg space-y-4">
                         {[
-                            { label: t('customerInfo.name'), value: customerName },
-                            { label: t('customerInfo.email'), value: customerEmail },
-                            { label: t('customerInfo.invoiceNumber'), value: invoiceNumber },
-                            { label: t('customerInfo.country'), value: country },
+                            { label: t('customerInfo.name'), value: invoice.clinicName },
+                            { label: t('customerInfo.email'), value: invoice.clinicEmail },
+                            { label: t('customerInfo.invoiceNumber'), value: invoice.invoiceNumber },
+                            { label: t('customerInfo.country'), value: invoice.clinicCountry || '-' },
                         ].map((row, index) => (
                             <div key={index} className="flex items-center justify-between">
                                 <p className="text-base-bold text-text">{row.label}</p>
@@ -103,45 +79,47 @@ export function InvoiceDetails({
 
                 {/* Invoice Items */}
                 <div className="bg-white rounded-xl p-6">
-                    <div className="flex items-center justify-between mb-6 pb-3 border-b border-[#EFF1F3] ">
+                    <div className="flex items-center justify-between mb-6 pb-3 border-b border-[#EFF1F3]">
                         <h4 className="text-lg-bold text-text">{t('invoiceItems.subscriptionDetails')}</h4>
                         <h4 className="text-lg-bold text-text">{t('invoiceItems.title')}</h4>
                     </div>
-                    
 
                     <div className="space-y-6">
                         <div className="flex items-center justify-between">
-                            <p className="text-base-regulartext-subtitle">{t('invoiceItems.subscriptionPlan')}</p>
-                            <p className="text-base-regular text-text">{subscriptionPlan}</p>
+                            <p className="text-base-regular text-subtitle">{t('invoiceItems.subscriptionPlan')}</p>
+                            <p className="text-base-regular text-text">{invoice.packageName}</p>
                         </div>
                         <div className="flex items-center justify-between">
-                            <p className="text-base-regular-subtitle">{t('invoiceItems.renewalType')}</p>
-                            <p className="text-base-regular text-text">{renewalType}</p>
+                            <p className="text-base-regular text-subtitle">{t('invoiceItems.renewalType')}</p>
+                            <p className="text-base-regular text-text">{invoice.transactionType || '-'}</p>
                         </div>
-                        {description && (
-                            <div className="flex items-center justify-between p-4 bg-[#F8F9FA] rounded-lg">
-                                <p className="text-base-regular text-subtitle">{t('invoiceItems.subscriptionDetails')}</p>
-                                <p className="text-lg-bold text-text">{description}</p>
-                            </div>
-                        )}
+                        <div className="flex items-center justify-between p-4 bg-[#F8F9FA] rounded-lg">
+                            <p className="text-base-regular text-subtitle">{t('invoiceItems.subscriptionDetails')}</p>
+                            <p className="text-lg-bold text-text">{billingPeriod}</p>
+                        </div>
                     </div>
-
                 </div>
 
                 {/* Totals */}
                 <div className="space-y-3 bg-grey-50 rounded-xl p-6">
                     <div className="flex items-center justify-between">
-                        <p className="text-base-regular text-text">{subtotal}</p>
+                        <p className="text-base-regular text-text">{invoice.amount} {invoice.currency}</p>
                         <p className="text-base-semibold text-text">{t('totals.subtotal')}</p>
                     </div>
-                    {description && (
+                    {invoice.taxAmount > 0 && (
                         <div className="flex items-center justify-between text-sm-regular">
-                            <p className="text-subtitle">{subtotal}</p>
-                            <p className="text-subtitle">{t('totals.subtotal')}</p>
+                            <p className="text-subtitle">{invoice.taxAmount} {invoice.currency} ({invoice.taxRate}%)</p>
+                            <p className="text-subtitle">{t('totals.tax') || 'الضريبة'}</p>
+                        </div>
+                    )}
+                    {invoice.addOnsAmount > 0 && (
+                        <div className="flex items-center justify-between text-sm-regular">
+                            <p className="text-subtitle">{invoice.addOnsAmount} {invoice.currency}</p>
+                            <p className="text-subtitle">{t('totals.addOns') || 'الإضافات'}</p>
                         </div>
                     )}
                     <div className="flex items-center justify-between pt-3 border-t border-grey-200">
-                        <p className="text-2xl-bold text-text">{total} {t('totals.currency')}</p>
+                        <p className="text-2xl-bold text-text">{invoice.totalAmount} {t('totals.currency')}</p>
                         <p className="text-lg-bold text-text">{t('totals.total')}</p>
                     </div>
                 </div>
@@ -166,7 +144,7 @@ export function InvoiceDetails({
 
             {/* Download Button */}
             <Button
-                onClick={handleDownloadPDF}
+                onClick={onDownloadPdf}
                 variant="primary"
                 fullWidth
                 className="mt-6"
