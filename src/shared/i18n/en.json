@@ -385,6 +385,7 @@
     "columns": {
       "id": "ID",
       "userName": "User Name",
+      "clinicName": "Clinic",
       "userRole": "Role",
       "userEmail": "Email",
       "time": "Time",

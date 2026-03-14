@@ -385,6 +385,7 @@
     "columns": {
       "id": "ID",
       "userName": "اسم المستخدم",
+      "clinicName": "العيادة",
       "userRole": "الرول",
       "userEmail": "البريد الالكتروني",
       "time": "التوقيت",

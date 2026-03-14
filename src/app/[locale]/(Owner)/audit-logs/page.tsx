@@ -70,7 +70,7 @@ export default function AuditLogsPage() {
             )
         },
         { key: 'userRole', header: t('columns.userRole'), render: (val) => val || '-' },
-        { key: 'clinicName', header: t('columns.userName'), render: (val) => val || '-' },
+        { key: 'clinicName', header: t('columns.clinicName'), render: (val) => val || '-' },
         { key: 'id', header: t('columns.id'), render: (val) => String(val).substring(14, 21).toUpperCase() },
     ];
 
