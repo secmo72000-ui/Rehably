@@ -377,7 +377,18 @@
       "footerText": "Electronic subscription invoice issued by",
       "platformName": "Rehably"
     },
-    "downloadPDF": "Download Invoice as PDF"
+    "downloadPDF": "Download Invoice as PDF",
+    "noData": "No invoices found",
+    "columns": {
+      "clinicName": "Clinic Name",
+      "paymentDate": "Payment Date",
+      "dueDate": "Due Date",
+      "paymentMethod": "Payment Method",
+      "amountPaid": "Amount Paid",
+      "status": "Payment Status",
+      "printInvoice": "Print Invoice",
+      "actions": "Actions"
+    }
   },
   "auditLogs": {
     "pageTitle": "Audit Logs",

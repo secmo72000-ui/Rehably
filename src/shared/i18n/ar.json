@@ -377,7 +377,18 @@
       "footerText": "فاتورة اشتراك إلكترونية صادرة من منصة",
       "platformName": "Rehably"
     },
-    "downloadPDF": "تحميل الفاتورة كملف PDF"
+    "downloadPDF": "تحميل الفاتورة كملف PDF",
+    "noData": "لا توجد فواتير",
+    "columns": {
+      "clinicName": "اسم العيادة",
+      "paymentDate": "تاريخ الدفع",
+      "dueDate": "تاريخ الاستحقاق",
+      "paymentMethod": "طريقة الدفع",
+      "amountPaid": "المبلغ المدفوع",
+      "status": "حالة الدفع",
+      "printInvoice": "طباعة الفاتورة",
+      "actions": "تفاصيل"
+    }
   },
   "auditLogs": {
     "pageTitle": "سجل الأنشطة",
