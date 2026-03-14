@@ -9,6 +9,21 @@ import { Table, type TableColumn } from '@/ui/components';
 import { useAuditLogsPage } from './useAuditLogsPage';
 import { AuditLogDto } from '@/domains/audit';
 
+function formatDetails(val: unknown): string {
+    if (!val || typeof val !== 'string') return '-';
+    try {
+        const parsed = JSON.parse(val);
+        if (typeof parsed === 'object' && parsed !== null) {
+            return Object.entries(parsed)
+                .map(([k, v]) => `${k}: ${v}`)
+                .join(', ');
+        }
+        return String(parsed);
+    } catch {
+        return val;
+    }
+}
+
 // ========== Page Component ==========
 export default function AuditLogsPage() {
     const params = useParams();
@@ -37,7 +52,11 @@ export default function AuditLogsPage() {
                 </div>
             )
         },
-        { key: 'details', header: t('columns.message'), render: (val) => val || '-' },
+        { key: 'details', header: t('columns.message'), render: (val) => (
+            <span className="block max-w-[250px] truncate" title={typeof val === 'string' ? val : ''}>
+                {formatDetails(val)}
+            </span>
+        ) },
         { key: 'entityName', header: t('columns.category'), render: (val) => val || '-' },
         { key: 'date_key' as any, header: t('columns.date'), render: (_, row) => new Date(row.timestamp).toLocaleDateString(locale === 'ar' ? 'en-GB' : locale) },
         { key: 'time_key' as any, header: t('columns.time'), render: (_, row) => new Date(row.timestamp).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }) },
