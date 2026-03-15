@@ -25,8 +25,11 @@ export function InfoGrid({ clinic, t, isRtl }: InfoGridProps) {
                 <div className="w-10 h-10 rounded-full bg-blue-50/50 flex items-center justify-center text-[#1da0f2]">
                     <UsersIcon />
                 </div>
-                <span className="text-gray-600 font-medium">
-                    {clinic.usersLimit ? `${clinic.usersLimit} ${t('details.users')}` : t('details.notSpecified')}
+                <span className="text-gray-600 font-medium flex items-center gap-1">
+                    <span dir="ltr">
+                        {clinic.usersLimit ? `${clinic.usersCount} / ${clinic.usersLimit}` : clinic.usersCount}
+                    </span>
+                    <span>{t('details.users')}</span>
                 </span>
             </div>
 

@@ -10,6 +10,7 @@ import type { SidebarItem } from "@/ui/components/Sidebar";
 const OWNER_ICONS = {
   home: "/Admin/Sidebar/Main.svg",
   clinicManagement: "/Admin/Sidebar/Clinics-Management.svg",
+  libraries: "/Admin/Sidebar/lib.svg",
   subscriptions: "/Admin/Sidebar/Subscriptions.svg",
   invoices: "/Admin/Sidebar/Bills.svg",
   reports: "/Admin/Sidebar/Reports.svg",
@@ -40,6 +41,12 @@ export function getOwnerSidebarItems(
       label: t("sidebar.clinicManagement"),
       href: `${basePath}/clinic-management`,
       iconSrc: OWNER_ICONS.clinicManagement,
+    },
+    {
+      id: "libraries",
+      label: t("sidebar.libraries"),
+      href: `${basePath}/libraries`,
+      iconSrc: OWNER_ICONS.libraries,
     },
     {
       id: "subscriptions",

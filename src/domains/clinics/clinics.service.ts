@@ -19,7 +19,7 @@ export const clinicsService = {
   getAll: async (params: ClinicListParams = {}): Promise<PaginatedClinicsResponse> => {
     const { page = 1, pageSize = 20, ...restParams } = params;
     const response = await apiClient.get<ApiResponse<PaginatedClinicsResponse>>('/api/admin/clinics', {
-      params: { Page: page, PageSize: pageSize, ...restParams },
+      params: { page, pageSize, ...restParams },
     });
     return response.data.data;
   },

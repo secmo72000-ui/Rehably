@@ -41,6 +41,7 @@
   "sidebar": {
     "home": "Home",
     "clinicManagement": "Clinic Management",
+    "libraries": "Libraries",
     "subscriptions": "Subscriptions",
     "invoices": "Invoices",
     "reports": "Reports",
