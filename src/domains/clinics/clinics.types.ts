@@ -206,14 +206,16 @@ export function isNearStorageLimit(clinic: Clinic): boolean {
 
 // ============ Add-Ons ============
 
+export type AddOnStatus = 'Active' | 'Cancelled' | 'Expired' | 'Suspended';
+
 export interface AddOnDto {
   id: string;
   featureId: string;
   featureName: string;
   limit: number;
   price: number;
-  paymentType: number;
-  status: number;
+  paymentType: string;
+  status: AddOnStatus;
   startDate: string;
   endDate: string;
 }
@@ -228,6 +230,7 @@ export interface AvailableAddOnDto {
   perUnitPrice: number;
   minQuantity: number;
   maxQuantity: number;
+  currentAddonLimit: number;
 }
 
 export interface CreateAddOnRequestDto {

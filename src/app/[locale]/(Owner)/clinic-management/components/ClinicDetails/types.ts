@@ -11,4 +11,5 @@ export interface ClinicDetailsProps {
     onClose: () => void;
     onEdit: () => void;
     onDelete: () => void;
+    onRefresh?: () => void;
 }

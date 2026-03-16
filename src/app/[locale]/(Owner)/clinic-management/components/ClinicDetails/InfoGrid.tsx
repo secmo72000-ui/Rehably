@@ -1,15 +1,27 @@
 import { cn } from "@/shared/utils/cn";
 import { rtlTextAlign, rtlFlexReverse } from '@/shared/utils/rtl.utils';
-import { Clinic } from "@/domains/clinics/clinics.types";
+import { Clinic, AddOnDto } from "@/domains/clinics/clinics.types";
 import { PhoneIcon, UsersIcon, PackageIcon, LocationIcon, FileFolderIcon } from './icons';
 
 interface InfoGridProps {
     clinic: Clinic;
+    addons?: AddOnDto[];
     t: (key: string) => string;
     isRtl: boolean;
 }
 
-export function InfoGrid({ clinic, t, isRtl }: InfoGridProps) {
+function PatientsIcon() {
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+        </svg>
+    );
+}
+
+export function InfoGrid({ clinic, addons = [], t, isRtl }: InfoGridProps) {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-10 gap-x-6 pb-2">
             <div className={cn("flex items-center gap-3 col-span-1", isRtl ? "justify-start" : "justify-start flex-row-reverse")}>
@@ -25,7 +37,7 @@ export function InfoGrid({ clinic, t, isRtl }: InfoGridProps) {
                 <div className="w-10 h-10 rounded-full bg-blue-50/50 flex items-center justify-center text-[#1da0f2]">
                     <UsersIcon />
                 </div>
-                <span className="text-gray-600 font-medium flex items-center gap-1">
+                <span className="text-gray-600 font-medium flex items-center gap-1" title={clinic.usersLimit ? `${t('details.total')}: ${clinic.usersLimit}` : ''}>
                     <span dir="ltr">
                         {clinic.usersLimit ? `${clinic.usersCount} / ${clinic.usersLimit}` : clinic.usersCount}
                     </span>
@@ -42,7 +54,19 @@ export function InfoGrid({ clinic, t, isRtl }: InfoGridProps) {
                 </span>
             </div>
 
-            {/* Row 2 */}
+            <div className={cn("flex items-center gap-3 col-span-1", isRtl ? "justify-start" : "justify-start flex-row-reverse")}>
+                <div className="w-10 h-10 rounded-full bg-blue-50/50 flex items-center justify-center text-[#1da0f2]">
+                    <PatientsIcon />
+                </div>
+                <span className="text-gray-600 font-medium flex items-center gap-1" title={clinic.patientsLimit ? `${t('details.total')}: ${clinic.patientsLimit}` : ''}>
+                    <span dir="ltr">
+                        {clinic.patientsLimit ? `${clinic.patientsCount} / ${clinic.patientsLimit}` : clinic.patientsCount}
+                    </span>
+                    <span>{t('details.patients')}</span>
+                </span>
+            </div>
+
+            {/* Row 2 - was Row 3 */}
             <div className={cn("flex items-center gap-3 col-span-1 lg:col-span-1 md:col-span-2", isRtl ? "justify-start" : "justify-start flex-row-reverse")}>
                 <div className="w-10 h-10 rounded-full bg-blue-50/50 flex items-center justify-center text-[#1da0f2] flex-shrink-0">
                     <LocationIcon />

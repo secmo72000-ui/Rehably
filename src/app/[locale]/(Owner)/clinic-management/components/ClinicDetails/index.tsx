@@ -1,12 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { getTranslation } from '@/shared/i18n';
 import type { Locale } from '@/configs/i18n.config';
 import { cn } from "@/shared/utils/cn";
 import { bytesToGB } from '@/shared/utils/format.utils';
 import { rtlTextAlign } from '@/shared/utils/rtl.utils';
+import { clinicsService } from '@/domains/clinics/clinics.service';
+import type { AddOnDto } from '@/domains/clinics/clinics.types';
 
 import { ClinicDetailsProps } from './types';
 import { ClinicDetailsHeader } from './ClinicDetailsHeader';
@@ -26,11 +28,52 @@ export function ClinicDetails({
     onClose,
     onEdit,
     onDelete,
+    onRefresh,
 }: ClinicDetailsProps) {
     const [isAddonDrawerOpen, setIsAddonDrawerOpen] = useState(false);
+    const [addons, setAddons] = useState<AddOnDto[]>([]);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const params = useParams();
     const locale = params.locale as Locale;
     const t = (key: string) => getTranslation(locale, `clinicManagement.${key}`);
+
+    const fetchAddons = useCallback(async () => {
+        if (!clinic?.id) return;
+        try {
+            const data = await clinicsService.getAddOns(clinic.id);
+            setAddons(data);
+        } catch {
+            // Silent fail — addons are supplementary
+        }
+    }, [clinic?.id]);
+
+    useEffect(() => {
+        fetchAddons();
+    }, [fetchAddons]);
+
+    const showSuccess = (message: string) => {
+        setSuccessMessage(message);
+        setTimeout(() => setSuccessMessage(null), 3000);
+    };
+
+    const handleCancelAddon = async (addOnId: string) => {
+        if (!clinic?.id) return;
+        await clinicsService.cancelAddOn(clinic.id, addOnId);
+        await fetchAddons();
+        onRefresh?.();
+        showSuccess(t('details.addonCancelled'));
+    };
+
+    const handleAddonDrawerClose = () => {
+        setIsAddonDrawerOpen(false);
+    };
+
+    const handleAddonCreated = async () => {
+        setIsAddonDrawerOpen(false);
+        await fetchAddons();
+        onRefresh?.();
+        showSuccess(t('details.addonCreated'));
+    };
 
     if (!clinic) return null;
 
@@ -85,6 +128,7 @@ export function ClinicDetails({
 
                 <InfoGrid
                     clinic={clinic}
+                    addons={addons}
                     t={t}
                     isRtl={isRtl}
                 />
@@ -92,15 +136,24 @@ export function ClinicDetails({
                 <PackageSection
                     clinic={clinic}
                     packageDetails={packageDetails}
+                    addons={addons}
+                    onCancelAddon={handleCancelAddon}
                     onAddFeatureClick={() => setIsAddonDrawerOpen(true)}
                     t={t}
                     isRtl={isRtl}
                 />
+
+                {successMessage && (
+                    <div className="p-3 bg-green-50 text-green-700 rounded-lg text-sm font-medium text-center">
+                        {successMessage}
+                    </div>
+                )}
             </div>
 
             <AddOnDrawer
                 isOpen={isAddonDrawerOpen}
-                onClose={() => setIsAddonDrawerOpen(false)}
+                onClose={handleAddonDrawerClose}
+                onSuccess={handleAddonCreated}
                 clinicId={clinic.id}
                 isRtl={isRtl}
                 t={t}

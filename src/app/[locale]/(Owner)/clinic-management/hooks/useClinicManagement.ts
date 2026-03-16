@@ -117,6 +117,17 @@ export function useClinicManagement(t: (key: string) => string) {
         setSelectedClinic(null);
     }, []);
 
+    const refreshClinicDetail = useCallback(async () => {
+        if (!selectedClinic) return;
+        try {
+            const { clinicsService } = await import('@/domains/clinics/clinics.service');
+            const updated = await clinicsService.getById(selectedClinic.id);
+            setSelectedClinic(updated);
+        } catch {
+            // Silent fail — will still show stale data
+        }
+    }, [selectedClinic]);
+
     const openDeleteModal = useCallback((clinic: Clinic) => {
         setClinicToDelete(clinic);
         setDeleteStatus('idle');
@@ -244,5 +255,6 @@ export function useClinicManagement(t: (key: string) => string) {
         setDeleteStatus,
         handleConfirmDelete,
         handleWizardSubmit,
+        refreshClinicDetail,
     };
 }

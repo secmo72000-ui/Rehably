@@ -56,6 +56,7 @@ export default function ClinicManagementPage() {
     setDeleteStatus,
     handleConfirmDelete,
     handleWizardSubmit,
+    refreshClinicDetail,
   } = useClinicManagement(t);
 
   // Fetch clinics on mount
@@ -162,6 +163,7 @@ export default function ClinicManagementPage() {
           onClose={closeViewDrawer}
           onEdit={() => openEditWizard(selectedClinic)}
           onDelete={() => openDeleteModal(selectedClinic)}
+          onRefresh={refreshClinicDetail}
         />
         {renderDeleteModal()}
       </>

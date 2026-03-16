@@ -84,12 +84,24 @@
       "sendNotification": "إرسال إشعار",
       "manager": "مدير العيادة",
       "subscriptionPlan": "باقة الاشتراك",
-      "addonFeature": "+ adon Feature",
+      "addonFeature": "+ إضافة خاصية",
       "certificate": "Certificate",
       "idDocument": "ID",
       "noDocuments": "لا توجد مستندات",
       "managerPlaceholder": "اسم مدير العيادة",
-      "defaultAddress": "العنوان بالتفصيل , مدينة , محافظة"
+      "defaultAddress": "العنوان بالتفصيل , مدينة , محافظة",
+      "activeAddons": "الإضافات النشطة",
+      "noActiveAddons": "لا توجد إضافات نشطة",
+      "expires": "ينتهي في",
+      "cancel": "إلغاء",
+      "cancelAddonConfirm": "هل أنت متأكد من إلغاء هذه الإضافة؟",
+      "addonCancelled": "تم إلغاء الإضافة بنجاح",
+      "addonCreated": "تمت إضافة الخاصية بنجاح",
+      "limit": "الحد",
+      "base": "أساسي",
+      "addons": "إضافات",
+      "total": "الإجمالي",
+      "currentAddon": "الإضافة الحالية"
     },
     "columns": {
       "name": "اسم العيادة",
@@ -269,13 +281,17 @@
       "packageLimit": "حدود الباقة",
       "submitButton": "اضافة خاصية اضافية",
       "noAvailableFeatures": "لا توجد خصائص إضافية متاحة لباقة هذه العيادة",
+      "startDate": "تاريخ البداية",
+      "endDate": "تاريخ النهاية",
       "validation": {
         "required": "يجب اختيار خاصية واحدة على الأقل",
         "datesRequired": "تاريخ البداية والنهاية مطلوبان",
         "dateOrder": "تاريخ النهاية يجب أن يكون بعد تاريخ البداية",
         "endDateFuture": "تاريخ النهاية يجب أن يكون في المستقبل"
       },
-      "defaultFeatureName": "خاصية إضافية"
+      "defaultFeatureName": "خاصية إضافية",
+      "updateConfirm": "بعض الخصائص المحددة لديها إضافات نشطة بالفعل. سيتم تحديث حدود الإضافات الحالية.",
+      "confirmUpdate": "تأكيد التحديث"
     },
     "deleteClinicTitle": "حذف العيادة",
     "deleteClinicConfirmationMessage": "هل تريد حقا القيام بحذف عيادة",

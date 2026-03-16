@@ -89,7 +89,19 @@
       "idDocument": "ID",
       "noDocuments": "No documents uploaded",
       "managerPlaceholder": "Clinic Manager Name",
-      "defaultAddress": "Detailed Address, City, Governorate"
+      "defaultAddress": "Detailed Address, City, Governorate",
+      "activeAddons": "Active Add-ons",
+      "noActiveAddons": "No active add-ons",
+      "expires": "Expires",
+      "cancel": "Cancel",
+      "cancelAddonConfirm": "Are you sure you want to cancel this add-on?",
+      "addonCancelled": "Add-on cancelled successfully",
+      "addonCreated": "Add-on created successfully",
+      "limit": "Limit",
+      "base": "Base",
+      "addons": "Add-ons",
+      "total": "Total",
+      "currentAddon": "Current add-on"
     },
     "columns": {
       "name": "Clinic Name",
@@ -269,13 +281,17 @@
       "packageLimit": "Package Limit",
       "submitButton": "Add Feature",
       "noAvailableFeatures": "No additional features available for this clinic's plan",
+      "startDate": "Start Date",
+      "endDate": "End Date",
       "validation": {
         "required": "At least one feature must be selected",
         "datesRequired": "Start and end dates are required",
         "dateOrder": "End date must be after start date",
         "endDateFuture": "End date must be in the future"
       },
-      "defaultFeatureName": "Additional Feature"
+      "defaultFeatureName": "Additional Feature",
+      "updateConfirm": "Some selected features already have active add-ons. Submitting will update the existing add-on limits.",
+      "confirmUpdate": "Confirm Update"
     },
     "deleteClinicTitle": "Delete Clinic",
     "deleteClinicConfirmationMessage": "Are you sure you want to delete clinic",
