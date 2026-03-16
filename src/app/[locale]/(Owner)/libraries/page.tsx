@@ -59,9 +59,23 @@ export default function LibrariesPage() {
         </Button>
       </div>
 
+      {/* Error Display */}
+      {controller.error && (
+        <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+          {controller.error}
+        </div>
+      )}
+
+      {/* Loading State */}
+      {controller.isLoading && (
+        <div className="flex justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500" />
+        </div>
+      )}
+
       {/* Main Content Area */}
       <div>
-        {controller.activeTab === 'treatments' && (
+        {!controller.isLoading && controller.activeTab === 'treatments' && (
           <TreatmentsTab 
             treatments={controller.treatments}
             searchQuery={controller.searchQuery}
@@ -72,7 +86,7 @@ export default function LibrariesPage() {
             locale={locale}
           />
         )}
-        {controller.activeTab === 'stages' && (
+        {!controller.isLoading && controller.activeTab === 'stages' && (
           <StagesTab 
              stages={controller.stages}
              t={controller.t}
@@ -80,7 +94,7 @@ export default function LibrariesPage() {
              onDelete={controller.handleDeleteStage}
           />
         )}
-        {controller.activeTab === 'exercises' && (
+        {!controller.isLoading && controller.activeTab === 'exercises' && (
           <ExercisesTab 
              exercises={controller.exercises}
              t={controller.t}
@@ -88,7 +102,7 @@ export default function LibrariesPage() {
              onDelete={controller.handleDeleteExercise}
           />
         )}
-        {controller.activeTab === 'assessments' && (
+        {!controller.isLoading && controller.activeTab === 'assessments' && (
           <AssessmentsTab 
              assessments={controller.assessments}
              t={controller.t}
@@ -96,7 +110,7 @@ export default function LibrariesPage() {
              onDelete={controller.handleDeleteAssessment}
           />
         )}
-        {controller.activeTab !== 'treatments' && controller.activeTab !== 'stages' && controller.activeTab !== 'exercises' && controller.activeTab !== 'assessments' && (
+        {!controller.isLoading && controller.activeTab !== 'treatments' && controller.activeTab !== 'stages' && controller.activeTab !== 'exercises' && controller.activeTab !== 'assessments' && (
           <div className="p-12 text-center text-gray-500 bg-white rounded-2xl shadow-sm border border-gray-100 font-medium">
             هذه المكتبة قيد التطوير
           </div>
@@ -104,9 +118,11 @@ export default function LibrariesPage() {
       </div>
 
       {/* Add Treatment Drawer */}
-      <AddTreatmentDrawer 
+      <AddTreatmentDrawer
         isOpen={controller.isDrawerOpen}
         onClose={controller.handleCloseDrawer}
+        onSubmit={controller.handleSubmitTreatment}
+        isSubmitting={controller.isSubmitting}
         isRtl={locale === 'ar'}
       />
 
@@ -114,6 +130,8 @@ export default function LibrariesPage() {
       <AddStageDrawer
         isOpen={controller.isStageDrawerOpen}
         onClose={controller.handleCloseStageDrawer}
+        onSubmit={controller.handleSubmitStage}
+        isSubmitting={controller.isSubmitting}
         isRtl={locale === 'ar'}
         t={controller.t}
       />
@@ -122,6 +140,7 @@ export default function LibrariesPage() {
       <AddExerciseDrawer
         isOpen={controller.isExerciseDrawerOpen}
         onClose={controller.handleCloseExerciseDrawer}
+        onSubmit={controller.handleSubmitExercise}
         isRtl={locale === 'ar'}
         t={controller.t}
       />
