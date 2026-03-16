@@ -1,20 +1,17 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Drawer } from '@/ui/components';
 import { Button } from '@/ui/primitives';
-import { getGroupedLibraries, getGroupedBasicFeatures, type Feature, type FeatureCategory } from '@/domains/features';
 import { cn } from '@/shared/utils/cn';
 import { FeatureCheckboxRow } from '@/ui/components/FeatureSelection';
-import { CreateAddOnRequestDto } from '@/domains/clinics/clinics.types';
+import { CreateAddOnRequestDto, AvailableAddOnDto } from '@/domains/clinics/clinics.types';
 import { clinicsService } from '@/domains/clinics/clinics.service';
 
 interface AddOnDrawerProps {
     isOpen: boolean;
     onClose: () => void;
     clinicId: string;
-    features: Feature[];
-    categories: FeatureCategory[];
     isRtl: boolean;
     t: (key: string) => string;
 }
@@ -30,14 +27,24 @@ export function AddOnDrawer({
     isOpen,
     onClose,
     clinicId,
-    features,
-    categories,
     isRtl,
     t
 }: AddOnDrawerProps) {
+    const [availableFeatures, setAvailableFeatures] = useState<AvailableAddOnDto[]>([]);
     const [addonsState, setAddonsState] = useState<Record<string, AddonState>>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isLoadingFeatures, setIsLoadingFeatures] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (isOpen && clinicId) {
+            setIsLoadingFeatures(true);
+            clinicsService.getAvailableAddOns(clinicId)
+                .then(data => setAvailableFeatures(data))
+                .catch(() => setError(t('common.error')))
+                .finally(() => setIsLoadingFeatures(false));
+        }
+    }, [isOpen, clinicId]);
 
     const toggleFeature = (featureId: string) => {
         setAddonsState(prev => {
@@ -71,18 +78,28 @@ export function AddOnDrawer({
                 return;
             }
 
-            // Validate dates
+            // Validate all selected addons have dates and limit
             for (const featureId of selectedIds) {
                 const state = addonsState[featureId];
-                if (state.startDate && state.endDate) {
-                    const sDate = new Date(state.startDate);
-                    const eDate = new Date(state.endDate);
-                    if (eDate <= sDate) {
-                        const featureName = features.find(f => f.id === featureId)?.name || t('addonDrawer.defaultFeatureName');
-                        setError(`${t('addonDrawer.validation.dateOrder')}${featureName}`);
-                        setIsSubmitting(false);
-                        return;
-                    }
+                const featureName = availableFeatures.find(f => f.featureId === featureId)?.featureName || featureId;
+
+                if (!state.startDate || !state.endDate) {
+                    setError(`${featureName}: ${t('addonDrawer.validation.datesRequired')}`);
+                    setIsSubmitting(false);
+                    return;
+                }
+
+                const sDate = new Date(state.startDate);
+                const eDate = new Date(state.endDate);
+                if (eDate <= sDate) {
+                    setError(`${featureName}: ${t('addonDrawer.validation.dateOrder')}`);
+                    setIsSubmitting(false);
+                    return;
+                }
+                if (eDate <= new Date()) {
+                    setError(`${featureName}: ${t('addonDrawer.validation.endDateFuture')}`);
+                    setIsSubmitting(false);
+                    return;
                 }
             }
 
@@ -91,11 +108,11 @@ export function AddOnDrawer({
                 const state = addonsState[featureId];
                 const request: CreateAddOnRequestDto = {
                     featureId,
-                    limit: state.limit ? parseInt(state.limit, 10) : 0,
-                    price: 0, // Not available in UI
-                    paymentType: 0, // Default to cash/free
-                    startDate: state.startDate ? new Date(state.startDate).toISOString() : new Date().toISOString(),
-                    endDate: state.endDate ? new Date(state.endDate).toISOString() : new Date().toISOString(),
+                    limit: state.limit ? parseInt(state.limit, 10) : 1,
+                    price: 0,
+                    paymentType: 0,
+                    startDate: new Date(state.startDate).toISOString(),
+                    endDate: new Date(state.endDate).toISOString(),
                 };
                 return clinicsService.createAddOn(clinicId, request);
             });
@@ -109,10 +126,6 @@ export function AddOnDrawer({
             setIsSubmitting(false);
         }
     };
-
-    // Group features using our extracted domain logic
-    const groupedLibraries = getGroupedLibraries(features, categories);
-    const groupedBasicFeatures = getGroupedBasicFeatures(features, groupedLibraries);
 
     return (
         <Drawer
@@ -129,57 +142,32 @@ export function AddOnDrawer({
                         </div>
                     )}
 
-                    {/* Basic Features Group */}
-                    {groupedBasicFeatures.length > 0 && (
+                    {isLoadingFeatures ? (
+                        <div className="text-center py-8 text-gray-500">Loading...</div>
+                    ) : availableFeatures.length === 0 ? (
+                        <div className="text-center py-8 text-gray-500">{t('addonDrawer.noAvailableFeatures')}</div>
+                    ) : (
                         <div>
                             <h4 className="text-gray-800 font-bold mb-4 text-sm">{t('addonDrawer.chooseFeatures')}</h4>
                             <div className="flex flex-col gap-1">
-                                {groupedBasicFeatures.map((feat) => {
-                                    const state = addonsState[feat.id] || {};
+                                {availableFeatures.map((feat) => {
+                                    const state = addonsState[feat.featureId] || {};
                                     return (
                                         <FeatureCheckboxRow
-                                            key={feat.id}
-                                            id={feat.id}
-                                            label={feat.name}
+                                            key={feat.featureId}
+                                            id={feat.featureId}
+                                            label={feat.featureName}
                                             isSelected={!!state.isSelected}
-                                            onToggle={() => toggleFeature(feat.id)}
+                                            onToggle={() => toggleFeature(feat.featureId)}
                                             showLimit={true}
                                             limit={state.limit || ''}
-                                            onLimitChange={(v) => updateFeature(feat.id, 'limit', v)}
+                                            onLimitChange={(v) => updateFeature(feat.featureId, 'limit', v)}
                                             limitPlaceholder={t('addonDrawer.packageLimit')}
                                             showDates={true}
                                             startDate={state.startDate || ''}
-                                            onStartDateChange={(v) => updateFeature(feat.id, 'startDate', v)}
+                                            onStartDateChange={(v) => updateFeature(feat.featureId, 'startDate', v)}
                                             endDate={state.endDate || ''}
-                                            onEndDateChange={(v) => updateFeature(feat.id, 'endDate', v)}
-                                            isRtl={isRtl}
-                                        />
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Libraries Group */}
-                    {groupedLibraries.length > 0 && (
-                        <div className="mt-8">
-                            <h4 className="text-gray-800 font-bold mb-4 text-sm">{t('addonDrawer.chooseLibraries')}</h4>
-                            <div className="flex flex-col gap-1">
-                                {groupedLibraries.map((feat) => {
-                                    const state = addonsState[feat.id] || {};
-                                    return (
-                                        <FeatureCheckboxRow
-                                            key={feat.id}
-                                            id={feat.id}
-                                            label={feat.name}
-                                            isSelected={!!state.isSelected}
-                                            onToggle={() => toggleFeature(feat.id)}
-                                            showLimit={false}
-                                            showDates={true}
-                                            startDate={state.startDate || ''}
-                                            onStartDateChange={(v) => updateFeature(feat.id, 'startDate', v)}
-                                            endDate={state.endDate || ''}
-                                            onEndDateChange={(v) => updateFeature(feat.id, 'endDate', v)}
+                                            onEndDateChange={(v) => updateFeature(feat.featureId, 'endDate', v)}
                                             isRtl={isRtl}
                                         />
                                     );

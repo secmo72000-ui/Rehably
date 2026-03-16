@@ -38,8 +38,8 @@ export function ClinicDetails({
 
     // Storage Calculations using domain helper
     const storageUsedGB = bytesToGB(clinic.storageUsedBytes || 0);
-    const storageTotalGB = bytesToGB(clinic.storageLimitBytes || 107374182400); // 100GB default
-    const storagePercentage = clinic.storageUsedPercentage || Math.round((storageUsedGB / storageTotalGB) * 100) || 50;
+    const storageTotalGB = bytesToGB(clinic.storageLimitBytes || 0);
+    const storagePercentage = storageTotalGB > 0 ? Math.round((storageUsedGB / storageTotalGB) * 100) : 0;
 
     const startDate = new Date(clinic.subscriptionStartDate || new Date()).toLocaleDateString('en-GB').replace(/\//g, '-');
     const endDate = new Date(clinic.subscriptionEndDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)).toLocaleDateString('en-GB').replace(/\//g, '-');
@@ -102,8 +102,6 @@ export function ClinicDetails({
                 isOpen={isAddonDrawerOpen}
                 onClose={() => setIsAddonDrawerOpen(false)}
                 clinicId={clinic.id}
-                features={features}
-                categories={categories}
                 isRtl={isRtl}
                 t={t}
             />

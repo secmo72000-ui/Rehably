@@ -57,25 +57,27 @@ export function InfoGrid({ clinic, t, isRtl }: InfoGridProps) {
                     <FileFolderIcon />
                 </div>
 
-                <div className={cn("flex items-center gap-3 border border-blue-200/60 rounded-lg shadow-sm px-4 py-2 bg-white grow-0", rtlFlexReverse(isRtl))}>
-                    <div className={cn("text-xs text-gray-500", rtlTextAlign(isRtl))}>
-                        <div className="font-bold text-gray-700 text-sm mb-0.5">{t('details.certificate')}</div>
-                        200 KB
-                    </div>
-                    <div className="w-8 h-8 flex items-center justify-center rounded bg-red-50 text-red-500">
-                        <img src="/Admin/ClinicDetails/PDF-icon.svg" alt="PDF" className="w-5 h-5 object-contain" />
-                    </div>
-                </div>
-
-                <div className={cn("flex items-center gap-3 border border-blue-200/60 rounded-lg shadow-sm px-4 py-2 bg-white grow-0", rtlFlexReverse(isRtl))}>
-                    <div className={cn("text-xs text-gray-500", rtlTextAlign(isRtl))}>
-                        <div className="font-bold text-gray-700 text-sm mb-0.5">{t('details.idDocument')}</div>
-                        200 KB
-                    </div>
-                    <div className="w-8 h-8 flex items-center justify-center rounded bg-red-50 text-red-500">
-                        <img src="/Admin/ClinicDetails/PDF-icon.svg" alt="PDF" className="w-5 h-5 object-contain" />
-                    </div>
-                </div>
+                {clinic.documents && clinic.documents.length > 0 ? (
+                    clinic.documents.map((doc) => (
+                        <a
+                            key={doc.id}
+                            href={doc.fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={cn("flex items-center gap-3 border border-blue-200/60 rounded-lg shadow-sm px-4 py-2 bg-white grow-0 hover:border-blue-400 transition-colors cursor-pointer", rtlFlexReverse(isRtl))}
+                        >
+                            <div className={cn("text-xs text-gray-500", rtlTextAlign(isRtl))}>
+                                <div className="font-bold text-gray-700 text-sm mb-0.5">{doc.type}</div>
+                                {doc.verificationStatus}
+                            </div>
+                            <div className="w-8 h-8 flex items-center justify-center rounded bg-red-50 text-red-500">
+                                <img src="/Admin/ClinicDetails/PDF-icon.svg" alt="PDF" className="w-5 h-5 object-contain" />
+                            </div>
+                        </a>
+                    ))
+                ) : (
+                    <span className="text-xs text-gray-400">{t('details.noDocuments')}</span>
+                )}
             </div>
         </div>
     );

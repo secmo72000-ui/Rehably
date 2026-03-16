@@ -4,8 +4,8 @@ import type { ApiResponse } from '@/shared/types/common.types';
 
 export const adminUsersService = {
   getAll: async (): Promise<PlatformUser[]> => {
-    const response = await apiClient.get<ApiResponse<PlatformUser[]>>('/api/admin/platform-users');
-    return response.data.data;
+    const response = await apiClient.get<ApiResponse<{ items: PlatformUser[]; totalCount: number }>>('/api/admin/platform-users?page=1&pageSize=100');
+    return response.data.data.items;
   },
 
   create: async (payload: CreatePlatformUserPayload): Promise<PlatformUser> => {

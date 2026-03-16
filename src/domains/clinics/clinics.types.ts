@@ -72,8 +72,18 @@ export interface Clinic {
   ownerLastName: string;
   ownerEmail: string;
   paymentMethod: string | null;
+  documents?: ClinicDocument[];
   createdAt: string;
   updatedAt: string | null;
+}
+
+export interface ClinicDocument {
+  id: string;
+  type: string;
+  fileUrl: string;
+  uploadedAt: string;
+  verificationStatus: string;
+  rejectionReason: string | null;
 }
 
 // ============ Create Clinic Request (POST) ============
@@ -206,6 +216,18 @@ export interface AddOnDto {
   status: number;
   startDate: string;
   endDate: string;
+}
+
+export interface AvailableAddOnDto {
+  featureId: string;
+  featureName: string;
+  featureCode: string;
+  description: string | null;
+  pricingType: number;
+  basePrice: number;
+  perUnitPrice: number;
+  minQuantity: number;
+  maxQuantity: number;
 }
 
 export interface CreateAddOnRequestDto {

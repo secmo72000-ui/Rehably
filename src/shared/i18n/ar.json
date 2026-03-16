@@ -87,6 +87,7 @@
       "addonFeature": "+ adon Feature",
       "certificate": "Certificate",
       "idDocument": "ID",
+      "noDocuments": "لا توجد مستندات",
       "managerPlaceholder": "اسم مدير العيادة",
       "defaultAddress": "العنوان بالتفصيل , مدينة , محافظة"
     },
@@ -267,9 +268,12 @@
       "chooseLibraries": "اختر المكتبات",
       "packageLimit": "حدود الباقة",
       "submitButton": "اضافة خاصية اضافية",
+      "noAvailableFeatures": "لا توجد خصائص إضافية متاحة لباقة هذه العيادة",
       "validation": {
         "required": "يجب اختيار خاصية واحدة على الأقل",
-        "dateOrder": "تاريخ النهاية يجب أن يكون بعد تاريخ البداية لـ: "
+        "datesRequired": "تاريخ البداية والنهاية مطلوبان",
+        "dateOrder": "تاريخ النهاية يجب أن يكون بعد تاريخ البداية",
+        "endDateFuture": "تاريخ النهاية يجب أن يكون في المستقبل"
       },
       "defaultFeatureName": "خاصية إضافية"
     },

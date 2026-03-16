@@ -20,7 +20,7 @@ export const authService = {
    * @param phone - Phone number (e.g., "01012345678")
    */
   loginViaOtp: async (phone: string) => {
-    const response = await apiClient.post<ApiResponse<{ message: string }>>('/api/Auth/login-via-otp', { phone });
+    const response = await apiClient.post<ApiResponse<{ message: string }>>('/api/otp/login', { phone });
     return response.data;
   },
 
@@ -30,7 +30,7 @@ export const authService = {
    * @param otp - One-time password (4-6 digits)
    */
   verifyOtpLogin: async (phone: string, otp: string) => {
-    const response = await apiClient.post<ApiResponse<LoginResponse>>('/api/Auth/verify-otp-login', { phone, otp });
+    const response = await apiClient.post<ApiResponse<LoginResponse>>('/api/otp/verify-login', { phone, otp });
     return response.data;
   },
 
@@ -39,7 +39,7 @@ export const authService = {
    * @param phone - Phone number
    */
   resendOtp: async (phone: string) => {
-    const response = await apiClient.post<ApiResponse<{ message: string }>>('/api/Auth/resend-otp', { phone });
+    const response = await apiClient.post<ApiResponse<{ message: string }>>('/api/otp/resend', { phone });
     return response.data;
   },
 

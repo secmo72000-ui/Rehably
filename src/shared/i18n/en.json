@@ -87,6 +87,7 @@
       "addonFeature": "+ Addon Feature",
       "certificate": "Certificate",
       "idDocument": "ID",
+      "noDocuments": "No documents uploaded",
       "managerPlaceholder": "Clinic Manager Name",
       "defaultAddress": "Detailed Address, City, Governorate"
     },
@@ -267,9 +268,12 @@
       "chooseLibraries": "Choose Libraries",
       "packageLimit": "Package Limit",
       "submitButton": "Add Feature",
+      "noAvailableFeatures": "No additional features available for this clinic's plan",
       "validation": {
         "required": "At least one feature must be selected",
-        "dateOrder": "End date must be after start date for: "
+        "datesRequired": "Start and end dates are required",
+        "dateOrder": "End date must be after start date",
+        "endDateFuture": "End date must be in the future"
       },
       "defaultFeatureName": "Additional Feature"
     },

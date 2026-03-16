@@ -46,7 +46,7 @@ export const getClinicsTableColumns = ({
         {
             key: 'subscriptionPlanName',
             header: t('columns.package'),
-            render: (value) => value || t('details.noPlan'),
+            render: (_, row) => row.subscriptionPlanName || t('details.noPlan'),
         },
 
         // 3. اسم المدير

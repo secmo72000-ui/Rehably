@@ -11,8 +11,8 @@ export const usersService = {
      * Get all platform users
      */
     getAll: async (): Promise<PlatformUser[]> => {
-        const response = await apiClient.get<ApiResponse<PlatformUser[]>>('/api/admin/platform-users');
-        return response.data.data;
+        const response = await apiClient.get<ApiResponse<{ items: PlatformUser[]; totalCount: number }>>('/api/admin/platform-users?page=1&pageSize=100');
+        return response.data.data.items;
     },
 
     /**

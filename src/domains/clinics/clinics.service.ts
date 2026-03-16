@@ -8,6 +8,7 @@ import {
   ClinicListParams,
   PaginatedClinicsResponse,
   AddOnDto,
+  AvailableAddOnDto,
   CreateAddOnRequestDto
 } from './clinics.types';
 
@@ -106,6 +107,14 @@ export const clinicsService = {
    */
   createAddOn: async (clinicId: string, data: CreateAddOnRequestDto): Promise<AddOnDto> => {
     const response = await apiClient.post<ApiResponse<AddOnDto>>(`/api/admin/clinics/${clinicId}/addons`, data);
+    return response.data.data;
+  },
+
+  /**
+   * Get available add-on features for a clinic (from its subscription package)
+   */
+  getAvailableAddOns: async (clinicId: string): Promise<AvailableAddOnDto[]> => {
+    const response = await apiClient.get<ApiResponse<AvailableAddOnDto[]>>(`/api/admin/clinics/${clinicId}/addons/available`);
     return response.data.data;
   },
 
