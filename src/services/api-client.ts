@@ -106,6 +106,11 @@ apiClient.interceptors.request.use((config) => {
   if (accessToken) {
     config.headers.Authorization = `Bearer ${accessToken}`;
   }
+  // When sending FormData, remove Content-Type so the browser sets
+  // multipart/form-data with the correct boundary (required for file uploads)
+  if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
+    delete config.headers['Content-Type'];
+  }
   return config;
 });
 

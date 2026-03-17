@@ -67,14 +67,14 @@ function FileUploadField({
                 <input
                     ref={inputRef}
                     type="file"
-                    accept="image/*"
+                    // Removed accept="image/*" to support all file types (PDF, DOC, etc.)
                     onChange={handleChange}
                     className="hidden"
                 />
             </div>
 
-            {/* Preview */}
-            {preview && (
+            {/* Preview (only for images) */}
+            {preview && preview.startsWith('data:image') && (
                 <div className="mt-2 rounded-lg overflow-hidden border border-grey-200 max-w-[200px]">
                     <Image src={preview} alt={label} width={200} height={120} className="object-cover" />
                 </div>

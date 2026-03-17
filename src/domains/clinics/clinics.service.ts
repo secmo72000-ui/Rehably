@@ -57,13 +57,15 @@ export const clinicsService = {
     if (data.paymentType !== undefined) formData.append('paymentType', String(data.paymentType));
     if (data.customTrialDays !== undefined) formData.append('customTrialDays', String(data.customTrialDays));
 
-    // Append document files
-    if (data.ownerIdDocument) formData.append('ownerIdDocument', data.ownerIdDocument);
-    if (data.medicalLicenseDocument) formData.append('medicalLicenseDocument', data.medicalLicenseDocument);
+    // Append document files (with explicit filename for backend compatibility)
+    if (data.ownerIdDocument) {
+      formData.append('ownerIdDocument', data.ownerIdDocument, data.ownerIdDocument.name || 'owner-id-document');
+    }
+    if (data.medicalLicenseDocument) {
+      formData.append('medicalLicenseDocument', data.medicalLicenseDocument, data.medicalLicenseDocument.name || 'medical-license-document');
+    }
 
-    const response = await apiClient.post<CreateClinicResponse>('/api/admin/clinics', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const response = await apiClient.post<CreateClinicResponse>('/api/admin/clinics', formData);
     return response.data;
   },
 
