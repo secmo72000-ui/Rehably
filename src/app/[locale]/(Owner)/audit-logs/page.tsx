@@ -24,6 +24,26 @@ function formatDetails(val: unknown): string {
     }
 }
 
+function parseUserAgent(ua: string | null): string {
+    if (!ua) return '-';
+    let browser = 'Unknown';
+    let os = 'Unknown';
+
+    if (ua.includes('Edg/') || ua.includes('Edge/')) browser = 'Edge';
+    else if (ua.includes('Chrome/')) browser = 'Chrome';
+    else if (ua.includes('Firefox/')) browser = 'Firefox';
+    else if (ua.includes('Safari/') && !ua.includes('Chrome/')) browser = 'Safari';
+    else if (ua.includes('MSIE') || ua.includes('Trident/')) browser = 'IE';
+
+    if (ua.includes('Windows')) os = 'Windows';
+    else if (ua.includes('Mac OS X')) os = 'macOS';
+    else if (ua.includes('Android')) os = 'Android';
+    else if (ua.includes('Linux')) os = 'Linux';
+    else if (ua.includes('iOS') || ua.includes('iPhone') || ua.includes('iPad')) os = 'iOS';
+
+    return `${browser} - ${os}`;
+}
+
 // ========== Page Component ==========
 export default function AuditLogsPage() {
     const params = useParams();
@@ -52,11 +72,7 @@ export default function AuditLogsPage() {
                 </div>
             )
         },
-        { key: 'details', header: t('columns.message'), render: (val) => (
-            <span className="block max-w-[250px] truncate" title={typeof val === 'string' ? val : ''}>
-                {formatDetails(val)}
-            </span>
-        ) },
+        { key: 'actionType', header: t('columns.actionType'), render: (val) => val || '-' },
         { key: 'entityName', header: t('columns.category'), render: (val) => val || '-' },
         { key: 'date_key' as any, header: t('columns.date'), render: (_, row) => new Date(row.timestamp).toLocaleDateString(locale === 'ar' ? 'en-GB' : locale) },
         { key: 'time_key' as any, header: t('columns.time'), render: (_, row) => new Date(row.timestamp).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }) },
@@ -71,6 +87,7 @@ export default function AuditLogsPage() {
         },
         { key: 'userRole', header: t('columns.userRole'), render: (val) => val || '-' },
         { key: 'clinicName', header: t('columns.clinicName'), render: (val) => val || '-' },
+        { key: 'userAgent', header: t('columns.browserOs'), render: (val) => parseUserAgent(val as string) },
         { key: 'id', header: t('columns.id'), render: (val) => String(val).substring(14, 21).toUpperCase() },
     ];
 

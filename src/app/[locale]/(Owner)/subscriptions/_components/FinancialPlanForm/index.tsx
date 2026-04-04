@@ -39,6 +39,7 @@ export function FinancialPlanForm({
     features,
     categories,
     t: tProp,
+    isRtl,
 }: FinancialPlanFormProps) {
     const t = tProp || ((k: string) => k);
     const librariesGroup = useMemo(() => getGroupedLibraries(features, categories), [features, categories]);
@@ -94,6 +95,7 @@ export function FinancialPlanForm({
                     planDetails={planDetails}
                     onPlanDetailsChange={setPlanDetails}
                     t={t}
+                    isRtl={isRtl}
                 />
 
                 <FeaturesSection
@@ -120,6 +122,7 @@ export function FinancialPlanForm({
                     price={price}
                     onChange={setPrice}
                     t={t}
+                    isRtl={isRtl}
                 />
             </div>
 

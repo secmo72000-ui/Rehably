@@ -34,33 +34,28 @@ export default function SettingsPage() {
                 {/* Language Selection */}
                 <div className="border border-grey-200 rounded-lg p-6">
                     <p className="text-base text-gray-500 mb-3 text-start">{t('language')}</p>
-                    <div className="flex justify-start"> 
-                           <button
-                            className="flex items-center gap-2 px-4 py-4 rounded-lg border border-primary-500 hover:bg-gray-50 text-[#4A4A4A] text-base-bold "
-                            onClick={changeLanguage}
-                        >
-                            <Image src="/shered/world.svg" alt="lang" width={20} height={20} />
-                            <span>{locale === 'ar' ? 'اللغة العربية' : 'English'}</span>
-                        </button>
-                    </div>
-                </div>
-
-                {/* Data Backup */}
-                <div className="border border-grey-200 rounded-lg p-6 flex items-center justify-between">
-                        <span className="text-base font-medium text-gray-700">{t('dataBackup')}</span>
-                    <div className="flex items-center gap-3">
+                    <div className="flex justify-start gap-4"> 
                         <button
-                            onClick={() => setIsBackupEnabled(!isBackupEnabled)}
-                            className={`flex items-center gap-2 px-4 py-4 rounded-lg border transition-colors ${isBackupEnabled
-                                    ? 'border-primary-200 bg-primary-50 text-primary-600'
-                                    : 'border-gray-200 text-gray-500'
-                                }`}
+                            className={`flex items-center gap-2 px-8 py-3 rounded-lg border text-base-bold transition-colors ${
+                                locale === 'ar'
+                                    ? 'border-Primary-500 bg-Primary-50 text-Primary-600'
+                                    : 'border-grey-200 text-gray-500 hover:bg-gray-50'
+                            }`}
+                            onClick={() => locale !== 'ar' && changeLanguage()}
                         >
-                            <span>{t('enabled')}</span>
-                            <div className={`w-10 h-6 rounded-full relative transition-colors ${isBackupEnabled ? 'bg-Primary-500' : 'bg-gray-300'}`}>
-                                <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${isBackupEnabled ? 'left-1' : 'left-[calc(100%-1.25rem)]'}`} />
-                              
-                            </div>
+                            <Image src="/shered/world.svg" alt="lang" width={20} height={20} className={locale !== 'ar' ? 'opacity-50 grayscale' : ''} />
+                            <span>اللغة العربية</span>
+                        </button>
+                        <button
+                            className={`flex items-center gap-2 px-8 py-3 rounded-lg border text-base-bold transition-colors ${
+                                locale === 'en'
+                                    ? 'border-Primary-500 bg-Primary-50 text-Primary-600'
+                                    : 'border-grey-200 text-gray-500 hover:bg-gray-50'
+                            }`}
+                            onClick={() => locale !== 'en' && changeLanguage()}
+                        >
+                            <Image src="/shered/world.svg" alt="lang" width={20} height={20} className={locale !== 'en' ? 'opacity-50 grayscale' : ''} />
+                            <span>English</span>
                         </button>
                     </div>
                 </div>

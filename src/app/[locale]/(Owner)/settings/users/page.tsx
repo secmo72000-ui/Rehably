@@ -35,7 +35,14 @@ export default function UsersPage() {
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center text-[#111827] text-xl font-bold">
-                {/* Breadcrumb-ish title if needed, else redundant with layout */}
+                {/* Back Button */}
+                <button
+                    onClick={() => router.push(`/${locale}/settings`)}
+                    className="flex items-center gap-2 text-gray-500 hover:text-gray-700 transition-colors w-fit"
+                >
+                    <img src="/shered/arrwo.svg" alt="back" width={12} height={12} className={locale === 'ar' ? 'rotate-180' : ''} />
+                    <span className="text-sm font-medium">{tRoles('backToSettings') || 'الرجوع للإعدادات'}</span>
+                </button>
             </div>
 
             {/* Top Navigator */}

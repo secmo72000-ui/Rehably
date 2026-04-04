@@ -32,6 +32,15 @@ export default function RolesPage() {
 
     return (
         <div className="space-y-6">
+            {/* Back Button */}
+            <button
+                onClick={() => router.push(`/${locale}/settings`)}
+                className="flex items-center gap-2 text-gray-500 hover:text-gray-700 transition-colors w-fit"
+            >
+                <img src="/shered/arrwo.svg" alt="back" width={12} height={12} className={locale === 'ar' ? 'rotate-180' : ''} />
+                <span className="text-sm font-medium">{t('backToSettings') || 'الرجوع للإعدادات'}</span>
+            </button>
+
             {/* Top Navigator */}
             <div className="flex justify-between items-center bg-transparent">
                 <div className="w-full max-w-md">

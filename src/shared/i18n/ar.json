@@ -137,6 +137,7 @@
       "confirmEditMessage": "هل تريد تأكيد تعديل بيانات العيادة؟",
       "validation": {
         "required": "هذا الحقل مطلوب",
+        "twoNamesRequired": "يرجى كتابة الاسم الأول والأخير (اسمين على الأقل)",
         "arabicOnly": "يجب أن يكون الاسم بالعربية فقط بدون أرقام أو حروف إنجليزية",
         "invalidEmail": "البريد الإلكتروني غير صحيح",
         "egyptianPhone": "رقم التليفون يجب أن يكون مصري (01xxxxxxxxx)",
@@ -170,7 +171,12 @@
         "idCard": "صورة البطاقة الشخصية",
         "idCardHint": "يرجي رفع صورة واضحة للبطاقة الشخصية مع وضوح الرقم القومي",
         "syndicateCard": "صورة كارنيه النقابة",
-        "uploadPlaceholder": "ارفع صورة"
+        "uploadPlaceholder": "اضغط للرفع أو اسحب الملف هنا",
+        "dropHere": "افلت الملف هنا...",
+        "browse": "اختر ملف",
+        "removeFile": "حذف الملف",
+        "errorInvalidType": "نوع الملف غير مسموح، يرجى رفع صورة (JPG، PNG، WebP) أو ملف PDF فقط",
+        "errorFileTooLarge": "حجم الملف كبير جداً، الحد الأقصى 5 ميجابايت"
       },
       "step3": {
         "assignPlan": "تعيين خطة اشتراكية",
@@ -426,6 +432,8 @@
       "date": "التاريخ",
       "registrationCode": "كود التسجيل",
       "category": "الفئة",
+      "actionType": "نوع الإجراء",
+      "browserOs": "المتصفح والنظام",
       "message": "الرسالة",
       "status": "الحالة"
     },
@@ -466,6 +474,7 @@
   },
   "roles": {
     "pageTitle": "الأدوار والصلاحيات",
+    "backToSettings": "الرجوع للإعدادات",
     "tabs": {
       "roles": "الأدوار",
       "users": "المستخدمين"

@@ -146,18 +146,6 @@ export default function InvoicesPage() {
                                 height={20}
                             />
                         </button>
-                        <button
-                            onClick={() => handleDelete(invoice.id)}
-                            className="p-2 hover:bg-red-50 rounded-lg transition-colors"
-                            title={t('deleteInvoice') || 'حذف'}
-                        >
-                            <Image
-                                src="/shered/trash.svg"
-                                alt="Delete"
-                                width={20}
-                                height={20}
-                            />
-                        </button>
                     </div>
                 )}
                 actionsHeader={t('columns.actions') || 'تفاصيل'}

@@ -40,11 +40,16 @@ export function useAuditLogsPage() {
 
     const handleSort = () => {
         setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
-        // Currently API doesn't mention sort param, but if it does, it will re-fetch
     };
 
+    const sortedLogs = [...logs].sort((a, b) => {
+        const timeA = new Date(a.timestamp).getTime();
+        const timeB = new Date(b.timestamp).getTime();
+        return sortDirection === 'asc' ? timeA - timeB : timeB - timeA;
+    });
+
     return {
-        logs,
+        logs: sortedLogs,
         isLoading,
         error,
         currentPage,

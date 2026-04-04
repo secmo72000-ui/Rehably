@@ -7,6 +7,7 @@ interface BasicInfoSectionProps {
     planDetails: string;
     onPlanDetailsChange: (val: string) => void;
     t: (key: string) => string;
+    isRtl: boolean;
 }
 
 export function BasicInfoSection({
@@ -14,7 +15,8 @@ export function BasicInfoSection({
     onPlanNameChange,
     planDetails,
     onPlanDetailsChange,
-    t
+    t,
+    isRtl
 }: BasicInfoSectionProps) {
     return (
         <div className="space-y-4">
@@ -24,6 +26,7 @@ export function BasicInfoSection({
                     placeholder={t('placeholders.planName') || 'مثال : خبير'}
                     value={planName}
                     onChange={(val) => onPlanNameChange(val)}
+                    isRtl={isRtl}
                     required
                     className=""
                 />
@@ -34,6 +37,7 @@ export function BasicInfoSection({
                     placeholder={t('placeholders.planDetails') || 'مثال : تناسب العيادات المبتدأة'}
                     value={planDetails}
                     onChange={(val) => onPlanDetailsChange(val)}
+                    isRtl={isRtl}
                 />
             </div>
         </div>

@@ -27,6 +27,7 @@ export function SharedFieldsSection({ data, onChange, t, isRtl }: SharedFieldsSe
                         type="date"
                         value={data.subscriptionStartDate}
                         onChange={(val) => onChange('subscriptionStartDate', val)}
+                        max={data.subscriptionEndDate || undefined}
                         isRtl={isRtl}
                     />
                 </div>
@@ -38,6 +39,7 @@ export function SharedFieldsSection({ data, onChange, t, isRtl }: SharedFieldsSe
                         type="date"
                         value={data.subscriptionEndDate}
                         onChange={(val) => onChange('subscriptionEndDate', val)}
+                        min={data.subscriptionStartDate || undefined}
                         isRtl={isRtl}
                     />
                 </div>

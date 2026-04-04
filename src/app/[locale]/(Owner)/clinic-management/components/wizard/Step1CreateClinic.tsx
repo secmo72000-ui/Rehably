@@ -41,6 +41,26 @@ export function Step1CreateClinic({ data, errors, onChange, t, isRtl }: Step1Pro
 
     const currentCities = cities[data.country] || [];
 
+    const [managerName, setManagerName] = React.useState(() => {
+        return [data.ownerFirstName, data.ownerLastName].filter(Boolean).join(' ');
+    });
+
+    React.useEffect(() => {
+        const externalValue = [data.ownerFirstName, data.ownerLastName].filter(Boolean).join(' ');
+        if (managerName.trim() !== externalValue.trim() && externalValue.trim() !== '') {
+            setManagerName(externalValue);
+        }
+    }, [data.ownerFirstName, data.ownerLastName, managerName]);
+
+    const handleManagerNameChange = (v: string) => {
+        setManagerName(v);
+        const parts = v.trim().split(/\s+/);
+        const firstName = parts[0] || '';
+        const lastName = parts.slice(1).join(' ') || '';
+        onChange('ownerFirstName', firstName);
+        onChange('ownerLastName', lastName);
+    };
+
     return (
         <div className="space-y-5">
             {/* Row 1: اسم العيادة */}
@@ -79,12 +99,8 @@ export function Step1CreateClinic({ data, errors, onChange, t, isRtl }: Step1Pro
                     {t('wizard.step1.clinicManager')} <span className="text-error-600">*</span>
                 </label>
                 <Input
-                    value={`${data.ownerFirstName} ${data.ownerLastName}`.trim()}
-                    onChange={(v) => {
-                        const parts = v.split(' ');
-                        onChange('ownerFirstName', parts[0] || '');
-                        onChange('ownerLastName', parts.slice(1).join(' ') || '');
-                    }}
+                    value={managerName}
+                    onChange={handleManagerNameChange}
                     placeholder={t('wizard.step1.clinicManagerPlaceholder')}
                     isRtl={isRtl}
                     error={errors.ownerFirstName}

@@ -62,9 +62,9 @@ export function validateStep1(
     errors.clinicName = t('wizard.validation.required');
   }
 
-  // مدير العيادة — required (ownerFirstName)
-  if (!data.ownerFirstName.trim()) {
-    errors.ownerFirstName = t('wizard.validation.required');
+  // مدير العيادة — required (ownerFirstName + ownerLastName)
+  if (!data.ownerFirstName.trim() || !data.ownerLastName.trim()) {
+    errors.ownerFirstName = t('wizard.validation.twoNamesRequired');
   }
 
   // البريد الإلكتروني — required + valid format

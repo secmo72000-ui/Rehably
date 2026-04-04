@@ -137,6 +137,7 @@
       "confirmEditMessage": "Are you sure you want to confirm editing this clinic's data?",
       "validation": {
         "required": "This field is required",
+        "twoNamesRequired": "Please enter both first and last name (at least two words)",
         "arabicOnly": "Name must be in Arabic only, no numbers or English letters",
         "invalidEmail": "Invalid email address",
         "egyptianPhone": "Phone must be Egyptian format (01xxxxxxxxx)",
@@ -170,7 +171,12 @@
         "idCard": "ID Card Photo",
         "idCardHint": "Please upload a clear photo of the ID card with visible national ID number",
         "syndicateCard": "Syndicate Card Photo",
-        "uploadPlaceholder": "Upload Photo"
+        "uploadPlaceholder": "Click to upload or drag & drop file here",
+        "dropHere": "Drop the file here...",
+        "browse": "Browse",
+        "removeFile": "Remove file",
+        "errorInvalidType": "Invalid file type. Please upload an image (JPG, PNG, WebP) or PDF only",
+        "errorFileTooLarge": "File is too large. Maximum size is 5MB"
       },
       "step3": {
         "assignPlan": "Assign Subscription Plan",
@@ -426,6 +432,8 @@
       "date": "Date",
       "registrationCode": "Registration Code",
       "category": "Category",
+      "actionType": "Action Type",
+      "browserOs": "Browser & OS",
       "message": "Message",
       "status": "Status"
     },
@@ -466,6 +474,7 @@
   },
   "roles": {
     "pageTitle": "Roles and Permissions",
+    "backToSettings": "Back to Settings",
     "tabs": {
       "roles": "Roles",
       "users": "Users"

@@ -5,17 +5,22 @@ interface PriceSectionProps {
     price: string;
     onChange: (val: string) => void;
     t: (key: string) => string;
+    isRtl: boolean;
 }
 
-export function PriceSection({ price, onChange, t }: PriceSectionProps) {
+export function PriceSection({ price, onChange, t, isRtl }: PriceSectionProps) {
     return (
         <div className="space-y-3 mt-4">
             <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">{t('price') || 'سعر الخطة المالية'}</label>
                 <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
                     placeholder={t('placeholders.price') || 'مثال : 1200 جنيها'}
                     value={price}
                     onChange={(val) => onChange(val)}
+                    isRtl={isRtl}
                     required
                 />
             </div>

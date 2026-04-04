@@ -43,6 +43,7 @@ export default function SubscriptionsPage() {
                         onCancel={controller.closeDrawer}
                         isLoading={controller.isCreating || controller.isUpdating}
                         t={t}
+                        isRtl={locale === 'ar'}
                         key={controller.selectedPackage?.id || 'new'}
                     />
                 )}

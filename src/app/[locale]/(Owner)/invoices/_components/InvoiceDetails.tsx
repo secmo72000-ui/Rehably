@@ -35,8 +35,35 @@ export function InvoiceDetails({ invoice, onDownloadPdf }: InvoiceDetailsProps) 
 
     const billingPeriod = `${formatDate(invoice.billingPeriodStart)} - ${formatDate(invoice.billingPeriodEnd)}`;
 
+    const handleDownloadPdf = async () => {
+        const element = document.getElementById('invoice-pdf-container');
+        if (!element) return;
+        
+        try {
+            // @ts-ignore
+            const html2pdf = (await import('html2pdf.js')).default;
+            const opt = {
+                margin: 5,
+                filename: `invoice-${invoice.invoiceNumber}.pdf`,
+                image: { type: 'jpeg' as const, quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
+            };
+            
+            const btn = document.getElementById('invoice-download-btn');
+            if (btn) btn.style.display = 'none';
+            
+            await html2pdf().set(opt).from(element).save();
+            
+            if (btn) btn.style.display = 'flex';
+        } catch (error) {
+            console.error('Failed to generate PDF', error);
+            onDownloadPdf(); // fallback
+        }
+    };
+
     return (
-        <div className="space-y-6">
+        <div id="invoice-pdf-container" className="space-y-6 p-4">
             {/* Header Row: Title + Price */}
             <div className="flex items-start justify-between pb-4">
                 <div className="flex flex-col items-start">
@@ -143,14 +170,16 @@ export function InvoiceDetails({ invoice, onDownloadPdf }: InvoiceDetailsProps) 
             </div>
 
             {/* Download Button */}
-            <Button
-                onClick={onDownloadPdf}
-                variant="primary"
-                fullWidth
-                className="mt-6"
-            >
-                {t('downloadPDF')}
-            </Button>
+            <div id="invoice-download-btn" className="flex">
+                <Button
+                    onClick={handleDownloadPdf}
+                    variant="primary"
+                    fullWidth
+                    className="mt-6 w-full"
+                >
+                    {t('downloadPDF')}
+                </Button>
+            </div>
         </div>
     );
 }

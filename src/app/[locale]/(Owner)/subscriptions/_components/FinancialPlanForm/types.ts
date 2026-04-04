@@ -9,4 +9,5 @@ export interface FinancialPlanFormProps {
     features: Feature[];
     categories: FeatureCategory[];
     t?: (key: string) => string;
+    isRtl: boolean;
 }

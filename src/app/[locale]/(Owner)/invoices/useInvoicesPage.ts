@@ -54,8 +54,14 @@ export function useInvoicesPage() {
         }
     };
 
+    const sortedInvoices = [...invoices].sort((a, b) => {
+        const timeA = new Date(a.dueDate).getTime();
+        const timeB = new Date(b.dueDate).getTime();
+        return sortDirection === 'asc' ? timeA - timeB : timeB - timeA;
+    });
+
     return {
-        invoices,
+        invoices: sortedInvoices,
         isLoading,
         error,
         currentPage,
