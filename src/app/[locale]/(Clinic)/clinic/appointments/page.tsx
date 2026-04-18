@@ -273,7 +273,7 @@ function AddAppointmentModal({ onClose, onSaved, patients }: {
                     breakdown.insuranceCoverageAmount > 0 && { label: 'تغطية التأمين', val: -breakdown.insuranceCoverageAmount, cls: 'text-green-600' },
                     breakdown.discountAmount > 0 && { label: 'الخصم', val: -breakdown.discountAmount, cls: 'text-orange-500' },
                     breakdown.taxAmount > 0 && { label: 'الضريبة', val: breakdown.taxAmount, cls: 'text-gray-500' },
-                  ].filter(Boolean).map((row: { label: string; val: number; cls: string }, i) => (
+                  ].filter((r): r is { label: string; val: number; cls: string } => !!r).map((row, i) => (
                     <div key={i} className="flex justify-between text-xs">
                       <span className="text-gray-500">{row.label}</span>
                       <span className={row.cls}>{row.val < 0 ? '- ' : ''}{Math.abs(row.val).toFixed(2)} {breakdown.currency}</span>
