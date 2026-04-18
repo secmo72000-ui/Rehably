@@ -157,7 +157,9 @@ export function middleware(request: NextRequest) {
   const userRole = decodeTokenRole(token);
 
   // 6. Validate role matches portal type (skip if already on /unauthorized to prevent loop)
-  if (pathWithoutLocale !== '/unauthorized' && !isRoleAllowedForPortal(userRole, portalType)) {
+  // In local development (localhost), skip role enforcement so any role can access any portal
+  const isLocalDev = hostname.includes('localhost') || hostname.includes('127.0.0.1');
+  if (!isLocalDev && pathWithoutLocale !== '/unauthorized' && !isRoleAllowedForPortal(userRole, portalType)) {
     return NextResponse.redirect(new URL(`/${currentLocale}/unauthorized`, request.url));
   }
 

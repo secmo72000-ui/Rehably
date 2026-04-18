@@ -211,7 +211,13 @@ export function useClinicManagement(t: (key: string) => string) {
                 }
 
                 const result = await createClinic(clinicData);
-                if (result) closeWizard();
+                if (result) {
+                    if (result.paymentUrl) {
+                        window.location.href = result.paymentUrl;
+                    } else {
+                        closeWizard();
+                    }
+                }
             }
         },
         [editingClinic, updateClinic, closeWizard, createClinic]

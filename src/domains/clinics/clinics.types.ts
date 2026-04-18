@@ -125,6 +125,7 @@ export interface CreateClinicResponseData {
   subscriptionEndDate: string | null;
   paymentType: string;
   paymentTransactionId: string;
+  paymentUrl?: string | null;
   createdAt: string;
 }
 

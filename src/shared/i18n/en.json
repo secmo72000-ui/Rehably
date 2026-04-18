@@ -641,5 +641,52 @@
     "sets": "Sets",
     "hold": "Hold",
     "seconds": "Seconds"
+  },
+  "reports": {
+    "pageTitle": "Reports",
+    "exportBtn": "Export Report",
+    "exporting": "Exporting...",
+    "filterThisMonth": "This Month",
+    "filterThisYear": "This Year",
+    "filterAll": "All",
+    "revenue": {
+      "title": "Total Revenue",
+      "subtitle": "Total payments received",
+      "currency": "EGP"
+    },
+    "clinics": {
+      "title": "Total Clinics",
+      "active": "Active",
+      "suspended": "Suspended"
+    },
+    "invoices": {
+      "title": "Invoices",
+      "paid": "Paid",
+      "pending": "Pending",
+      "rejected": "Rejected"
+    },
+    "subscriptions": {
+      "title": "Subscription Distribution",
+      "monthly": "Monthly",
+      "yearly": "Yearly"
+    },
+    "revenueChart": {
+      "title": "Monthly Revenue",
+      "tooltip": "Revenue"
+    },
+    "recentInvoices": {
+      "title": "Recent Invoices",
+      "viewAll": "View All",
+      "clinic": "Clinic",
+      "amount": "Amount",
+      "date": "Date",
+      "status": "Status",
+      "paid": "Paid",
+      "pending": "Pending",
+      "rejected": "Rejected"
+    },
+    "noData": "No report data available",
+    "loading": "Loading reports...",
+    "error": "An error occurred while loading data"
   }
 }

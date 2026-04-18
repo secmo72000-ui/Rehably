@@ -152,6 +152,50 @@ export interface TreatmentStageDto {
   updatedAt: string | null;
 }
 
+// ============ Modality (for clinic library) ============
+
+export interface ModalityItem {
+  id: string;
+  clinicId: string | null;
+  code: string;
+  name: string;
+  nameArabic: string | null;
+  modalityType: number;
+  therapeuticCategory: string;
+  mainGoal: string;
+  parametersNotes: string | null;
+  clinicalNotes: string | null;
+  minDurationWeeks: number | null;
+  maxDurationWeeks: number | null;
+  minSessions: number | null;
+  maxSessions: number | null;
+  relatedConditionCodes: string | null;
+  accessTier: number;
+  isGlobal: boolean;
+  isDeleted: boolean;
+  createdAt: string;
+  updatedAt: string | null;
+}
+
+// ============ Device (for clinic library) ============
+
+export interface DeviceItem {
+  id: string;
+  clinicId: string | null;
+  name: string;
+  nameArabic: string | null;
+  description: string | null;
+  imageUrl: string | null;
+  relatedConditionCodes: string | null;
+  manufacturer: string | null;
+  model: string | null;
+  accessTier: number;
+  isGlobal: boolean;
+  isDeleted: boolean;
+  createdAt: string;
+  updatedAt: string | null;
+}
+
 export interface CreateStageRequest {
   bodyRegionId?: string;
   code: string;

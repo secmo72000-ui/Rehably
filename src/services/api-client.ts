@@ -1,11 +1,9 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
 const getBaseUrl = () => {
+  // Set NEXT_PUBLIC_API_URL in Vercel dashboard (production) or .env.local (dev)
   if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL;
-  if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
-    return '/api-proxy';
-  }
-  return 'http://rehably.runasp.net';
+  return 'http://localhost:5272'; // dev fallback
 };
 
 const API_URL = getBaseUrl();

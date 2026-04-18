@@ -22,3 +22,6 @@ node_modules/
 Thumbs.db
 .vercel
 .env*.local
+
+# Allow example env templates
+!.env.production.example

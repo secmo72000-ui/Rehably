@@ -641,5 +641,52 @@
     "sets": "الخطوات",
     "hold": "الوقوف",
     "seconds": "ثانية"
+  },
+  "reports": {
+    "pageTitle": "التقارير",
+    "exportBtn": "تصدير التقرير",
+    "exporting": "جاري التصدير...",
+    "filterThisMonth": "هذا الشهر",
+    "filterThisYear": "هذا العام",
+    "filterAll": "الكل",
+    "revenue": {
+      "title": "إجمالي الإيرادات",
+      "subtitle": "إجمالي المدفوعات المستلمة",
+      "currency": "ج.م"
+    },
+    "clinics": {
+      "title": "إجمالي العيادات",
+      "active": "نشطة",
+      "suspended": "معلقة"
+    },
+    "invoices": {
+      "title": "الفواتير",
+      "paid": "مدفوعة",
+      "pending": "معلقة",
+      "rejected": "مرفوضة"
+    },
+    "subscriptions": {
+      "title": "توزيع الاشتراكات",
+      "monthly": "شهري",
+      "yearly": "سنوي"
+    },
+    "revenueChart": {
+      "title": "الإيرادات الشهرية",
+      "tooltip": "الإيراد"
+    },
+    "recentInvoices": {
+      "title": "آخر الفواتير",
+      "viewAll": "عرض الكل",
+      "clinic": "العيادة",
+      "amount": "المبلغ",
+      "date": "التاريخ",
+      "status": "الحالة",
+      "paid": "مدفوع",
+      "pending": "معلق",
+      "rejected": "مرفوض"
+    },
+    "noData": "لا توجد بيانات للتقارير",
+    "loading": "جاري تحميل التقارير...",
+    "error": "حدث خطأ أثناء تحميل البيانات"
   }
 }

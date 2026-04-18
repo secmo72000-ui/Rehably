@@ -36,7 +36,7 @@ interface ClinicsState {
   // Actions
   fetchClinics: (page?: number, pageSize?: number) => Promise<void>;
   fetchClinicById: (id: string) => Promise<Clinic | null>;
-  createClinic: (data: CreateClinicRequest) => Promise<Clinic | null>;
+  createClinic: (data: CreateClinicRequest) => Promise<{ clinic: Clinic; paymentUrl?: string | null } | null>;
   updateClinic: (id: string, data: UpdateClinicRequest) => Promise<Clinic | null>;
   deleteClinic: (id: string) => Promise<boolean>;
   toggleClinicStatus: (id: string, currentStatus: number) => Promise<boolean>;
@@ -156,7 +156,7 @@ export const useClinicsStore = create<ClinicsState>((set, get) => ({
         totalCount: state.totalCount + 1,
         isCreating: false,
       }));
-      return newClinic;
+      return { clinic: newClinic, paymentUrl: resData.paymentUrl };
     } catch (error: any) {
       console.error('Failed to create clinic', error);
       set({ 

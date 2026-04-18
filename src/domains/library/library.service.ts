@@ -11,6 +11,8 @@ import type {
   CreateAssessmentRequest,
   TreatmentStageDto,
   CreateStageRequest,
+  ModalityItem,
+  DeviceItem,
 } from './library.types';
 
 // ============ Treatments (Admin) ============
@@ -96,6 +98,40 @@ export const assessmentsService = {
 
   delete: async (id: string): Promise<void> => {
     await apiClient.delete(`/api/admin/assessments/${id}`);
+  },
+};
+
+// ============ Clinic Library (clinic-scoped, uses TenantId from JWT) ============
+
+interface ClinicApiResponse<T> {
+  success: boolean;
+  data: T;
+}
+
+export const clinicLibraryService = {
+  getExercises: async (params: LibraryQueryParams = {}): Promise<LibraryListResponse<ExerciseDto>> => {
+    const response = await apiClient.get<ClinicApiResponse<LibraryListResponse<ExerciseDto>>>('/api/clinic/library/exercises', { params });
+    return response.data.data;
+  },
+
+  getModalities: async (params: LibraryQueryParams = {}): Promise<LibraryListResponse<ModalityItem>> => {
+    const response = await apiClient.get<ClinicApiResponse<LibraryListResponse<ModalityItem>>>('/api/clinic/library/modalities', { params });
+    return response.data.data;
+  },
+
+  getDevices: async (params: LibraryQueryParams = {}): Promise<LibraryListResponse<DeviceItem>> => {
+    const response = await apiClient.get<ClinicApiResponse<LibraryListResponse<DeviceItem>>>('/api/clinic/library/devices', { params });
+    return response.data.data;
+  },
+
+  getAssessments: async (params: LibraryQueryParams = {}): Promise<LibraryListResponse<AssessmentDto>> => {
+    const response = await apiClient.get<ClinicApiResponse<LibraryListResponse<AssessmentDto>>>('/api/clinic/library/assessments', { params });
+    return response.data.data;
+  },
+
+  getTreatments: async (params: LibraryQueryParams = {}): Promise<LibraryListResponse<TreatmentDto>> => {
+    const response = await apiClient.get<ClinicApiResponse<LibraryListResponse<TreatmentDto>>>('/api/clinic/library/treatments', { params });
+    return response.data.data;
   },
 };
 
