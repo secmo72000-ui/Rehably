@@ -126,6 +126,7 @@ export interface CreateClinicResponseData {
   paymentType: string;
   paymentTransactionId: string;
   paymentUrl?: string | null;
+  tempPassword?: string | null;
   createdAt: string;
 }
 

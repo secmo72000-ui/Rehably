@@ -36,6 +36,8 @@ export default function ClinicManagementPage() {
     categories,
     featuresLoading,
     selectedClinic,
+    createdClinicInfo,
+    setCreatedClinicInfo,
     isDeleteModalOpen,
     clinicToDelete,
     deleteStatus,
@@ -130,6 +132,11 @@ export default function ClinicManagementPage() {
   if (pageView === 'wizard') {
     return (
       <>
+        {error && (
+          <div className="p-4 mb-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+            {error}
+          </div>
+        )}
         <ClinicWizard
           clinic={editingClinic}
           packages={packages}
@@ -179,6 +186,36 @@ export default function ClinicManagementPage() {
           {t('addClinic')}
         </Button>
       </div>
+
+      {/* Clinic Created — Temp Password Banner */}
+      {createdClinicInfo && (
+        <div className="p-4 bg-green-50 border border-green-300 rounded-lg text-green-800 text-sm space-y-2">
+          <div className="flex justify-between items-start">
+            <p className="font-semibold text-base">✅ تم إنشاء العيادة بنجاح — {createdClinicInfo.name}</p>
+            <button
+              onClick={() => setCreatedClinicInfo(null)}
+              className="text-green-600 hover:text-green-900 text-lg leading-none ml-4"
+              aria-label="إغلاق"
+            >
+              ×
+            </button>
+          </div>
+          <p>البريد الإلكتروني للمالك: <span className="font-mono font-bold">{createdClinicInfo.email}</span></p>
+          <p>
+            كلمة المرور المؤقتة:{' '}
+            <span className="font-mono font-bold bg-green-100 px-2 py-0.5 rounded select-all">
+              {createdClinicInfo.tempPassword}
+            </span>
+            <button
+              onClick={() => navigator.clipboard.writeText(createdClinicInfo.tempPassword)}
+              className="mr-2 text-xs text-green-700 underline hover:no-underline"
+            >
+              نسخ
+            </button>
+          </p>
+          <p className="text-xs text-green-600">احتفظ بهذه البيانات — لن تظهر مرة أخرى. سيُطلب من المالك تغيير كلمة المرور عند أول تسجيل دخول.</p>
+        </div>
+      )}
 
       {/* Error Message */}
       {error && (

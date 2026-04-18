@@ -36,7 +36,7 @@ interface ClinicsState {
   // Actions
   fetchClinics: (page?: number, pageSize?: number) => Promise<void>;
   fetchClinicById: (id: string) => Promise<Clinic | null>;
-  createClinic: (data: CreateClinicRequest) => Promise<{ clinic: Clinic; paymentUrl?: string | null } | null>;
+  createClinic: (data: CreateClinicRequest) => Promise<{ clinic: Clinic; paymentUrl?: string | null; tempPassword?: string | null } | null>;
   updateClinic: (id: string, data: UpdateClinicRequest) => Promise<Clinic | null>;
   deleteClinic: (id: string) => Promise<boolean>;
   toggleClinicStatus: (id: string, currentStatus: number) => Promise<boolean>;
@@ -108,7 +108,7 @@ export const useClinicsStore = create<ClinicsState>((set, get) => ({
     set({ isCreating: true, error: null });
     try {
       const response = await clinicsService.create(data);
-      const resData = response.data;
+      const resData = (response as any).data ?? response;
       // Build a Clinic object from the flat response
       const newClinic: Clinic = {
         id: resData.id,
@@ -156,13 +156,15 @@ export const useClinicsStore = create<ClinicsState>((set, get) => ({
         totalCount: state.totalCount + 1,
         isCreating: false,
       }));
-      return { clinic: newClinic, paymentUrl: resData.paymentUrl };
+      return { clinic: newClinic, paymentUrl: resData.paymentUrl, tempPassword: resData.tempPassword ?? null };
     } catch (error: any) {
       console.error('Failed to create clinic', error);
-      set({ 
-        error: error.message || 'فشل في إنشاء العيادة', 
-        isCreating: false 
-      });
+      const msg =
+        error?.response?.data?.error?.message ||
+        error?.response?.data?.message ||
+        error?.message ||
+        'فشل في إنشاء العيادة';
+      set({ error: msg, isCreating: false });
       return null;
     }
   },

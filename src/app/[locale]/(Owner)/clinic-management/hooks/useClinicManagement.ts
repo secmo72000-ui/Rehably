@@ -46,6 +46,9 @@ export function useClinicManagement(t: (key: string) => string) {
     // View Details State
     const [selectedClinic, setSelectedClinic] = useState<Clinic | null>(null);
 
+    // Temp password shown after clinic creation
+    const [createdClinicInfo, setCreatedClinicInfo] = useState<{ name: string; email: string; tempPassword: string } | null>(null);
+
     // Delete Modal State
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [clinicToDelete, setClinicToDelete] = useState<Clinic | null>(null);
@@ -215,6 +218,13 @@ export function useClinicManagement(t: (key: string) => string) {
                     if (result.paymentUrl) {
                         window.location.href = result.paymentUrl;
                     } else {
+                        if (result.tempPassword) {
+                            setCreatedClinicInfo({
+                                name: data.clinicName,
+                                email: data.ownerEmail,
+                                tempPassword: result.tempPassword,
+                            });
+                        }
                         closeWizard();
                     }
                 }
@@ -240,6 +250,8 @@ export function useClinicManagement(t: (key: string) => string) {
         categories,
         featuresLoading,
         selectedClinic,
+        createdClinicInfo,
+        setCreatedClinicInfo,
         isDeleteModalOpen,
         clinicToDelete,
         deleteStatus,
