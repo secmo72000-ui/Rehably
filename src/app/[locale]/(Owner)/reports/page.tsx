@@ -232,7 +232,7 @@ export default function ReportsPage() {
           .filter(i => {
             const d = new Date(i.paidAt || '');
             return !isNaN(d.getTime()) && d.getMonth() === targetMonth && d.getFullYear() === targetYear
-              && (i.paymentStatus === 0 || String(i.paymentStatus).toLowerCase() === 'paid');
+              && (String(i.paymentStatus).toLowerCase() === 'paid' || (i.paymentStatus as unknown as number) === 0);
           })
           .reduce((s, i) => s + (i.totalAmount || 0), 0);
         return { month, value: rev };
