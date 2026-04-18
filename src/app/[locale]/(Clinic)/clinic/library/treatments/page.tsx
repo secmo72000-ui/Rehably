@@ -77,7 +77,7 @@ export default function TreatmentsPage() {
         ].map(item => (
           <Link key={item.href} href={item.href}
             className={`px-4 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-colors
-              ${ typeof window !== "undefined" <div className="space-y-5" dir="rtl"><div className="space-y-5" dir="rtl"> window.location.pathname.includes(item.href.split("/").pop()!)
+              ${ typeof window !== "undefined" && window.location.pathname.includes(item.href.split("/").pop()!)
                 ? "bg-[#29AAFE] text-white"
                 : "text-gray-500 hover:bg-gray-100" }`}>
             {item.label}
