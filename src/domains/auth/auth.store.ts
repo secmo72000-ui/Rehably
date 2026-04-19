@@ -82,23 +82,27 @@ export const useAuthStore = create<AuthState>()(
             });
 
             // Fetch user info — allowed even when mustChangePassword=true (middleware whitelists /me)
-            const userRes = await authService.me(accessToken);
-            if (userRes.success) {
-              set({ user: userRes.data });
+            try {
+              const userRes = await authService.me(accessToken);
+              if (userRes.success) {
+                set({ user: userRes.data });
+              }
+            } catch {
+              // me() failed — non-fatal, continue with login
+            }
 
-              // If must change password, stop here — LoginForm will redirect to /change-password
-              if (mustChangePassword) return;
+            // If must change password, stop here — LoginForm will redirect to /change-password
+            if (mustChangePassword) return;
 
-              // Skip portal validation on localhost (dev preview)
-              const isLocalDev = typeof window !== 'undefined' &&
-                (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+            // Skip portal validation on localhost (dev preview)
+            const isLocalDev = typeof window !== 'undefined' &&
+              (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
-              if (!isLocalDev) {
-                const { validatePortalAccess } = get();
-                if (!validatePortalAccess()) {
-                  await get().logout();
-                  throw new Error('لا يمكنك الوصول إلى هذه المنصة');
-                }
+            if (!isLocalDev) {
+              const { user, validatePortalAccess } = get();
+              if (user && !validatePortalAccess()) {
+                await get().logout();
+                throw new Error('لا يمكنك الوصول إلى هذه المنصة');
               }
             }
           }
@@ -179,6 +183,7 @@ export const useAuthStore = create<AuthState>()(
           refreshToken: null,
           user: null,
           isAuthenticated: false,
+          mustChangePassword: false,
           otpSent: false,
           otpPhone: null,
           error: null,
