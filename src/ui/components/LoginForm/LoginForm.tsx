@@ -15,7 +15,7 @@ interface LoginFormProps {
 
 export function LoginForm({ locale }: LoginFormProps) {
   const router = useRouter();
-  const { login, getRedirectPath } = useAuthStore();
+  const { login, getRedirectPath, mustChangePassword } = useAuthStore();
 
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
@@ -34,8 +34,12 @@ export function LoginForm({ locale }: LoginFormProps) {
 
     try {
       await login(email, password);
+      // If user must change password, redirect to change-password page
+      if (useAuthStore.getState().mustChangePassword) {
+        router.push(`/${locale}/change-password`);
+        return;
+      }
       const path = getRedirectPath();
-      // Ensure we redirect to the localized path
       router.push(`/${locale}${path}`);
     } catch (err: any) {
       console.error(err);

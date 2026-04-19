@@ -29,10 +29,11 @@ interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  mustChangePassword: boolean;
   otpSent: boolean;
   otpPhone: string | null;
   error: string | null;
-  
+
   // Email + Password login (Owner/Clinic)
   login: (email: string, password: string) => Promise<void>;
   
@@ -55,6 +56,7 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       isAuthenticated: false,
       isLoading: false,
+      mustChangePassword: false,
       otpSent: false,
       otpPhone: null,
       error: null,
@@ -65,30 +67,38 @@ export const useAuthStore = create<AuthState>()(
         try {
           const res = await authService.login({ email, password });
           if (res.success) {
-            const { accessToken, refreshToken } = res.data;
-            
+            const { accessToken, refreshToken, mustChangePassword } = res.data;
+
             // Save token to cookie for middleware to read (do this first!)
             setCookie('accessToken', accessToken, 7);
             setCookie('refreshToken', refreshToken, 30);
-            
+
             // Save to state
             set({
               accessToken,
               refreshToken,
               isAuthenticated: true,
+              mustChangePassword: mustChangePassword ?? false,
             });
-            
-            // Fetch user info
+
+            // Fetch user info — allowed even when mustChangePassword=true (middleware whitelists /me)
             const userRes = await authService.me(accessToken);
             if (userRes.success) {
               set({ user: userRes.data });
-              
-              // Validate portal access after getting user info
-              const { validatePortalAccess } = get();
-              if (!validatePortalAccess()) {
-                // Clear auth if user doesn't have access to this portal
-                await get().logout();
-                throw new Error('لا يمكنك الوصول إلى هذه المنصة');
+
+              // If must change password, stop here — LoginForm will redirect to /change-password
+              if (mustChangePassword) return;
+
+              // Skip portal validation on localhost (dev preview)
+              const isLocalDev = typeof window !== 'undefined' &&
+                (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+              if (!isLocalDev) {
+                const { validatePortalAccess } = get();
+                if (!validatePortalAccess()) {
+                  await get().logout();
+                  throw new Error('لا يمكنك الوصول إلى هذه المنصة');
+                }
               }
             }
           }
@@ -213,14 +223,27 @@ export const useAuthStore = create<AuthState>()(
         const { user, validatePortalAccess } = get();
         if (!user || !user.roles.length) return '/login';
 
-        // Validate portal access
+        // On localhost, redirect by role so any portal can be previewed
+        const isLocalDev = typeof window !== 'undefined' &&
+          (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+        if (isLocalDev) {
+          const role = user.roles[0];
+          const clinicRoles = ['ClinicOwner', 'ClinicAdmin', 'Doctor', 'Receptionist'];
+          const patientRoles = ['Patient'];
+          if (clinicRoles.includes(role)) return '/clinic/dashboard';
+          if (patientRoles.includes(role)) return '/patient/home';
+          return '/home'; // PlatformAdmin
+        }
+
+        // Production: validate portal access
         if (!validatePortalAccess()) {
           return '/unauthorized';
         }
 
         const subdomain = getSubdomain();
         const portalType = getPortalType(subdomain);
-        
+
         return getDefaultPathForPortal(portalType);
       }
     }),
