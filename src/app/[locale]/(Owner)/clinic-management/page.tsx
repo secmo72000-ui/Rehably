@@ -200,19 +200,22 @@ export default function ClinicManagementPage() {
               ×
             </button>
           </div>
-          <p>البريد الإلكتروني للمالك: <span className="font-mono font-bold">{createdClinicInfo.email}</span></p>
+          <p>
+            البريد الإلكتروني للمالك:{' '}
+            <span className="font-mono font-bold" dir="ltr">{createdClinicInfo.email}</span>
+          </p>
           <p>
             كلمة المرور المؤقتة:{' '}
-            <span className="font-mono font-bold bg-green-100 px-2 py-0.5 rounded select-all">
+            <span className="font-mono font-bold bg-green-100 px-2 py-0.5 rounded select-all" dir="ltr">
               {createdClinicInfo.tempPassword}
             </span>
-            <button
-              onClick={() => navigator.clipboard.writeText(createdClinicInfo.tempPassword)}
-              className="mr-2 text-xs text-green-700 underline hover:no-underline"
-            >
-              نسخ
-            </button>
           </p>
+          <button
+            onClick={() => navigator.clipboard.writeText(`Email: ${createdClinicInfo.email}\nPassword: ${createdClinicInfo.tempPassword}`)}
+            className="text-xs text-green-700 underline hover:no-underline"
+          >
+            نسخ البريد الإلكتروني + كلمة المرور
+          </button>
           <p className="text-xs text-green-600">احتفظ بهذه البيانات — لن تظهر مرة أخرى. سيُطلب من المالك تغيير كلمة المرور عند أول تسجيل دخول.</p>
         </div>
       )}
