@@ -71,12 +71,12 @@ export const useAuthStore = create<AuthState>()(
 
             // Save token to cookie for middleware to read (do this first!)
             setCookie('accessToken', accessToken, 7);
-            setCookie('refreshToken', refreshToken, 30);
+            if (refreshToken) setCookie('refreshToken', refreshToken, 30);
 
             // Save to state
             set({
               accessToken,
-              refreshToken,
+              refreshToken: refreshToken || null,
               isAuthenticated: true,
               mustChangePassword: mustChangePassword ?? false,
             });
