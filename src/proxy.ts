@@ -9,7 +9,8 @@ const DEFAULT_LOCALE = 'ar';
 const PUBLIC_PATHS = [
   '/login',
   '/forgot-password',
-  '/reset-password', 
+  '/reset-password',
+  '/change-password',
   '/verify-otp',
   '/create-password',
   '/unauthorized'
