@@ -44,8 +44,14 @@ function AddPatientDrawer({ onClose, onSaved }: { onClose: () => void; onSaved: 
       });
       onSaved();
       onClose();
-    } catch {
-      setError('فشل في حفظ المريض. حاول مرة أخرى.');
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.error?.message ||
+        err?.response?.data?.message ||
+        err?.response?.data?.title ||
+        err?.message ||
+        'فشل في حفظ المريض. حاول مرة أخرى.';
+      setError(msg);
     } finally {
       setSaving(false);
     }
