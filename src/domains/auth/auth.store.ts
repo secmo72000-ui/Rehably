@@ -236,8 +236,9 @@ export const useAuthStore = create<AuthState>()(
           const role = user.roles[0];
           const clinicRoles = ['ClinicOwner', 'ClinicAdmin', 'Doctor', 'Receptionist'];
           const patientRoles = ['Patient'];
-          if (clinicRoles.includes(role)) return '/clinic/dashboard';
-          if (patientRoles.includes(role)) return '/patient/home';
+          // Tenant-scoped roles: "ClinicOwner_<guid>" — match by prefix
+          if (clinicRoles.some(r => role === r || role.startsWith(r + '_'))) return '/clinic/dashboard';
+          if (patientRoles.some(r => role === r || role.startsWith(r + '_'))) return '/patient/home';
           return '/home'; // PlatformAdmin
         }
 

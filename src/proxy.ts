@@ -99,7 +99,8 @@ function decodeTokenRole(token: string): string | null {
 
 function isRoleAllowedForPortal(role: string | null, portalType: PortalType): boolean {
   if (!role) return false;
-  return PORTAL_ROLES[portalType].includes(role);
+  // Roles can be tenant-scoped: e.g. "ClinicOwner_<guid>" — match by prefix
+  return PORTAL_ROLES[portalType].some(r => role === r || role.startsWith(r + '_'));
 }
 
 function getDefaultPathForPortal(portalType: PortalType): string {

@@ -73,7 +73,8 @@ export function getPortalType(subdomain: string | null): PortalType {
  * Check if a role is allowed for a specific portal type
  */
 export function isRoleAllowedForPortal(role: string, portalType: PortalType): boolean {
-  return PORTAL_ROLES[portalType].includes(role);
+  // Roles can be tenant-scoped: e.g. "ClinicOwner_<guid>" — match by prefix
+  return PORTAL_ROLES[portalType].some(r => role === r || role.startsWith(r + '_'));
 }
 
 /**
