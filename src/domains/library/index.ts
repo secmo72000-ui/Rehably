@@ -1,4 +1,4 @@
-export { treatmentsService, exercisesService, assessmentsService, stagesService } from './library.service';
+export { treatmentsService, exercisesService, assessmentsService, stagesService, devicesService } from './library.service';
 export type {
   LibraryListResponse,
   LibraryQueryParams,
@@ -10,4 +10,6 @@ export type {
   CreateAssessmentRequest,
   TreatmentStageDto,
   CreateStageRequest,
+  DeviceItem,
+  CreateDeviceRequest,
 } from './library.types';

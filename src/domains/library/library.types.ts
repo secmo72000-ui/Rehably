@@ -207,3 +207,15 @@ export interface CreateStageRequest {
   minSessions?: number;
   maxSessions?: number;
 }
+
+// ============ Device (Admin) ============
+
+export interface CreateDeviceRequest {
+  name: string;
+  nameArabic?: string;
+  description?: string;
+  relatedConditionCodes?: string;
+  manufacturer?: string;
+  model?: string;
+  accessTier?: number;
+}

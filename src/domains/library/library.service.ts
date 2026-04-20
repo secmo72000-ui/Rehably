@@ -13,6 +13,7 @@ import type {
   CreateStageRequest,
   ModalityItem,
   DeviceItem,
+  CreateDeviceRequest,
 } from './library.types';
 
 // ============ Treatments (Admin) ============
@@ -30,6 +31,11 @@ export const treatmentsService = {
 
   create: async (data: CreateTreatmentRequest): Promise<TreatmentDto> => {
     const response = await apiClient.post<TreatmentDto>('/api/admin/treatments', data);
+    return response.data;
+  },
+
+  update: async (id: string, data: CreateTreatmentRequest): Promise<TreatmentDto> => {
+    const response = await apiClient.put<TreatmentDto>(`/api/admin/treatments/${id}`, data);
     return response.data;
   },
 
@@ -73,6 +79,27 @@ export const exercisesService = {
     return response.data;
   },
 
+  update: async (id: string, data: CreateExerciseRequest, video?: File): Promise<ExerciseDto> => {
+    const formData = new FormData();
+    formData.append('Name', data.name);
+    if (data.nameArabic) formData.append('NameArabic', data.nameArabic);
+    if (data.description) formData.append('Description', data.description);
+    formData.append('BodyRegionCategoryId', data.bodyRegionCategoryId);
+    if (data.relatedConditionCode) formData.append('RelatedConditionCode', data.relatedConditionCode);
+    if (data.tags) formData.append('Tags', data.tags);
+    if (data.repeats !== undefined) formData.append('Repeats', String(data.repeats));
+    if (data.steps !== undefined) formData.append('Steps', String(data.steps));
+    if (data.holdSeconds !== undefined) formData.append('HoldSeconds', String(data.holdSeconds));
+    if (data.linkedExerciseIds) formData.append('LinkedExerciseIds', data.linkedExerciseIds);
+    if (data.accessTier !== undefined) formData.append('AccessTier', String(data.accessTier));
+    if (video) formData.append('video', video);
+
+    const response = await apiClient.put<ExerciseDto>(`/api/admin/exercises/${id}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+
   delete: async (id: string): Promise<void> => {
     await apiClient.delete(`/api/admin/exercises/${id}`);
   },
@@ -93,6 +120,11 @@ export const assessmentsService = {
 
   create: async (data: CreateAssessmentRequest): Promise<AssessmentDto> => {
     const response = await apiClient.post<AssessmentDto>('/api/admin/assessments', data);
+    return response.data;
+  },
+
+  update: async (id: string, data: CreateAssessmentRequest): Promise<AssessmentDto> => {
+    const response = await apiClient.put<AssessmentDto>(`/api/admin/assessments/${id}`, data);
     return response.data;
   },
 
@@ -153,7 +185,64 @@ export const stagesService = {
     return response.data.data;
   },
 
+  update: async (id: string, data: CreateStageRequest): Promise<TreatmentStageDto> => {
+    const response = await apiClient.put<ApiResponse<TreatmentStageDto>>(`/api/admin/stages/${id}`, data);
+    return response.data.data;
+  },
+
   delete: async (id: string): Promise<void> => {
     await apiClient.delete(`/api/admin/stages/${id}`);
+  },
+};
+
+// ============ Devices (Admin) ============
+
+export const devicesService = {
+  getAll: async (params: LibraryQueryParams = {}): Promise<LibraryListResponse<DeviceItem>> => {
+    const response = await apiClient.get<LibraryListResponse<DeviceItem>>('/api/admin/devices', { params });
+    return response.data;
+  },
+
+  getById: async (id: string): Promise<DeviceItem> => {
+    const response = await apiClient.get<DeviceItem>(`/api/admin/devices/${id}`);
+    return response.data;
+  },
+
+  create: async (data: CreateDeviceRequest, image?: File): Promise<DeviceItem> => {
+    const formData = new FormData();
+    formData.append('Name', data.name);
+    if (data.nameArabic) formData.append('NameArabic', data.nameArabic);
+    if (data.description) formData.append('Description', data.description);
+    if (data.relatedConditionCodes) formData.append('RelatedConditionCodes', data.relatedConditionCodes);
+    if (data.manufacturer) formData.append('Manufacturer', data.manufacturer);
+    if (data.model) formData.append('Model', data.model);
+    if (data.accessTier !== undefined) formData.append('AccessTier', String(data.accessTier));
+    if (image) formData.append('image', image);
+
+    const response = await apiClient.post<DeviceItem>('/api/admin/devices', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+
+  update: async (id: string, data: CreateDeviceRequest, image?: File): Promise<DeviceItem> => {
+    const formData = new FormData();
+    formData.append('Name', data.name);
+    if (data.nameArabic) formData.append('NameArabic', data.nameArabic);
+    if (data.description) formData.append('Description', data.description);
+    if (data.relatedConditionCodes) formData.append('RelatedConditionCodes', data.relatedConditionCodes);
+    if (data.manufacturer) formData.append('Manufacturer', data.manufacturer);
+    if (data.model) formData.append('Model', data.model);
+    if (data.accessTier !== undefined) formData.append('AccessTier', String(data.accessTier));
+    if (image) formData.append('image', image);
+
+    const response = await apiClient.put<DeviceItem>(`/api/admin/devices/${id}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+
+  delete: async (id: string): Promise<void> => {
+    await apiClient.delete(`/api/admin/devices/${id}`);
   },
 };

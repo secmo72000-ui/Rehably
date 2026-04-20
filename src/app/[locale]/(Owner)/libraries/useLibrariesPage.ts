@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocale } from '@/shared/hooks';
 import { getTranslation } from '@/shared/i18n';
 import {
@@ -6,19 +6,22 @@ import {
   exercisesService,
   assessmentsService,
   stagesService,
+  devicesService,
 } from '@/domains/library';
 import type {
   TreatmentDto,
   ExerciseDto,
   AssessmentDto,
   TreatmentStageDto,
+  DeviceItem,
   CreateTreatmentRequest,
   CreateExerciseRequest,
   CreateAssessmentRequest,
   CreateStageRequest,
+  CreateDeviceRequest,
 } from '@/domains/library';
 
-// ============ UI-facing types (kept for backward compat with components) ============
+// ============ UI-facing types ============
 
 export interface Treatment {
   id: string;
@@ -69,7 +72,17 @@ export interface Assessment {
   frequency: string;
 }
 
-// ============ Mappers (Backend DTO → UI type) ============
+export interface Device {
+  id: string;
+  name: string;
+  description?: string;
+  manufacturer?: string;
+  model?: string;
+  imageUrl?: string;
+  relatedConditionCodes?: string;
+}
+
+// ============ Mappers ============
 
 function mapTreatment(dto: TreatmentDto): Treatment {
   return {
@@ -128,6 +141,18 @@ function mapAssessment(dto: AssessmentDto): Assessment {
   };
 }
 
+function mapDevice(dto: DeviceItem): Device {
+  return {
+    id: dto.id,
+    name: dto.name,
+    description: dto.description ?? undefined,
+    manufacturer: dto.manufacturer ?? undefined,
+    model: dto.model ?? undefined,
+    imageUrl: dto.imageUrl ?? undefined,
+    relatedConditionCodes: dto.relatedConditionCodes ?? undefined,
+  };
+}
+
 // ============ Hook ============
 
 export function useLibrariesPage() {
@@ -144,74 +169,106 @@ export function useLibrariesPage() {
   const [stages, setStages] = useState<Stage[]>([]);
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [assessments, setAssessments] = useState<Assessment[]>([]);
+  const [devices, setDevices] = useState<Device[]>([]);
 
   // Loading & error
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Drawer state
+  // Add Drawer state
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isStageDrawerOpen, setIsStageDrawerOpen] = useState(false);
   const [isExerciseDrawerOpen, setIsExerciseDrawerOpen] = useState(false);
+  const [isAssessmentDrawerOpen, setIsAssessmentDrawerOpen] = useState(false);
+  const [isDeviceDrawerOpen, setIsDeviceDrawerOpen] = useState(false);
+
+  // Edit state (null = add mode, object = edit mode)
+  const [editingTreatment, setEditingTreatment] = useState<Treatment | null>(null);
+  const [editingStage, setEditingStage] = useState<Stage | null>(null);
+  const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
+  const [editingAssessment, setEditingAssessment] = useState<Assessment | null>(null);
+  const [editingDevice, setEditingDevice] = useState<Device | null>(null);
 
   // Treatment Details Drawer state
   const [selectedTreatment, setSelectedTreatment] = useState<Treatment | null>(null);
   const [isDetailsDrawerOpen, setIsDetailsDrawerOpen] = useState(false);
 
+  // Search debounce
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  useEffect(() => {
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 400);
+    return () => { if (searchTimer.current) clearTimeout(searchTimer.current); };
+  }, [searchQuery]);
+
   // ============ Fetch Functions ============
 
-  const fetchTreatments = useCallback(async () => {
+  const fetchTreatments = useCallback(async (search?: string) => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await treatmentsService.getAll({ page: 1, pageSize: 100 });
+      const response = await treatmentsService.getAll({ page: 1, pageSize: 100, search: search || undefined });
       setTreatments(response.items.map(mapTreatment));
     } catch (err: any) {
-      console.error('Failed to fetch treatments', err);
       setError(err?.response?.data?.error?.message || err?.message || 'Failed to fetch treatments');
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  const fetchStages = useCallback(async () => {
+  const fetchStages = useCallback(async (search?: string) => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await stagesService.getAll({ page: 1, pageSize: 100 });
+      const response = await stagesService.getAll({ page: 1, pageSize: 100, search: search || undefined });
       setStages(response.items.map(mapStage));
     } catch (err: any) {
-      console.error('Failed to fetch stages', err);
       setError(err?.response?.data?.error?.message || err.message || 'Failed to fetch stages');
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  const fetchExercises = useCallback(async () => {
+  const fetchExercises = useCallback(async (search?: string) => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await exercisesService.getAll({ page: 1, pageSize: 100 });
+      const response = await exercisesService.getAll({ page: 1, pageSize: 100, search: search || undefined });
       setExercises(response.items.map(mapExercise));
     } catch (err: any) {
-      console.error('Failed to fetch exercises', err);
       setError(err?.response?.data?.error?.message || err?.message || 'Failed to fetch exercises');
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  const fetchAssessments = useCallback(async () => {
+  const fetchAssessments = useCallback(async (search?: string) => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await assessmentsService.getAll({ page: 1, pageSize: 100 });
+      const response = await assessmentsService.getAll({ page: 1, pageSize: 100, search: search || undefined });
       setAssessments(response.items.map(mapAssessment));
     } catch (err: any) {
-      console.error('Failed to fetch assessments', err);
       setError(err?.response?.data?.error?.message || err?.message || 'Failed to fetch assessments');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const fetchDevices = useCallback(async (search?: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await devicesService.getAll({ page: 1, pageSize: 100, search: search || undefined });
+      setDevices(response.items.map(mapDevice));
+    } catch (err: any) {
+      // Devices API may not exist yet — fail silently with empty list
+      setDevices([]);
     } finally {
       setIsLoading(false);
     }
@@ -221,26 +278,33 @@ export function useLibrariesPage() {
 
   useEffect(() => {
     switch (activeTab) {
-      case 'treatments':
-        fetchTreatments();
-        break;
-      case 'stages':
-        fetchStages();
-        break;
-      case 'exercises':
-        fetchExercises();
-        break;
-      case 'assessments':
-        fetchAssessments();
-        break;
+      case 'treatments': fetchTreatments(); break;
+      case 'stages': fetchStages(); break;
+      case 'exercises': fetchExercises(); break;
+      case 'assessments': fetchAssessments(); break;
+      case 'devices': fetchDevices(); break;
     }
-  }, [activeTab, fetchTreatments, fetchStages, fetchExercises, fetchAssessments]);
+  }, [activeTab, fetchTreatments, fetchStages, fetchExercises, fetchAssessments, fetchDevices]);
+
+  // ============ Re-fetch on search change ============
+
+  useEffect(() => {
+    switch (activeTab) {
+      case 'treatments': fetchTreatments(debouncedSearch); break;
+      case 'stages': fetchStages(debouncedSearch); break;
+      case 'exercises': fetchExercises(debouncedSearch); break;
+      case 'assessments': fetchAssessments(debouncedSearch); break;
+      case 'devices': fetchDevices(debouncedSearch); break;
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch]);
 
   // ============ Tab Handlers ============
 
   const handleTabChange = (id: string) => {
     setActiveTab(id);
     setSearchQuery('');
+    setDebouncedSearch('');
     setError(null);
   };
 
@@ -248,18 +312,22 @@ export function useLibrariesPage() {
 
   // ============ Treatment Handlers ============
 
-  const handleAddTreatment = () => setIsDrawerOpen(true);
-  const handleCloseDrawer = () => setIsDrawerOpen(false);
+  const handleAddTreatment = () => { setEditingTreatment(null); setIsDrawerOpen(true); };
+  const handleCloseDrawer = () => { setIsDrawerOpen(false); setTimeout(() => setEditingTreatment(null), 300); };
 
   const handleSubmitTreatment = async (data: CreateTreatmentRequest) => {
     setIsSubmitting(true);
     try {
-      await treatmentsService.create(data);
+      if (editingTreatment) {
+        await treatmentsService.update(editingTreatment.id, data);
+      } else {
+        await treatmentsService.create(data);
+      }
       setIsDrawerOpen(false);
-      await fetchTreatments();
+      setTimeout(() => setEditingTreatment(null), 300);
+      await fetchTreatments(debouncedSearch);
     } catch (err: any) {
-      console.error('Failed to create treatment', err);
-      setError(err?.response?.data?.error?.message || err?.message || 'Failed to create treatment');
+      setError(err?.response?.data?.error?.message || err?.message || 'Failed to save treatment');
     } finally {
       setIsSubmitting(false);
     }
@@ -276,7 +344,9 @@ export function useLibrariesPage() {
   };
 
   const handleEditTreatment = (treatment: Treatment) => {
-    console.log('Edit treatment', treatment);
+    setEditingTreatment(treatment);
+    setIsDetailsDrawerOpen(false);
+    setTimeout(() => setIsDrawerOpen(true), 300);
   };
 
   const handleDeleteTreatment = async (treatment: Treatment) => {
@@ -284,32 +354,36 @@ export function useLibrariesPage() {
       await treatmentsService.delete(treatment.id);
       setTreatments(prev => prev.filter(t => t.id !== treatment.id));
     } catch (err: any) {
-      console.error('Failed to delete treatment', err);
       setError(err?.response?.data?.error?.message || err?.message || 'Failed to delete treatment');
     }
   };
 
   // ============ Stage Handlers ============
 
-  const handleAddStage = () => setIsStageDrawerOpen(true);
-  const handleCloseStageDrawer = () => setIsStageDrawerOpen(false);
+  const handleAddStage = () => { setEditingStage(null); setIsStageDrawerOpen(true); };
+  const handleCloseStageDrawer = () => { setIsStageDrawerOpen(false); setTimeout(() => setEditingStage(null), 300); };
 
   const handleSubmitStage = async (data: CreateStageRequest) => {
     setIsSubmitting(true);
     try {
-      await stagesService.create(data);
+      if (editingStage) {
+        await stagesService.update(editingStage.id, data);
+      } else {
+        await stagesService.create(data);
+      }
       setIsStageDrawerOpen(false);
-      await fetchStages();
+      setTimeout(() => setEditingStage(null), 300);
+      await fetchStages(debouncedSearch);
     } catch (err: any) {
-      console.error('Failed to create stage', err);
-      setError(err?.response?.data?.error?.message || err.message || 'Failed to create stage');
+      setError(err?.response?.data?.error?.message || err.message || 'Failed to save stage');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleEditStage = (stage: Stage) => {
-    console.log('Edit stage', stage);
+    setEditingStage(stage);
+    setIsStageDrawerOpen(true);
   };
 
   const handleDeleteStage = async (stage: Stage) => {
@@ -317,15 +391,14 @@ export function useLibrariesPage() {
       await stagesService.delete(stage.id);
       setStages(prev => prev.filter(s => s.id !== stage.id));
     } catch (err: any) {
-      console.error('Failed to delete stage', err);
       setError(err?.response?.data?.error?.message || err.message || 'Failed to delete stage');
     }
   };
 
   // ============ Exercise Handlers ============
 
-  const handleAddExercise = () => setIsExerciseDrawerOpen(true);
-  const handleCloseExerciseDrawer = () => setIsExerciseDrawerOpen(false);
+  const handleAddExercise = () => { setEditingExercise(null); setIsExerciseDrawerOpen(true); };
+  const handleCloseExerciseDrawer = () => { setIsExerciseDrawerOpen(false); setTimeout(() => setEditingExercise(null), 300); };
 
   const handleSubmitExercise = async (data: { name: string; description: string; bodyArea: string; relatedDisease: string; categories: string; repeats: string; steps: string; hold: string; media: File | null }) => {
     setIsSubmitting(true);
@@ -340,19 +413,24 @@ export function useLibrariesPage() {
         steps: data.steps ? parseInt(data.steps) : undefined,
         holdSeconds: data.hold ? parseInt(data.hold) : undefined,
       };
-      await exercisesService.create(request, data.media ?? undefined);
+      if (editingExercise) {
+        await exercisesService.update(editingExercise.id, request, data.media ?? undefined);
+      } else {
+        await exercisesService.create(request, data.media ?? undefined);
+      }
       setIsExerciseDrawerOpen(false);
-      await fetchExercises();
+      setTimeout(() => setEditingExercise(null), 300);
+      await fetchExercises(debouncedSearch);
     } catch (err: any) {
-      console.error('Failed to create exercise', err);
-      setError(err?.response?.data?.error?.message || err?.message || 'Failed to create exercise');
+      setError(err?.response?.data?.error?.message || err?.message || 'Failed to save exercise');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleEditExercise = (exercise: Exercise) => {
-    console.log('Edit exercise', exercise);
+    setEditingExercise(exercise);
+    setIsExerciseDrawerOpen(true);
   };
 
   const handleDeleteExercise = async (exercise: Exercise) => {
@@ -360,32 +438,36 @@ export function useLibrariesPage() {
       await exercisesService.delete(exercise.id);
       setExercises(prev => prev.filter(e => e.id !== exercise.id));
     } catch (err: any) {
-      console.error('Failed to delete exercise', err);
       setError(err?.response?.data?.error?.message || err?.message || 'Failed to delete exercise');
     }
   };
 
   // ============ Assessment Handlers ============
 
-  const handleAddAssessment = () => {
-    console.log('Add assessment — drawer not implemented yet');
-  };
+  const handleAddAssessment = () => { setEditingAssessment(null); setIsAssessmentDrawerOpen(true); };
+  const handleCloseAssessmentDrawer = () => { setIsAssessmentDrawerOpen(false); setTimeout(() => setEditingAssessment(null), 300); };
 
   const handleSubmitAssessment = async (data: CreateAssessmentRequest) => {
     setIsSubmitting(true);
     try {
-      await assessmentsService.create(data);
-      await fetchAssessments();
+      if (editingAssessment) {
+        await assessmentsService.update(editingAssessment.id, data);
+      } else {
+        await assessmentsService.create(data);
+      }
+      setIsAssessmentDrawerOpen(false);
+      setTimeout(() => setEditingAssessment(null), 300);
+      await fetchAssessments(debouncedSearch);
     } catch (err: any) {
-      console.error('Failed to create assessment', err);
-      setError(err?.response?.data?.error?.message || err?.message || 'Failed to create assessment');
+      setError(err?.response?.data?.error?.message || err?.message || 'Failed to save assessment');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleEditAssessment = (assessment: Assessment) => {
-    console.log('Edit assessment', assessment);
+    setEditingAssessment(assessment);
+    setIsAssessmentDrawerOpen(true);
   };
 
   const handleDeleteAssessment = async (assessment: Assessment) => {
@@ -393,8 +475,44 @@ export function useLibrariesPage() {
       await assessmentsService.delete(assessment.id);
       setAssessments(prev => prev.filter(a => a.id !== assessment.id));
     } catch (err: any) {
-      console.error('Failed to delete assessment', err);
       setError(err?.response?.data?.error?.message || err?.message || 'Failed to delete assessment');
+    }
+  };
+
+  // ============ Device Handlers ============
+
+  const handleAddDevice = () => { setEditingDevice(null); setIsDeviceDrawerOpen(true); };
+  const handleCloseDeviceDrawer = () => { setIsDeviceDrawerOpen(false); setTimeout(() => setEditingDevice(null), 300); };
+
+  const handleSubmitDevice = async (data: CreateDeviceRequest, image?: File) => {
+    setIsSubmitting(true);
+    try {
+      if (editingDevice) {
+        await devicesService.update(editingDevice.id, data, image);
+      } else {
+        await devicesService.create(data, image);
+      }
+      setIsDeviceDrawerOpen(false);
+      setTimeout(() => setEditingDevice(null), 300);
+      await fetchDevices(debouncedSearch);
+    } catch (err: any) {
+      setError(err?.response?.data?.error?.message || err?.message || 'Failed to save device');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleEditDevice = (device: Device) => {
+    setEditingDevice(device);
+    setIsDeviceDrawerOpen(true);
+  };
+
+  const handleDeleteDevice = async (device: Device) => {
+    try {
+      await devicesService.delete(device.id);
+      setDevices(prev => prev.filter(d => d.id !== device.id));
+    } catch (err: any) {
+      setError(err?.response?.data?.error?.message || err?.message || 'Failed to delete device');
     }
   };
 
@@ -407,36 +525,63 @@ export function useLibrariesPage() {
     setSearchQuery,
     sortDirection,
     handleSortToggle,
+
+    // Treatment drawers
     isDrawerOpen,
+    editingTreatment,
     handleAddTreatment,
     handleCloseDrawer,
     handleSubmitTreatment,
-    isStageDrawerOpen,
-    handleAddStage,
-    handleCloseStageDrawer,
-    handleSubmitStage,
     selectedTreatment,
     isDetailsDrawerOpen,
     handleOpenDetails,
     handleCloseDetails,
     handleEditTreatment,
     handleDeleteTreatment,
+
+    // Stage drawers
+    isStageDrawerOpen,
+    editingStage,
+    handleAddStage,
+    handleCloseStageDrawer,
+    handleSubmitStage,
     handleEditStage,
     handleDeleteStage,
-    handleEditExercise,
-    handleDeleteExercise,
+
+    // Exercise drawers
     isExerciseDrawerOpen,
+    editingExercise,
     handleAddExercise,
     handleCloseExerciseDrawer,
     handleSubmitExercise,
+    handleEditExercise,
+    handleDeleteExercise,
+
+    // Assessment drawers
+    isAssessmentDrawerOpen,
+    editingAssessment,
+    handleAddAssessment,
+    handleCloseAssessmentDrawer,
+    handleSubmitAssessment,
+    handleEditAssessment,
+    handleDeleteAssessment,
+
+    // Device drawers
+    isDeviceDrawerOpen,
+    editingDevice,
+    handleAddDevice,
+    handleCloseDeviceDrawer,
+    handleSubmitDevice,
+    handleEditDevice,
+    handleDeleteDevice,
+
+    // Data
     treatments,
     stages,
     exercises,
     assessments,
-    handleEditAssessment,
-    handleDeleteAssessment,
-    handleAddAssessment,
-    handleSubmitAssessment,
+    devices,
+
     isLoading,
     isSubmitting,
     error,

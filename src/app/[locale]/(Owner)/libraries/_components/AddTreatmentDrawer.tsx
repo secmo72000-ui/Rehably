@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Drawer } from '@/ui/components';
 import { Input, Button } from '@/ui/primitives';
 import type { CreateTreatmentRequest } from '@/domains/library';
+import type { Treatment } from '../useLibrariesPage';
 
 interface AddTreatmentDrawerProps {
   isOpen: boolean;
@@ -9,6 +10,7 @@ interface AddTreatmentDrawerProps {
   onSubmit?: (data: CreateTreatmentRequest) => void;
   isSubmitting?: boolean;
   isRtl?: boolean;
+  initialData?: Treatment | null;
 }
 
 export function AddTreatmentDrawer({
@@ -17,7 +19,10 @@ export function AddTreatmentDrawer({
   onSubmit,
   isSubmitting = false,
   isRtl = true,
+  initialData,
 }: AddTreatmentDrawerProps) {
+  const isEditMode = !!initialData;
+
   const [formData, setFormData] = useState({
     code: '',
     name: '',
@@ -33,6 +38,35 @@ export function AddTreatmentDrawer({
     sourceReference: '',
     sourceDetails: '',
   });
+
+  useEffect(() => {
+    if (isOpen) {
+      if (initialData) {
+        setFormData({
+          code: initialData.code,
+          name: initialData.name,
+          category: initialData.category,
+          affectedArea: initialData.affectedArea,
+          minWeeks: String(initialData.minWeeks),
+          maxWeeks: String(initialData.maxWeeks),
+          sessions: String(initialData.sessions),
+          description: initialData.description ?? '',
+          redFlags: initialData.redFlags ?? '',
+          contraindications: initialData.contraindications ?? '',
+          clinicNotes: initialData.clinicNotes ?? '',
+          sourceReference: initialData.reviewSource,
+          sourceDetails: initialData.sourceDetails ?? '',
+        });
+      } else {
+        setFormData({
+          code: '', name: '', category: '', affectedArea: '',
+          minWeeks: '', maxWeeks: '', sessions: '',
+          description: '', redFlags: '', contraindications: '',
+          clinicNotes: '', sourceReference: '', sourceDetails: '',
+        });
+      }
+    }
+  }, [isOpen, initialData]);
 
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -61,7 +95,7 @@ export function AddTreatmentDrawer({
     <Drawer
       isOpen={isOpen}
       onClose={onClose}
-      title="اضافة علاج جديد"
+      title={isEditMode ? 'تعديل العلاج' : 'اضافة علاج جديد'}
       size="md"
     >
       <div className="space-y-5 p-2">
@@ -230,11 +264,13 @@ export function AddTreatmentDrawer({
           <Button
             variant="primary"
             fullWidth
-            className="py-3 text-base  font-medium"
+            className="py-3 text-base font-medium"
             onClick={handleSubmit}
             disabled={isSubmitting}
           >
-            {isSubmitting ? 'جاري الاضافة...' : 'اضافة مرض جديد'}
+            {isSubmitting
+              ? (isEditMode ? 'جاري التعديل...' : 'جاري الاضافة...')
+              : (isEditMode ? 'حفظ التعديلات' : 'اضافة مرض جديد')}
           </Button>
         </div>
       </div>

@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Drawer } from '@/ui/components';
 import { Input, Button } from '@/ui/primitives';
 import type { CreateStageRequest } from '@/domains/library';
+import type { Stage } from '../useLibrariesPage';
 
 interface AddStageDrawerProps {
   isOpen: boolean;
@@ -10,6 +11,7 @@ interface AddStageDrawerProps {
   isSubmitting?: boolean;
   isRtl?: boolean;
   t: (key: string) => string;
+  initialData?: Stage | null;
 }
 
 export function AddStageDrawer({
@@ -19,7 +21,10 @@ export function AddStageDrawer({
   isSubmitting = false,
   isRtl = true,
   t,
+  initialData,
 }: AddStageDrawerProps) {
+  const isEditMode = !!initialData;
+
   const [formData, setFormData] = useState({
     code: '',
     name: '',
@@ -31,6 +36,29 @@ export function AddStageDrawer({
     minSessions: '',
     maxSessions: '',
   });
+
+  useEffect(() => {
+    if (isOpen) {
+      if (initialData) {
+        setFormData({
+          code: initialData.code,
+          name: initialData.title,
+          description: initialData.description,
+          mainGoal: initialData.mainGoal,
+          clinicNotes: initialData.clinicNotes,
+          minWeeks: String(initialData.minWeeks),
+          maxWeeks: String(initialData.maxWeeks),
+          minSessions: String(initialData.minSessions),
+          maxSessions: String(initialData.maxSessions),
+        });
+      } else {
+        setFormData({
+          code: '', name: '', description: '', mainGoal: '',
+          clinicNotes: '', minWeeks: '', maxWeeks: '', minSessions: '', maxSessions: '',
+        });
+      }
+    }
+  }, [isOpen, initialData]);
 
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -53,7 +81,7 @@ export function AddStageDrawer({
     <Drawer
       isOpen={isOpen}
       onClose={onClose}
-      title={t('addStage')}
+      title={isEditMode ? 'تعديل المرحلة' : t('addStage')}
       size="md"
     >
       <div className="space-y-5 p-2">
@@ -175,11 +203,13 @@ export function AddStageDrawer({
           <Button
             variant="primary"
             fullWidth
-            className="py-3 text-base  font-medium"
+            className="py-3 text-base font-medium"
             onClick={handleSubmit}
             disabled={isSubmitting}
           >
-            {isSubmitting ? 'جاري الاضافة...' : t('addStage')}
+            {isSubmitting
+              ? (isEditMode ? 'جاري التعديل...' : 'جاري الاضافة...')
+              : (isEditMode ? 'حفظ التعديلات' : t('addStage'))}
           </Button>
         </div>
       </div>

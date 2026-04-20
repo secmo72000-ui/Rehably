@@ -9,3 +9,7 @@ export * from './ExerciseCard';
 export * from './AddExerciseDrawer';
 export * from './AssessmentsTab';
 export * from './AssessmentCard';
+export * from './AddAssessmentDrawer';
+export * from './DevicesTab';
+export * from './DeviceCard';
+export * from './AddDeviceDrawer';

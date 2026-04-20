@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Drawer } from '@/ui/components';
 import { Input, Button, Select, Textarea } from '@/ui/primitives';
+import type { Exercise } from '../useLibrariesPage';
 
 interface AddExerciseDrawerProps {
   isOpen: boolean;
@@ -8,6 +9,7 @@ interface AddExerciseDrawerProps {
   onSubmit?: (data: any) => void;
   isRtl?: boolean;
   t: (key: string) => string;
+  initialData?: Exercise | null;
 }
 
 export function AddExerciseDrawer({
@@ -16,7 +18,10 @@ export function AddExerciseDrawer({
   onSubmit,
   isRtl = true,
   t,
+  initialData,
 }: AddExerciseDrawerProps) {
+  const isEditMode = !!initialData;
+
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -29,10 +34,33 @@ export function AddExerciseDrawer({
     media: null as File | null
   });
 
+  useEffect(() => {
+    if (isOpen) {
+      if (initialData) {
+        setFormData({
+          name: initialData.title,
+          description: initialData.description,
+          bodyArea: '',
+          relatedDisease: '',
+          categories: '',
+          repeats: String(initialData.reps),
+          steps: String(initialData.sets),
+          hold: String(initialData.holdTime),
+          media: null,
+        });
+      } else {
+        setFormData({
+          name: '', description: '', bodyArea: '', relatedDisease: '',
+          categories: '', repeats: '', steps: '', hold: '', media: null,
+        });
+      }
+    }
+  }, [isOpen, initialData]);
+
   const handleChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
-  
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setFormData(prev => ({ ...prev, media: e.target.files![0] }));
@@ -55,7 +83,7 @@ export function AddExerciseDrawer({
     <Drawer
       isOpen={isOpen}
       onClose={onClose}
-      title="اضافة تمرين جديد"
+      title={isEditMode ? 'تعديل التمرين' : 'اضافة تمرين جديد'}
       size="md"
     >
        <div className="flex flex-col h-full bg-white p-6 overflow-y-auto custom-scrollbar">
@@ -190,12 +218,12 @@ export function AddExerciseDrawer({
           </div>
           
           <div className="pt-4 border-t border-gray-100 pb-0 w-full mt-auto">
-            <Button 
-              variant="primary" 
+            <Button
+              variant="primary"
               className="py-3 w-full text-base font-medium rounded-xl"
               onClick={handleSubmit}
             >
-              اضافة تمرين جديد
+              {isEditMode ? 'حفظ التعديلات' : 'اضافة تمرين جديد'}
             </Button>
           </div>
        </div>

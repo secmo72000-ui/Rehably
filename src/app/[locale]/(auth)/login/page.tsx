@@ -69,6 +69,7 @@ export default async function LoginPage({ params }: LoginPageProps) {
           alt="Rehably Logo"
           width={408}
           height={408}
+          priority
           className="w-32 h-32 sm:w-40 sm:h-40 md:w-56 md:h-56 lg:w-72 lg:h-72 xl:w-[408px] xl:h-[408px]"
         />
       </div>

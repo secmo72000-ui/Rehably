@@ -6,154 +6,197 @@ import { TabNavigator } from '@/ui/components';
 import { Button } from '@/ui/primitives';
 import type { Locale } from '@/configs/i18n.config';
 import { useLibrariesPage } from './useLibrariesPage';
-import { TreatmentsTab, AddTreatmentDrawer, TreatmentDetailsDrawer, StagesTab, AddStageDrawer, ExercisesTab, AddExerciseDrawer, AssessmentsTab } from './_components';
+import {
+  TreatmentsTab,
+  AddTreatmentDrawer,
+  TreatmentDetailsDrawer,
+  StagesTab,
+  AddStageDrawer,
+  ExercisesTab,
+  AddExerciseDrawer,
+  AssessmentsTab,
+  AddAssessmentDrawer,
+  DevicesTab,
+  AddDeviceDrawer,
+} from './_components';
 
 export default function LibrariesPage() {
   const params = useParams();
   const locale = params.locale as Locale;
-  const controller = useLibrariesPage();
+  const c = useLibrariesPage();
 
   const tabs = [
     { id: 'treatments', label: 'مكتبة العلاجات' },
     { id: 'stages', label: 'مكتبة المراحل' },
     { id: 'exercises', label: 'مكتبة التمارين' },
     { id: 'assessments', label: 'التقييمات' },
-    { id: 'devices', label: 'الأجهزة' }
+    { id: 'devices', label: 'الأجهزة' },
   ];
+
+  // Add button label per tab
+  const addLabel = {
+    treatments: c.t('addTreatment'),
+    stages: c.t('addStage'),
+    exercises: c.t('addExercise'),
+    assessments: 'اضافة تقييم',
+    devices: 'اضافة جهاز',
+  }[c.activeTab] ?? c.t('addTreatment');
+
+  // Add button handler per tab
+  const handleAdd = {
+    treatments: c.handleAddTreatment,
+    stages: c.handleAddStage,
+    exercises: c.handleAddExercise,
+    assessments: c.handleAddAssessment,
+    devices: c.handleAddDevice,
+  }[c.activeTab] ?? c.handleAddTreatment;
 
   return (
     <div className="space-y-6 lg:space-y-8">
-      {/* Top Header: Tabs */}
+      {/* Tabs */}
       <div className="flex justify-start w-full overflow-x-auto pb-2 lg:pb-0">
         <TabNavigator
           tabs={tabs}
-          activeTab={controller.activeTab}
-          onTabChange={controller.handleTabChange}
+          activeTab={c.activeTab}
+          onTabChange={c.handleTabChange}
           className="bg-transparent shadow-none p-0 flex-nowrap"
         />
       </div>
-      
-      {/* Add Treatment Button Row */}
+
+      {/* Add Button */}
       <div className="flex justify-end items-center">
         <Button
           variant="primary"
           startIcon={<span className="text-xl font-bold">+</span>}
           className="px-6 py-3 w-full sm:w-auto block"
-          onClick={
-            controller.activeTab === 'stages' 
-              ? controller.handleAddStage 
-              : controller.activeTab === 'exercises' 
-                ? controller.handleAddExercise 
-                : controller.activeTab === 'assessments'
-                  ? controller.handleAddAssessment
-                  : controller.handleAddTreatment
-          }
+          onClick={handleAdd}
         >
-          {controller.activeTab === 'stages' 
-            ? controller.t('addStage') 
-            : controller.activeTab === 'exercises' 
-              ? controller.t('addExercise') 
-              : controller.activeTab === 'assessments'
-                ? 'اضافة تقييم'
-                : controller.t('addTreatment')}
+          {addLabel}
         </Button>
       </div>
 
-      {/* Error Display */}
-      {controller.error && (
+      {/* Error */}
+      {c.error && (
         <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
-          {controller.error}
+          {c.error}
         </div>
       )}
 
-      {/* Loading State */}
-      {controller.isLoading && (
+      {/* Loading */}
+      {c.isLoading && (
         <div className="flex justify-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500" />
         </div>
       )}
 
-      {/* Main Content Area */}
+      {/* Tab Content */}
       <div>
-        {!controller.isLoading && controller.activeTab === 'treatments' && (
-          <TreatmentsTab 
-            treatments={controller.treatments}
-            searchQuery={controller.searchQuery}
-            onSearchChange={controller.setSearchQuery}
-            sortDirection={controller.sortDirection}
-            onSortToggle={controller.handleSortToggle}
-            onView={controller.handleOpenDetails}
+        {!c.isLoading && c.activeTab === 'treatments' && (
+          <TreatmentsTab
+            treatments={c.treatments}
+            searchQuery={c.searchQuery}
+            onSearchChange={c.setSearchQuery}
+            sortDirection={c.sortDirection}
+            onSortToggle={c.handleSortToggle}
+            onView={c.handleOpenDetails}
             locale={locale}
           />
         )}
-        {!controller.isLoading && controller.activeTab === 'stages' && (
-          <StagesTab 
-             stages={controller.stages}
-             t={controller.t}
-             onEdit={controller.handleEditStage}
-             onDelete={controller.handleDeleteStage}
+        {!c.isLoading && c.activeTab === 'stages' && (
+          <StagesTab
+            stages={c.stages}
+            t={c.t}
+            onEdit={c.handleEditStage}
+            onDelete={c.handleDeleteStage}
           />
         )}
-        {!controller.isLoading && controller.activeTab === 'exercises' && (
-          <ExercisesTab 
-             exercises={controller.exercises}
-             t={controller.t}
-             onEdit={controller.handleEditExercise}
-             onDelete={controller.handleDeleteExercise}
+        {!c.isLoading && c.activeTab === 'exercises' && (
+          <ExercisesTab
+            exercises={c.exercises}
+            t={c.t}
+            onEdit={c.handleEditExercise}
+            onDelete={c.handleDeleteExercise}
           />
         )}
-        {!controller.isLoading && controller.activeTab === 'assessments' && (
-          <AssessmentsTab 
-             assessments={controller.assessments}
-             t={controller.t}
-             onEdit={controller.handleEditAssessment}
-             onDelete={controller.handleDeleteAssessment}
+        {!c.isLoading && c.activeTab === 'assessments' && (
+          <AssessmentsTab
+            assessments={c.assessments}
+            t={c.t}
+            onEdit={c.handleEditAssessment}
+            onDelete={c.handleDeleteAssessment}
           />
         )}
-        {!controller.isLoading && controller.activeTab !== 'treatments' && controller.activeTab !== 'stages' && controller.activeTab !== 'exercises' && controller.activeTab !== 'assessments' && (
-          <div className="p-12 text-center text-gray-500 bg-white rounded-2xl shadow-sm border border-gray-100 font-medium">
-            هذه المكتبة قيد التطوير
-          </div>
+        {!c.isLoading && c.activeTab === 'devices' && (
+          <DevicesTab
+            devices={c.devices}
+            onEdit={c.handleEditDevice}
+            onDelete={c.handleDeleteDevice}
+          />
         )}
       </div>
 
-      {/* Add Treatment Drawer */}
+      {/* ====== Drawers ====== */}
+
+      {/* Treatment Add/Edit */}
       <AddTreatmentDrawer
-        isOpen={controller.isDrawerOpen}
-        onClose={controller.handleCloseDrawer}
-        onSubmit={controller.handleSubmitTreatment}
-        isSubmitting={controller.isSubmitting}
+        isOpen={c.isDrawerOpen}
+        onClose={c.handleCloseDrawer}
+        onSubmit={c.handleSubmitTreatment}
+        isSubmitting={c.isSubmitting}
         isRtl={locale === 'ar'}
+        initialData={c.editingTreatment}
       />
 
-      {/* Add Stage Drawer */}
+      {/* Stage Add/Edit */}
       <AddStageDrawer
-        isOpen={controller.isStageDrawerOpen}
-        onClose={controller.handleCloseStageDrawer}
-        onSubmit={controller.handleSubmitStage}
-        isSubmitting={controller.isSubmitting}
+        isOpen={c.isStageDrawerOpen}
+        onClose={c.handleCloseStageDrawer}
+        onSubmit={c.handleSubmitStage}
+        isSubmitting={c.isSubmitting}
         isRtl={locale === 'ar'}
-        t={controller.t}
+        t={c.t}
+        initialData={c.editingStage}
       />
 
-      {/* Add Exercise Drawer */}
+      {/* Exercise Add/Edit */}
       <AddExerciseDrawer
-        isOpen={controller.isExerciseDrawerOpen}
-        onClose={controller.handleCloseExerciseDrawer}
-        onSubmit={controller.handleSubmitExercise}
+        isOpen={c.isExerciseDrawerOpen}
+        onClose={c.handleCloseExerciseDrawer}
+        onSubmit={c.handleSubmitExercise}
         isRtl={locale === 'ar'}
-        t={controller.t}
+        t={c.t}
+        initialData={c.editingExercise}
       />
 
-      {/* Treatment Details Drawer */}
-      <TreatmentDetailsDrawer 
-        isOpen={controller.isDetailsDrawerOpen}
-        onClose={controller.handleCloseDetails}
-        treatment={controller.selectedTreatment}
-        onEdit={controller.handleEditTreatment}
-        onDelete={controller.handleDeleteTreatment}
+      {/* Assessment Add/Edit */}
+      <AddAssessmentDrawer
+        isOpen={c.isAssessmentDrawerOpen}
+        onClose={c.handleCloseAssessmentDrawer}
+        onSubmit={c.handleSubmitAssessment}
+        isSubmitting={c.isSubmitting}
         isRtl={locale === 'ar'}
-        t={controller.t}
+        initialData={c.editingAssessment}
+      />
+
+      {/* Device Add/Edit */}
+      <AddDeviceDrawer
+        isOpen={c.isDeviceDrawerOpen}
+        onClose={c.handleCloseDeviceDrawer}
+        onSubmit={c.handleSubmitDevice}
+        isSubmitting={c.isSubmitting}
+        isRtl={locale === 'ar'}
+        initialData={c.editingDevice}
+      />
+
+      {/* Treatment Details */}
+      <TreatmentDetailsDrawer
+        isOpen={c.isDetailsDrawerOpen}
+        onClose={c.handleCloseDetails}
+        treatment={c.selectedTreatment}
+        onEdit={c.handleEditTreatment}
+        onDelete={c.handleDeleteTreatment}
+        isRtl={locale === 'ar'}
+        t={c.t}
       />
     </div>
   );
