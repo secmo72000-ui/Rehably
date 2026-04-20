@@ -6,6 +6,7 @@ export {
   type PortalType,
   getSubdomain,
   getPortalType,
+  getPortalTypeFromRole,
   isRoleAllowedForPortal,
   getDefaultPathForPortal,
 } from './subdomain.utils';

@@ -70,16 +70,14 @@ function getPortalType(subdomain: string | null): PortalType {
   return 'clinic';
 }
 
-// ============ PORTAL OVERRIDE (query param + cookie for Vercel testing) ============
-function getPortalOverride(request: NextRequest): PortalType | null {
-  // Query param takes priority: ?portal=clinic|patient|owner
-  const param = request.nextUrl.searchParams.get('portal');
-  if (param === 'clinic' || param === 'patient' || param === 'owner') return param as PortalType;
-
-  // Fallback: cookie set by a previous ?portal= visit
-  const cookie = request.cookies.get('x-portal-override')?.value;
-  if (cookie === 'clinic' || cookie === 'patient' || cookie === 'owner') return cookie as PortalType;
-
+// ============ ROLE-BASED PORTAL DETECTION ============
+// When no subdomain, derive portal type from the JWT role claim.
+// This is the permanent solution — works on any domain without subdomains.
+function getPortalTypeFromRole(role: string | null): PortalType | null {
+  if (!role) return null;
+  for (const [portal, roles] of Object.entries(PORTAL_ROLES) as [PortalType, string[]][]) {
+    if (roles.some(r => role === r || role.startsWith(r + '_'))) return portal;
+  }
   return null;
 }
 
@@ -127,8 +125,12 @@ export function proxy(request: NextRequest) {
 
   // 2. Detect subdomain and portal type
   const subdomain = getSubdomainFromHost(hostname);
-  const portalOverride = !subdomain ? getPortalOverride(request) : null;
-  const portalType = portalOverride ?? getPortalType(subdomain);
+  // When no subdomain (Vercel, custom domain root, localhost), derive portal from JWT role
+  const token_early = request.cookies.get('accessToken')?.value;
+  const roleBasedPortal = !subdomain && token_early
+    ? getPortalTypeFromRole(decodeTokenRole(token_early))
+    : null;
+  const portalType = roleBasedPortal ?? getPortalType(subdomain);
 
   // 3. Identify Locale
   const pathnameIsMissingLocale = LOCALES.every(
@@ -157,14 +159,8 @@ export function proxy(request: NextRequest) {
   // Case A: User is NOT logged in
   if (!token) {
     if (isPublic) {
-      // Add portal type header for login page to know which form to show
       const response = NextResponse.next();
       response.headers.set('x-portal-type', portalType);
-      // Persist portal override cookie from query param
-      const portalParam = request.nextUrl.searchParams.get('portal');
-      if (portalParam && !subdomain) {
-        response.cookies.set('x-portal-override', portalType, { path: '/', sameSite: 'lax' });
-      }
       return response;
     }
     // Redirect to login for protected pages
@@ -199,13 +195,6 @@ export function proxy(request: NextRequest) {
   // Allow access with portal type header
   const response = NextResponse.next();
   response.headers.set('x-portal-type', portalType);
-
-  // Persist portal override as cookie so it survives navigations
-  const portalParam = request.nextUrl.searchParams.get('portal');
-  if (portalParam && !subdomain) {
-    response.cookies.set('x-portal-override', portalType, { path: '/', sameSite: 'lax' });
-  }
-
   return response;
 }
 

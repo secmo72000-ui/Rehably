@@ -53,27 +53,20 @@ export function getSubdomain(): string | null {
  * - anything else → clinic
  */
 export function getPortalType(subdomain: string | null): PortalType {
-  if (!subdomain) {
-    // Check cookie override (set by ?portal= query param for Vercel testing)
-    if (typeof document !== 'undefined') {
-      const match = document.cookie.match(/(?:^|;\s*)x-portal-override=([^;]+)/);
-      if (match) {
-        const val = match[1] as PortalType;
-        if (val === 'clinic' || val === 'patient' || val === 'owner') return val;
-      }
-    }
-    return 'owner';
-  }
-
-  if (subdomain === 'platform') {
-    return 'owner';
-  }
-
-  if (subdomain.startsWith('portal.') || subdomain.startsWith('portal')) {
-    return 'patient';
-  }
-
+  if (!subdomain || subdomain === 'platform') return 'owner';
+  if (subdomain.startsWith('portal.') || subdomain.startsWith('portal')) return 'patient';
   return 'clinic';
+}
+
+/**
+ * Derive portal type from a role string (tenant-scoped roles supported).
+ * Used when no subdomain is present (Vercel, custom domain root).
+ */
+export function getPortalTypeFromRole(role: string): PortalType | null {
+  for (const [portal, roles] of Object.entries(PORTAL_ROLES) as [PortalType, string[]][]) {
+    if (roles.some(r => role === r || role.startsWith(r + '_'))) return portal as PortalType;
+  }
+  return null;
 }
 
 /**

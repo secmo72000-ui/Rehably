@@ -2,12 +2,13 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { LoginResponse, User } from './auth.types';
 import { authService } from './auth.service';
-import { 
-  getSubdomain, 
-  getPortalType, 
+import {
+  getSubdomain,
+  getPortalType,
+  getPortalTypeFromRole,
   isRoleAllowedForPortal,
   getDefaultPathForPortal,
-  type PortalType 
+  type PortalType
 } from '@/shared/utils/subdomain.utils';
 
 // ============ Cookie Helpers ============
@@ -218,8 +219,12 @@ export const useAuthStore = create<AuthState>()(
 
         const role = user.roles[0];
         const subdomain = getSubdomain();
-        const portalType = getPortalType(subdomain);
-        
+
+        // No subdomain: derive portal type from role (permanent solution, no cookies/params needed)
+        const portalType = subdomain
+          ? getPortalType(subdomain)
+          : (getPortalTypeFromRole(role) ?? 'owner');
+
         return isRoleAllowedForPortal(role, portalType);
       },
 
@@ -248,7 +253,9 @@ export const useAuthStore = create<AuthState>()(
         }
 
         const subdomain = getSubdomain();
-        const portalType = getPortalType(subdomain);
+        const portalType = subdomain
+          ? getPortalType(subdomain)
+          : (getPortalTypeFromRole(user.roles[0]) ?? 'owner');
 
         return getDefaultPathForPortal(portalType);
       }
