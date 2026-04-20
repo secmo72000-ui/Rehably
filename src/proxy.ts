@@ -70,6 +70,19 @@ function getPortalType(subdomain: string | null): PortalType {
   return 'clinic';
 }
 
+// ============ PORTAL OVERRIDE (query param + cookie for Vercel testing) ============
+function getPortalOverride(request: NextRequest): PortalType | null {
+  // Query param takes priority: ?portal=clinic|patient|owner
+  const param = request.nextUrl.searchParams.get('portal');
+  if (param === 'clinic' || param === 'patient' || param === 'owner') return param as PortalType;
+
+  // Fallback: cookie set by a previous ?portal= visit
+  const cookie = request.cookies.get('x-portal-override')?.value;
+  if (cookie === 'clinic' || cookie === 'patient' || cookie === 'owner') return cookie as PortalType;
+
+  return null;
+}
+
 function decodeTokenRole(token: string): string | null {
   try {
     const parts = token.split('.');
@@ -113,7 +126,8 @@ export function proxy(request: NextRequest) {
 
   // 2. Detect subdomain and portal type
   const subdomain = getSubdomainFromHost(hostname);
-  const portalType = getPortalType(subdomain);
+  const portalOverride = !subdomain ? getPortalOverride(request) : null;
+  const portalType = portalOverride ?? getPortalType(subdomain);
 
   // 3. Identify Locale
   const pathnameIsMissingLocale = LOCALES.every(
@@ -145,6 +159,11 @@ export function proxy(request: NextRequest) {
       // Add portal type header for login page to know which form to show
       const response = NextResponse.next();
       response.headers.set('x-portal-type', portalType);
+      // Persist portal override cookie from query param
+      const portalParam = request.nextUrl.searchParams.get('portal');
+      if (portalParam && !subdomain) {
+        response.cookies.set('x-portal-override', portalType, { path: '/', sameSite: 'lax' });
+      }
       return response;
     }
     // Redirect to login for protected pages
@@ -179,6 +198,13 @@ export function proxy(request: NextRequest) {
   // Allow access with portal type header
   const response = NextResponse.next();
   response.headers.set('x-portal-type', portalType);
+
+  // Persist portal override as cookie so it survives navigations
+  const portalParam = request.nextUrl.searchParams.get('portal');
+  if (portalParam && !subdomain) {
+    response.cookies.set('x-portal-override', portalType, { path: '/', sameSite: 'lax' });
+  }
+
   return response;
 }
 
