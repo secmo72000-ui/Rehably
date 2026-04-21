@@ -12,35 +12,63 @@ const statusMap: Record<string, { label: string; cls: string }> = {
   Discharged: { label: 'خُرِّج', cls: 'bg-gray-100 text-gray-500' },
 };
 
+// ── Validation helpers ─────────────────────────────────────
+function validatePatientForm(form: { firstName: string; lastName: string; phone: string; email: string; dob: string }) {
+  const errors: Record<string, string> = {};
+  if (!form.firstName.trim()) errors.firstName = 'الاسم الأول مطلوب';
+  if (!form.lastName.trim()) errors.lastName = 'الاسم الأخير مطلوب';
+  if (form.phone && !/^[0-9+\-\s()]{7,15}$/.test(form.phone.trim()))
+    errors.phone = 'رقم الهاتف غير صحيح';
+  if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()))
+    errors.email = 'البريد الإلكتروني غير صحيح';
+  if (form.dob) {
+    const d = new Date(form.dob);
+    if (isNaN(d.getTime())) errors.dob = 'تاريخ الميلاد غير صحيح';
+    else if (d > new Date()) errors.dob = 'تاريخ الميلاد لا يمكن أن يكون في المستقبل';
+  }
+  return errors;
+}
+
 // ── Add Patient Drawer ─────────────────────────────────────
 function AddPatientDrawer({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
   const [form, setForm] = useState({
     firstName: '', lastName: '', phone: '', email: '',
     diagnosis: '', gender: 0, dob: '', notes: '',
   });
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [apiError, setApiError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
 
-  const set = (k: keyof typeof form, v: string | number) =>
+  const set = (k: keyof typeof form, v: string | number) => {
     setForm(prev => ({ ...prev, [k]: v }));
+    // Clear field error on change
+    setFieldErrors(prev => { const n = { ...prev }; delete n[k as string]; return n; });
+    setApiError(null);
+  };
+
+  const touch = (k: string) => setTouched(prev => ({ ...prev, [k]: true }));
 
   const handleSave = async () => {
-    if (!form.firstName || !form.lastName) {
-      setError('الاسم الأول والأخير مطلوبان');
-      return;
-    }
+    // Run full validation
+    const errors = validatePatientForm(form);
+    setFieldErrors(errors);
+    // Mark all fields as touched to show errors
+    setTouched({ firstName: true, lastName: true, phone: true, email: true, dob: true });
+    if (Object.keys(errors).length > 0) return;
+
     setSaving(true);
-    setError(null);
+    setApiError(null);
     try {
       await patientsService.create({
-        firstName: form.firstName,
-        lastName: form.lastName,
-        phone: form.phone || undefined,
-        email: form.email || undefined,
+        firstName: form.firstName.trim(),
+        lastName: form.lastName.trim(),
+        phone: form.phone.trim() || undefined,
+        email: form.email.trim() || undefined,
         dateOfBirth: form.dob || undefined,
         gender: form.gender,
-        diagnosis: form.diagnosis || undefined,
-        notes: form.notes || undefined,
+        diagnosis: form.diagnosis.trim() || undefined,
+        notes: form.notes.trim() || undefined,
       });
       onSaved();
       onClose();
@@ -50,8 +78,8 @@ function AddPatientDrawer({ onClose, onSaved }: { onClose: () => void; onSaved: 
         err?.response?.data?.message ||
         err?.response?.data?.title ||
         err?.message ||
-        'فشل في حفظ المريض. حاول مرة أخرى.';
-      setError(msg);
+        'فشل في حفظ المريض، حاول مرة أخرى';
+      setApiError(msg);
     } finally {
       setSaving(false);
     }
@@ -64,15 +92,60 @@ function AddPatientDrawer({ onClose, onSaved }: { onClose: () => void; onSaved: 
           <span className="text-base font-black text-gray-800">إضافة مريض جديد</span>
           <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400">✕</button>
         </div>
+
         <div className="flex-1 overflow-y-auto p-5 space-y-4">
-          {error && <div className="bg-red-50 text-red-600 text-xs rounded-xl px-3 py-2">{error}</div>}
+          {/* API error banner */}
+          {apiError && (
+            <div className="flex items-start gap-2 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">
+              <span className="text-base mt-0.5">⚠️</span>
+              <span>{apiError}</span>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-3">
-            <Field label="الاسم الأول *" value={form.firstName} onChange={v => set('firstName', v)} />
-            <Field label="الاسم الأخير *" value={form.lastName} onChange={v => set('lastName', v)} />
+            <Field
+              label="الاسم الأول *"
+              value={form.firstName}
+              onChange={v => set('firstName', v)}
+              onBlur={() => touch('firstName')}
+              error={touched.firstName ? fieldErrors.firstName : undefined}
+            />
+            <Field
+              label="الاسم الأخير *"
+              value={form.lastName}
+              onChange={v => set('lastName', v)}
+              onBlur={() => touch('lastName')}
+              error={touched.lastName ? fieldErrors.lastName : undefined}
+            />
           </div>
-          <Field label="رقم الهاتف" value={form.phone} onChange={v => set('phone', v)} type="tel" />
-          <Field label="البريد الإلكتروني" value={form.email} onChange={v => set('email', v)} type="email" />
-          <Field label="تاريخ الميلاد" value={form.dob} onChange={v => set('dob', v)} type="date" />
+
+          <Field
+            label="رقم الهاتف"
+            value={form.phone}
+            onChange={v => set('phone', v)}
+            onBlur={() => touch('phone')}
+            type="tel"
+            error={touched.phone ? fieldErrors.phone : undefined}
+            placeholder="مثال: 0501234567"
+          />
+          <Field
+            label="البريد الإلكتروني"
+            value={form.email}
+            onChange={v => set('email', v)}
+            onBlur={() => touch('email')}
+            type="email"
+            error={touched.email ? fieldErrors.email : undefined}
+            placeholder="example@email.com"
+          />
+          <Field
+            label="تاريخ الميلاد"
+            value={form.dob}
+            onChange={v => set('dob', v)}
+            onBlur={() => touch('dob')}
+            type="date"
+            error={touched.dob ? fieldErrors.dob : undefined}
+          />
+
           <div>
             <label className="block text-xs font-bold text-gray-600 mb-1.5">الجنس</label>
             <div className="flex gap-3">
@@ -84,16 +157,32 @@ function AddPatientDrawer({ onClose, onSaved }: { onClose: () => void; onSaved: 
               ))}
             </div>
           </div>
-          <Field label="التشخيص" value={form.diagnosis} onChange={v => set('diagnosis', v)} />
+
+          <Field
+            label="التشخيص"
+            value={form.diagnosis}
+            onChange={v => set('diagnosis', v)}
+            placeholder="مثال: LBP"
+          />
+
           <div>
             <label className="block text-xs font-bold text-gray-600 mb-1.5">ملاحظات</label>
-            <textarea value={form.notes} onChange={e => set('notes', e.target.value)} rows={3}
-              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#29AAFE] resize-none" />
+            <textarea
+              value={form.notes}
+              onChange={e => set('notes', e.target.value)}
+              rows={3}
+              placeholder="أي ملاحظات إضافية..."
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#29AAFE] resize-none placeholder-gray-300"
+            />
           </div>
         </div>
+
         <div className="p-5 border-t border-gray-100">
-          <button onClick={handleSave} disabled={saving}
-            className="w-full bg-[#29AAFE] hover:bg-[#1A8FD9] disabled:opacity-60 text-white font-bold py-3 rounded-xl text-sm transition-colors">
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="w-full bg-[#29AAFE] hover:bg-[#1A8FD9] disabled:opacity-60 text-white font-bold py-3 rounded-xl text-sm transition-colors"
+          >
             {saving ? 'جاري الحفظ...' : 'حفظ المريض'}
           </button>
         </div>
@@ -102,14 +191,36 @@ function AddPatientDrawer({ onClose, onSaved }: { onClose: () => void; onSaved: 
   );
 }
 
-function Field({ label, value, onChange, type = 'text' }: {
-  label: string; value: string; onChange: (v: string) => void; type?: string;
+function Field({
+  label, value, onChange, onBlur, type = 'text', error, placeholder,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  onBlur?: () => void;
+  type?: string;
+  error?: string;
+  placeholder?: string;
 }) {
   return (
     <div>
       <label className="block text-xs font-bold text-gray-600 mb-1.5">{label}</label>
-      <input type={type} value={value} onChange={e => onChange(e.target.value)}
-        className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-800 outline-none focus:border-[#29AAFE]" dir="rtl" />
+      <input
+        type={type}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        onBlur={onBlur}
+        placeholder={placeholder}
+        className={`w-full border rounded-xl px-3 py-2.5 text-sm text-gray-800 outline-none transition-colors placeholder-gray-300 ${
+          error ? 'border-red-400 focus:border-red-500 bg-red-50' : 'border-gray-200 focus:border-[#29AAFE]'
+        }`}
+        dir="rtl"
+      />
+      {error && (
+        <p className="mt-1 text-xs text-red-500 flex items-center gap-1">
+          <span>✕</span> {error}
+        </p>
+      )}
     </div>
   );
 }
