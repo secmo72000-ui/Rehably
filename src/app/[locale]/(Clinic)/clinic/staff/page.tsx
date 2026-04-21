@@ -65,6 +65,42 @@ function Field({
   );
 }
 
+// ── RoleSelect ─────────────────────────────────────────────
+
+const STAFF_ROLES = [
+  { value: 'Doctor',       label: 'طبيب / معالج' },
+  { value: 'Receptionist', label: 'موظف استقبال' },
+  { value: 'User',         label: 'موظف عام' },
+];
+
+function RoleSelect({
+  value, onChange, required = false, error,
+}: {
+  value: string; onChange: (v: string) => void; required?: boolean; error?: string;
+}) {
+  return (
+    <div>
+      <label className="block text-xs font-bold text-gray-600 mb-1.5">
+        الدور{required && <span className="text-red-500 mr-0.5">*</span>}
+      </label>
+      <select
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        className={`w-full border rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#29AAFE] transition-colors bg-white ${
+          error ? 'border-red-400 bg-red-50' : 'border-gray-200'
+        }`}
+        dir="rtl"
+      >
+        <option value="">-- اختر الدور --</option>
+        {STAFF_ROLES.map(r => (
+          <option key={r.value} value={r.value}>{r.label}</option>
+        ))}
+      </select>
+      {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
+    </div>
+  );
+}
+
 // ── Avatar ─────────────────────────────────────────────────
 
 function Avatar({ member, size = 'sm' }: { member: StaffMember; size?: 'sm' | 'lg' }) {
@@ -133,8 +169,15 @@ function InviteModal({
       });
       onSaved();
       onClose();
-    } catch {
-      setApiError('فشل في إرسال الدعوة. حاول مرة أخرى.');
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { error?: { message?: string }; message?: string; title?: string } }; message?: string };
+      const msg =
+        axiosErr?.response?.data?.error?.message ||
+        axiosErr?.response?.data?.message ||
+        axiosErr?.response?.data?.title ||
+        axiosErr?.message ||
+        'فشل في إرسال الدعوة. حاول مرة أخرى.';
+      setApiError(msg);
     } finally {
       setSaving(false);
     }
@@ -198,11 +241,10 @@ function InviteModal({
             value={form.phoneNumber ?? ''}
             onChange={v => set('phoneNumber', v)}
           />
-          <Field
-            label="الدور"
-            required
+          <RoleSelect
             value={form.role}
             onChange={v => set('role', v)}
+            required
             error={errors.role}
           />
         </div>
