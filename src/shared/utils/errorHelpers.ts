@@ -3,34 +3,55 @@
  * Reads: response.data.error.message → response.data.message → response.data.title → err.message
  * Falls back to `fallback` string if nothing found.
  */
+/** Returns true if a string looks like an HTML document rather than an API message */
+function isHtml(s: unknown): boolean {
+  if (typeof s !== 'string') return false;
+  const t = s.trimStart();
+  return t.startsWith('<!') || t.startsWith('<html') || t.startsWith('<HTML') || t.length > 500;
+}
+
+/** Safe extraction: returns the value only if it's a short non-HTML string */
+function safeMsg(v: unknown): string | undefined {
+  if (typeof v === 'string' && v.trim() && !isHtml(v)) return v;
+  return undefined;
+}
+
 export function getApiError(err: unknown, fallback = 'حدث خطأ. حاول مرة أخرى.'): string {
   if (!err) return fallback;
   const e = err as {
     response?: {
-      data?: {
-        error?: { message?: string };
-        message?: string;
-        title?: string;
-        errors?: Record<string, string[]>;
-      };
+      status?: number;
+      data?: unknown;
     };
     message?: string;
   };
 
+  const data = e?.response?.data as Record<string, unknown> | undefined;
+
   // ASP.NET validation problem details (400)
-  const validationErrors = e?.response?.data?.errors;
-  if (validationErrors) {
-    const msgs = Object.values(validationErrors).flat().filter(Boolean);
-    if (msgs.length) return msgs.join(' | ');
+  if (data && typeof data === 'object') {
+    const errs = (data as { errors?: Record<string, string[]> }).errors;
+    if (errs && typeof errs === 'object') {
+      const msgs = Object.values(errs).flat().filter(Boolean);
+      if (msgs.length) return msgs.join(' | ');
+    }
   }
 
-  return (
-    e?.response?.data?.error?.message ||
-    e?.response?.data?.message ||
-    e?.response?.data?.title ||
-    e?.message ||
-    fallback
-  );
+  // HTTP status fallbacks for non-JSON responses
+  const status = e?.response?.status;
+  if (status === 404) return fallback;
+  if (status === 403) return 'غير مصرح بهذه العملية';
+  if (status === 402) return 'هذه الميزة غير متاحة في باقتك الحالية';
+  if (status && status >= 500) return 'خطأ في الخادم. حاول مرة أخرى.';
+
+  const candidates = [
+    safeMsg((data as { error?: { message?: unknown } })?.error?.message),
+    safeMsg((data as { message?: unknown })?.message),
+    safeMsg((data as { title?: unknown })?.title),
+    safeMsg(e?.message),
+  ];
+
+  return candidates.find(Boolean) ?? fallback;
 }
 
 export const getFriendlyErrorMessage = (errorMsg: string, t: (key: string) => string) => {

@@ -12,7 +12,7 @@ import { getApiError } from '@/shared/utils';
 type TabId = 'calendar' | 'list';
 
 const DAYS_AR = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
-const HOURS = ['8:00', '9:00', '10:00', '11:00', '12:00', '13:00', '14:00'];
+const HOURS = Array.from({ length: 16 }, (_, i) => `${i + 7}:00`); // 7:00 → 22:00
 
 const statusMap: Record<string, { label: string; cls: string }> = {
   Scheduled:  { label: 'مجدول',    cls: 'bg-blue-50 text-blue-600' },
@@ -53,28 +53,34 @@ function WeekCalendar({ appointments }: { appointments: AppointmentItem[] }) {
 
   return (
     <div className="overflow-x-auto">
-      <div className="min-w-[640px] grid border border-gray-200 rounded-xl overflow-hidden" style={{ gridTemplateColumns: '56px repeat(7, 1fr)' }}>
+      {/* sticky day headers */}
+      <div className="min-w-[640px] grid border-x border-t border-gray-200 rounded-t-xl" style={{ gridTemplateColumns: '56px repeat(7, 1fr)' }}>
         <div className="bg-gray-50 border-b border-gray-200 p-2" />
         {DAYS_AR.map((day, i) => (
           <div key={day} className={`border-b border-l border-gray-200 p-2 text-center text-xs font-bold ${i === todayDay ? 'bg-[#E8F5FF] text-[#29AAFE]' : 'bg-gray-50 text-gray-600'}`}>
             {weekDates[i]} {day}
           </div>
         ))}
-        {HOURS.map(hour => (
-          <React.Fragment key={hour}>
-            <div className="bg-gray-50 border-b border-gray-100 p-1.5 text-[11px] text-gray-400 text-center">{hour}</div>
-            {Array.from({ length: 7 }, (_, di) => (
-              <div key={di} className="border-b border-l border-gray-100 p-1 min-h-[52px]">
-                {getAptsForSlot(di, hour).map((a, idx) => (
-                  <div key={a.id} className={`rounded-md px-1.5 py-1 mb-1 text-[11px] ${COLORS[idx % COLORS.length]}`}>
-                    <div className="font-bold leading-tight truncate">{a.patientName}</div>
-                    <div className="text-[10px] text-gray-400">{new Date(a.startTime).toLocaleTimeString('ar', { hour: '2-digit', minute: '2-digit' })}</div>
-                  </div>
-                ))}
-              </div>
-            ))}
-          </React.Fragment>
-        ))}
+      </div>
+      {/* scrollable body */}
+      <div className="min-w-[640px] max-h-[520px] overflow-y-auto border-x border-b border-gray-200 rounded-b-xl">
+        <div className="grid" style={{ gridTemplateColumns: '56px repeat(7, 1fr)' }}>
+          {HOURS.map(hour => (
+            <React.Fragment key={hour}>
+              <div className="bg-gray-50 border-b border-gray-100 p-1.5 text-[11px] text-gray-400 text-center sticky-hour">{hour}</div>
+              {Array.from({ length: 7 }, (_, di) => (
+                <div key={di} className="border-b border-l border-gray-100 p-1 min-h-[52px]">
+                  {getAptsForSlot(di, hour).map((a, idx) => (
+                    <div key={a.id} className={`rounded-md px-1.5 py-1 mb-1 text-[11px] ${COLORS[idx % COLORS.length]}`}>
+                      <div className="font-bold leading-tight truncate">{a.patientName}</div>
+                      <div className="text-[10px] text-gray-400">{new Date(a.startTime).toLocaleTimeString('ar', { hour: '2-digit', minute: '2-digit' })}</div>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </React.Fragment>
+          ))}
+        </div>
       </div>
     </div>
   );
