@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { insuranceService } from '@/domains/billing/billing.service';
+import { getApiError } from '@/shared/utils';
 import type { ClinicInsuranceProvider, InsuranceProvider } from '@/domains/billing/billing.types';
 
 export default function InsuranceSettingsPage() {
@@ -56,7 +57,7 @@ export default function InsuranceSettingsPage() {
       setShowAddModal(false);
       setAddForm({ insuranceProviderId: '', preAuthRequired: false, defaultCoveragePercent: 80, notes: '' });
       showToast('تم تفعيل شركة التأمين بنجاح', 'success');
-    } catch { showToast('حدث خطأ', 'error'); } finally { setSaving(false); }
+    } catch (err) { showToast(getApiError(err, 'حدث خطأ'), 'error'); } finally { setSaving(false); }
   }
 
   async function handleUpdate() {
@@ -67,7 +68,7 @@ export default function InsuranceSettingsPage() {
       await load();
       setShowEditModal(false);
       showToast('تم التحديث بنجاح', 'success');
-    } catch { showToast('حدث خطأ', 'error'); } finally { setSaving(false); }
+    } catch (err) { showToast(getApiError(err, 'حدث خطأ'), 'error'); } finally { setSaving(false); }
   }
 
   async function handleDeactivate(id: string) {
@@ -76,7 +77,7 @@ export default function InsuranceSettingsPage() {
       await insuranceService.deactivateProvider(id);
       await load();
       showToast('تم إلغاء التفعيل', 'success');
-    } catch { showToast('حدث خطأ', 'error'); }
+    } catch (err) { showToast(getApiError(err, 'حدث خطأ'), 'error'); }
   }
 
   const filteredGlobal = globalProviders.filter(p =>

@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { apiClient } from '@/services/api-client';
+import { getApiError } from '@/shared/utils';
 
 // ── Types ──────────────────────────────────────────────────
 
@@ -216,8 +217,8 @@ function CreateRoleModal({
       });
       onCreated();
       onClose();
-    } catch {
-      setApiError('فشل في إنشاء الدور. حاول مرة أخرى.');
+    } catch (err) {
+      setApiError(getApiError(err, 'فشل في إنشاء الدور. حاول مرة أخرى.'));
     } finally {
       setSaving(false);
     }
@@ -551,8 +552,8 @@ export default function RolesPage() {
         const updated = rolesData.find((r) => r.name === selectedRole.name);
         setSelectedRole(updated ?? null);
       }
-    } catch {
-      setError('فشل في تحميل البيانات. حاول مرة أخرى.');
+    } catch (err) {
+      setError(getApiError(err, 'فشل في تحميل البيانات. حاول مرة أخرى.'));
     } finally {
       setLoading(false);
     }
@@ -583,8 +584,8 @@ export default function RolesPage() {
         currentlyActive ? 'تم إزالة الصلاحية بنجاح' : 'تم إضافة الصلاحية بنجاح',
         'success'
       );
-    } catch {
-      showToast('فشل في تحديث الصلاحية. حاول مرة أخرى.', 'error');
+    } catch (err) {
+      showToast(getApiError(err, 'فشل في تحديث الصلاحية. حاول مرة أخرى.'), 'error');
     } finally {
       setPermTogglingSet((prev) => {
         const next = new Set(prev);
@@ -603,8 +604,8 @@ export default function RolesPage() {
       setSelectedRole(null);
       setConfirmDelete(false);
       await loadData();
-    } catch {
-      showToast('فشل في حذف الدور. حاول مرة أخرى.', 'error');
+    } catch (err) {
+      showToast(getApiError(err, 'فشل في حذف الدور. حاول مرة أخرى.'), 'error');
     } finally {
       setDeleting(false);
     }

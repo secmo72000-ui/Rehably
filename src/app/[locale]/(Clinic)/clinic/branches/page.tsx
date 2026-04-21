@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { apiClient } from '@/services/api-client';
+import { getApiError } from '@/shared/utils';
 
 // ── Types ──────────────────────────────────────────────────
 
@@ -253,11 +254,11 @@ function BranchDrawer({ mode, branch, onClose, onSaved, showToast }: DrawerProps
       }
       onSaved();
       onClose();
-    } catch {
+    } catch (err) {
       setApiError(
-        mode === 'add'
+        getApiError(err, mode === 'add'
           ? 'فشل في إضافة الفرع. حاول مرة أخرى.'
-          : 'فشل في تحديث الفرع. حاول مرة أخرى.'
+          : 'فشل في تحديث الفرع. حاول مرة أخرى.')
       );
     } finally {
       setSaving(false);
@@ -636,8 +637,8 @@ export default function BranchesPage() {
     try {
       const data = await branchApi.getAll();
       setBranches(data ?? []);
-    } catch {
-      setError('فشل في تحميل بيانات الفروع. حاول مرة أخرى.');
+    } catch (err) {
+      setError(getApiError(err, 'فشل في تحميل بيانات الفروع. حاول مرة أخرى.'));
     } finally {
       setLoading(false);
     }
@@ -667,8 +668,8 @@ export default function BranchesPage() {
       showToast('تم حذف الفرع بنجاح', 'success');
       setDeleteTarget(null);
       loadBranches();
-    } catch {
-      showToast('فشل في حذف الفرع. حاول مرة أخرى.', 'error');
+    } catch (err) {
+      showToast(getApiError(err, 'فشل في حذف الفرع. حاول مرة أخرى.'), 'error');
     } finally {
       setDeleting(false);
     }

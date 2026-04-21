@@ -8,6 +8,7 @@ import {
   stagesService,
   devicesService,
 } from '@/domains/library';
+import { getApiError } from '@/shared/utils';
 import type {
   TreatmentDto,
   ExerciseDto,
@@ -214,8 +215,8 @@ export function useLibrariesPage() {
     try {
       const response = await treatmentsService.getAll({ page: 1, pageSize: 100, search: search || undefined });
       setTreatments(response.items.map(mapTreatment));
-    } catch (err: any) {
-      setError(err?.response?.data?.error?.message || err?.message || 'Failed to fetch treatments');
+    } catch (err) {
+      setError(getApiError(err, 'Failed to fetch treatments'));
     } finally {
       setIsLoading(false);
     }
@@ -227,8 +228,8 @@ export function useLibrariesPage() {
     try {
       const response = await stagesService.getAll({ page: 1, pageSize: 100, search: search || undefined });
       setStages(response.items.map(mapStage));
-    } catch (err: any) {
-      setError(err?.response?.data?.error?.message || err.message || 'Failed to fetch stages');
+    } catch (err) {
+      setError(getApiError(err, 'Failed to fetch stages'));
     } finally {
       setIsLoading(false);
     }
@@ -240,8 +241,8 @@ export function useLibrariesPage() {
     try {
       const response = await exercisesService.getAll({ page: 1, pageSize: 100, search: search || undefined });
       setExercises(response.items.map(mapExercise));
-    } catch (err: any) {
-      setError(err?.response?.data?.error?.message || err?.message || 'Failed to fetch exercises');
+    } catch (err) {
+      setError(getApiError(err, 'Failed to fetch exercises'));
     } finally {
       setIsLoading(false);
     }
@@ -253,8 +254,8 @@ export function useLibrariesPage() {
     try {
       const response = await assessmentsService.getAll({ page: 1, pageSize: 100, search: search || undefined });
       setAssessments(response.items.map(mapAssessment));
-    } catch (err: any) {
-      setError(err?.response?.data?.error?.message || err?.message || 'Failed to fetch assessments');
+    } catch (err) {
+      setError(getApiError(err, 'Failed to fetch assessments'));
     } finally {
       setIsLoading(false);
     }
@@ -326,8 +327,8 @@ export function useLibrariesPage() {
       setIsDrawerOpen(false);
       setTimeout(() => setEditingTreatment(null), 300);
       await fetchTreatments(debouncedSearch);
-    } catch (err: any) {
-      setError(err?.response?.data?.error?.message || err?.message || 'Failed to save treatment');
+    } catch (err) {
+      setError(getApiError(err, 'Failed to save treatment'));
     } finally {
       setIsSubmitting(false);
     }
@@ -353,8 +354,8 @@ export function useLibrariesPage() {
     try {
       await treatmentsService.delete(treatment.id);
       setTreatments(prev => prev.filter(t => t.id !== treatment.id));
-    } catch (err: any) {
-      setError(err?.response?.data?.error?.message || err?.message || 'Failed to delete treatment');
+    } catch (err) {
+      setError(getApiError(err, 'Failed to delete treatment'));
     }
   };
 
@@ -374,8 +375,8 @@ export function useLibrariesPage() {
       setIsStageDrawerOpen(false);
       setTimeout(() => setEditingStage(null), 300);
       await fetchStages(debouncedSearch);
-    } catch (err: any) {
-      setError(err?.response?.data?.error?.message || err.message || 'Failed to save stage');
+    } catch (err) {
+      setError(getApiError(err, 'Failed to save stage'));
     } finally {
       setIsSubmitting(false);
     }
@@ -390,8 +391,8 @@ export function useLibrariesPage() {
     try {
       await stagesService.delete(stage.id);
       setStages(prev => prev.filter(s => s.id !== stage.id));
-    } catch (err: any) {
-      setError(err?.response?.data?.error?.message || err.message || 'Failed to delete stage');
+    } catch (err) {
+      setError(getApiError(err, 'Failed to delete stage'));
     }
   };
 
@@ -421,8 +422,8 @@ export function useLibrariesPage() {
       setIsExerciseDrawerOpen(false);
       setTimeout(() => setEditingExercise(null), 300);
       await fetchExercises(debouncedSearch);
-    } catch (err: any) {
-      setError(err?.response?.data?.error?.message || err?.message || 'Failed to save exercise');
+    } catch (err) {
+      setError(getApiError(err, 'Failed to save exercise'));
     } finally {
       setIsSubmitting(false);
     }
@@ -437,8 +438,8 @@ export function useLibrariesPage() {
     try {
       await exercisesService.delete(exercise.id);
       setExercises(prev => prev.filter(e => e.id !== exercise.id));
-    } catch (err: any) {
-      setError(err?.response?.data?.error?.message || err?.message || 'Failed to delete exercise');
+    } catch (err) {
+      setError(getApiError(err, 'Failed to delete exercise'));
     }
   };
 
@@ -458,8 +459,8 @@ export function useLibrariesPage() {
       setIsAssessmentDrawerOpen(false);
       setTimeout(() => setEditingAssessment(null), 300);
       await fetchAssessments(debouncedSearch);
-    } catch (err: any) {
-      setError(err?.response?.data?.error?.message || err?.message || 'Failed to save assessment');
+    } catch (err) {
+      setError(getApiError(err, 'Failed to save assessment'));
     } finally {
       setIsSubmitting(false);
     }
@@ -474,8 +475,8 @@ export function useLibrariesPage() {
     try {
       await assessmentsService.delete(assessment.id);
       setAssessments(prev => prev.filter(a => a.id !== assessment.id));
-    } catch (err: any) {
-      setError(err?.response?.data?.error?.message || err?.message || 'Failed to delete assessment');
+    } catch (err) {
+      setError(getApiError(err, 'Failed to delete assessment'));
     }
   };
 
@@ -495,8 +496,8 @@ export function useLibrariesPage() {
       setIsDeviceDrawerOpen(false);
       setTimeout(() => setEditingDevice(null), 300);
       await fetchDevices(debouncedSearch);
-    } catch (err: any) {
-      setError(err?.response?.data?.error?.message || err?.message || 'Failed to save device');
+    } catch (err) {
+      setError(getApiError(err, 'Failed to save device'));
     } finally {
       setIsSubmitting(false);
     }
@@ -511,8 +512,8 @@ export function useLibrariesPage() {
     try {
       await devicesService.delete(device.id);
       setDevices(prev => prev.filter(d => d.id !== device.id));
-    } catch (err: any) {
-      setError(err?.response?.data?.error?.message || err?.message || 'Failed to delete device');
+    } catch (err) {
+      setError(getApiError(err, 'Failed to delete device'));
     }
   };
 

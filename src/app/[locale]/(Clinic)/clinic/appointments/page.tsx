@@ -7,6 +7,7 @@ import { insuranceService, invoiceService } from '@/domains/billing/billing.serv
 import type { AppointmentItem } from '@/domains/appointments/appointments.types';
 import type { PatientListItem } from '@/domains/patients/patients.types';
 import type { PatientInsurance, BillingBreakdown } from '@/domains/billing/billing.types';
+import { getApiError } from '@/shared/utils';
 
 type TabId = 'calendar' | 'list';
 
@@ -162,8 +163,8 @@ function AddAppointmentModal({ onClose, onSaved, patients }: {
       }
 
       onSaved(); onClose();
-    } catch {
-      setError('فشل في حفظ الموعد');
+    } catch (err) {
+      setError(getApiError(err, 'فشل في حفظ الموعد'));
     } finally { setSaving(false); }
   };
 
@@ -356,8 +357,8 @@ export default function AppointmentsPage() {
       const result = await appointmentsService.getAll({ page, pageSize: 20 });
       setListApts(result.items);
       setTotalPages(result.totalPages);
-    } catch {
-      setError('فشل في تحميل المواعيد');
+    } catch (err) {
+      setError(getApiError(err, 'فشل في تحميل المواعيد'));
     } finally {
       setLoading(false);
     }

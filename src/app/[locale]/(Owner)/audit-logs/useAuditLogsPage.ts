@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { auditService, AuditLogDto } from '@/domains/audit';
+import { getApiError } from '@/shared/utils';
 
 export function useAuditLogsPage() {
     const [logs, setLogs] = useState<AuditLogDto[]>([]);
@@ -27,8 +28,8 @@ export function useAuditLogsPage() {
             setLogs(response.items || []);
             setTotalPages(response.totalPages || 1);
             setTotalCount(response.totalCount || 0);
-        } catch (err: any) {
-            setError(err?.response?.data?.detail || err.message || 'Failed to fetch audit logs');
+        } catch (err) {
+            setError(getApiError(err, 'Failed to fetch audit logs'));
         } finally {
             setIsLoading(false);
         }

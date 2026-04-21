@@ -7,6 +7,7 @@ import { authService } from '@/domains/auth/auth.service';
 import { Input, Button } from '@/ui/primitives';
 import { LockIcon, EyeIcon, EyeOffIcon } from '@/ui/icons';
 import type { Locale } from '@/configs/i18n.config';
+import { getApiError } from '@/shared/utils';
 
 export default function ChangePasswordPage() {
   const router = useRouter();
@@ -70,8 +71,8 @@ export default function ChangePasswordPage() {
       } else {
         setError('فشل تغيير كلمة المرور. تأكد من صحة كلمة المرور الحالية.');
       }
-    } catch {
-      setError('فشل تغيير كلمة المرور. تأكد من صحة كلمة المرور الحالية.');
+    } catch (err) {
+      setError(getApiError(err, 'فشل تغيير كلمة المرور. تأكد من صحة كلمة المرور الحالية.'));
     } finally {
       setIsLoading(false);
     }

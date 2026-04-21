@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { staffService } from '@/domains/staff/staff.service';
 import type { StaffMember, UpdateStaffRequest } from '@/domains/staff/staff.types';
+import { getApiError } from '@/shared/utils';
 
 // ── Helpers ────────────────────────────────────────────────
 
@@ -190,8 +191,8 @@ export default function StaffDetailPage() {
         lastName: data.lastName,
         phoneNumber: data.phoneNumber ?? '',
       });
-    } catch {
-      setError('فشل في تحميل بيانات الموظف.');
+    } catch (err) {
+      setError(getApiError(err, 'فشل في تحميل بيانات الموظف.'));
     } finally {
       setLoading(false);
     }
@@ -215,8 +216,8 @@ export default function StaffDetailPage() {
       setMember(updated);
       setIsEditing(false);
       setToast({ message: 'تم حفظ التعديلات بنجاح', type: 'success' });
-    } catch {
-      setEditError('فشل في حفظ التعديلات. حاول مرة أخرى.');
+    } catch (err) {
+      setEditError(getApiError(err, 'فشل في حفظ التعديلات. حاول مرة أخرى.'));
     } finally {
       setSaving(false);
     }
@@ -235,8 +236,8 @@ export default function StaffDetailPage() {
       }
       setConfirmDialog(null);
       loadMember();
-    } catch {
-      setToast({ message: 'حدث خطأ. حاول مرة أخرى.', type: 'error' });
+    } catch (err) {
+      setToast({ message: getApiError(err, 'حدث خطأ. حاول مرة أخرى.'), type: 'error' });
       setConfirmDialog(null);
     } finally {
       setActionLoading(false);

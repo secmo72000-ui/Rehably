@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { patientsService } from '@/domains/patients/patients.service';
 import type { PatientListItem } from '@/domains/patients/patients.types';
+import { getApiError } from '@/shared/utils';
 
 const statusMap: Record<string, { label: string; cls: string }> = {
   Active:     { label: 'نشط',    cls: 'bg-green-50 text-green-600' },
@@ -258,8 +259,8 @@ export default function PatientsPage() {
       setPatients(result.items);
       setTotalCount(result.totalCount);
       setTotalPages(result.totalPages);
-    } catch {
-      setError('فشل في تحميل المرضى');
+    } catch (err) {
+      setError(getApiError(err, 'فشل في تحميل المرضى'));
     } finally {
       setLoading(false);
     }

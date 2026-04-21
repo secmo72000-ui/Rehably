@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { appointmentsService } from '@/domains/appointments/appointments.service';
 import type { AppointmentItem } from '@/domains/appointments/appointments.types';
+import { getApiError } from '@/shared/utils';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -231,8 +232,8 @@ export default function AppointmentDetailPage() {
     try {
       const data = await appointmentsService.getById(id);
       setAppointment(data);
-    } catch {
-      setError('فشل في تحميل بيانات الموعد');
+    } catch (err) {
+      setError(getApiError(err, 'فشل في تحميل بيانات الموعد'));
     } finally {
       setLoading(false);
     }
@@ -250,8 +251,8 @@ export default function AppointmentDetailPage() {
       setModal({ type: 'none' });
       showToast('تم تأكيد الموعد بنجاح', 'success');
       await load();
-    } catch {
-      showToast('فشل في تأكيد الموعد', 'error');
+    } catch (err) {
+      showToast(getApiError(err, 'فشل في تأكيد الموعد'), 'error');
     } finally {
       setActionLoading(false);
     }
@@ -264,8 +265,8 @@ export default function AppointmentDetailPage() {
       setModal({ type: 'none' });
       showToast('تم إتمام الموعد بنجاح', 'success');
       await load();
-    } catch {
-      showToast('فشل في إتمام الموعد', 'error');
+    } catch (err) {
+      showToast(getApiError(err, 'فشل في إتمام الموعد'), 'error');
     } finally {
       setActionLoading(false);
     }
@@ -278,8 +279,8 @@ export default function AppointmentDetailPage() {
       setModal({ type: 'none' });
       showToast('تم إلغاء الموعد', 'success');
       await load();
-    } catch {
-      showToast('فشل في إلغاء الموعد', 'error');
+    } catch (err) {
+      showToast(getApiError(err, 'فشل في إلغاء الموعد'), 'error');
     } finally {
       setActionLoading(false);
     }

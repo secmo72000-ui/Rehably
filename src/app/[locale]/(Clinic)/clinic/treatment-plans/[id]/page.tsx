@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { treatmentPlansService } from '@/domains/treatment-plans/treatment-plans.service';
 import type { TreatmentPlanDetail, SessionItem } from '@/domains/treatment-plans/treatment-plans.types';
+import { getApiError } from '@/shared/utils';
 
 // ── Status maps ────────────────────────────────────────────────────────────────
 
@@ -124,8 +125,8 @@ function AddSessionModal({ planId, onClose, onSaved }: {
       });
       onSaved();
       onClose();
-    } catch {
-      setError('فشل في إضافة الجلسة');
+    } catch (err) {
+      setError(getApiError(err, 'فشل في إضافة الجلسة'));
     } finally {
       setSaving(false);
     }
@@ -215,8 +216,8 @@ function CompleteSessionModal({ session, onClose, onSaved }: {
       });
       onSaved();
       onClose();
-    } catch {
-      setError('فشل في إتمام الجلسة');
+    } catch (err) {
+      setError(getApiError(err, 'فشل في إتمام الجلسة'));
     } finally {
       setSaving(false);
     }
@@ -358,8 +359,8 @@ export default function TreatmentPlanDetailPage() {
     try {
       const data = await treatmentPlansService.getById(planId);
       setPlan(data);
-    } catch {
-      setError('فشل في تحميل خطة العلاج');
+    } catch (err) {
+      setError(getApiError(err, 'فشل في تحميل خطة العلاج'));
     } finally {
       setLoading(false);
     }
@@ -376,8 +377,8 @@ export default function TreatmentPlanDetailPage() {
       const updated = await treatmentPlansService.activate(plan.id);
       setPlan(updated);
       showToast('تم تفعيل خطة العلاج بنجاح', 'success');
-    } catch {
-      showToast('فشل في تفعيل خطة العلاج', 'error');
+    } catch (err) {
+      showToast(getApiError(err, 'فشل في تفعيل خطة العلاج'), 'error');
     } finally {
       setActionLoading(false);
       setConfirmAction(null);
@@ -391,8 +392,8 @@ export default function TreatmentPlanDetailPage() {
       const updated = await treatmentPlansService.complete(plan.id);
       setPlan(updated);
       showToast('تم إتمام خطة العلاج بنجاح', 'success');
-    } catch {
-      showToast('فشل في إتمام خطة العلاج', 'error');
+    } catch (err) {
+      showToast(getApiError(err, 'فشل في إتمام خطة العلاج'), 'error');
     } finally {
       setActionLoading(false);
       setConfirmAction(null);

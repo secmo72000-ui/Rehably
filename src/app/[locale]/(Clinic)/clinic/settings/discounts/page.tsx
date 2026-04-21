@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { discountService } from '@/domains/billing/billing.service';
+import { getApiError } from '@/shared/utils';
 import type { Discount, DiscountType, DiscountApplicationMethod, DiscountAppliesTo } from '@/domains/billing/billing.types';
 
 const typeLabels: Record<DiscountType, string> = { Percentage: 'نسبة مئوية', FixedAmount: 'مبلغ ثابت', SessionPackage: 'باقة جلسات' };
@@ -79,7 +80,7 @@ export default function DiscountsSettingsPage() {
       }
       await load();
       setShowModal(false);
-    } catch { showToast('حدث خطأ', 'error'); } finally { setSaving(false); }
+    } catch (err) { showToast(getApiError(err, 'حدث خطأ'), 'error'); } finally { setSaving(false); }
   }
 
   async function handleDelete(id: string) {
@@ -88,7 +89,7 @@ export default function DiscountsSettingsPage() {
       await discountService.delete(id);
       await load();
       showToast('تم الحذف', 'success');
-    } catch { showToast('حدث خطأ', 'error'); }
+    } catch (err) { showToast(getApiError(err, 'حدث خطأ'), 'error'); }
   }
 
   const filtered = discounts.filter(d =>

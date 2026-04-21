@@ -1,7 +1,7 @@
 export { cn } from './cn';
 export { sortByDate } from './sortByDate';
 export { formatDate } from './date.utils';
-export { getFriendlyErrorMessage } from './errorHelpers';
+export { getFriendlyErrorMessage, getApiError } from './errorHelpers';
 export {
   type PortalType,
   getSubdomain,

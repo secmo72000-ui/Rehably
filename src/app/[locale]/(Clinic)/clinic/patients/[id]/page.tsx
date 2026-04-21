@@ -9,6 +9,7 @@ import { treatmentPlansService } from '@/domains/treatment-plans/treatment-plans
 import type { PatientDetail } from '@/domains/patients/patients.types';
 import type { AppointmentItem } from '@/domains/appointments/appointments.types';
 import type { TreatmentPlanItem } from '@/domains/treatment-plans/treatment-plans.types';
+import { getApiError } from '@/shared/utils';
 
 // ── Types ──────────────────────────────────────────────────
 type TabId = 'info' | 'appointments' | 'plans';
@@ -298,8 +299,8 @@ function InfoTab({
       onPatientUpdated(updated);
       setEditMode(false);
       showToast('success', 'تم حفظ بيانات المريض بنجاح');
-    } catch {
-      showToast('error', 'فشل في حفظ البيانات. حاول مرة أخرى.');
+    } catch (err) {
+      showToast('error', getApiError(err, 'فشل في حفظ البيانات. حاول مرة أخرى.'));
     } finally {
       setSaving(false);
     }
@@ -519,8 +520,8 @@ function AppointmentsTab({ patientId }: { patientId: string }) {
       try {
         const result = await appointmentsService.getAll({ patientId, page: 1, pageSize: 10 });
         setAppointments(result.items);
-      } catch {
-        setError('فشل في تحميل البيانات');
+      } catch (err) {
+        setError(getApiError(err, 'فشل في تحميل البيانات'));
       } finally {
         setLoading(false);
       }
@@ -604,8 +605,8 @@ function PlansTab({ patientId, locale }: { patientId: string; locale: string }) 
       try {
         const result = await treatmentPlansService.getAll({ patientId });
         setPlans(result.items);
-      } catch {
-        setError('فشل في تحميل البيانات');
+      } catch (err) {
+        setError(getApiError(err, 'فشل في تحميل البيانات'));
       } finally {
         setLoading(false);
       }
@@ -727,8 +728,8 @@ export default function PatientProfilePage() {
     try {
       const data = await patientsService.getById(patientId);
       setPatient(data);
-    } catch {
-      setError('فشل في تحميل البيانات');
+    } catch (err) {
+      setError(getApiError(err, 'فشل في تحميل البيانات'));
     } finally {
       setLoading(false);
     }
@@ -751,8 +752,8 @@ export default function PatientProfilePage() {
       setPatient(updated);
       setShowDischargeDialog(false);
       showToast('success', 'تم تصريف المريض بنجاح');
-    } catch {
-      showToast('error', 'فشل في تصريف المريض. حاول مرة أخرى.');
+    } catch (err) {
+      showToast('error', getApiError(err, 'فشل في تصريف المريض. حاول مرة أخرى.'));
     } finally {
       setDischarging(false);
     }

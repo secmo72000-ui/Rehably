@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Drawer } from '@/ui/components';
 import { Button } from '@/ui/primitives';
 import { cn } from '@/shared/utils/cn';
+import { getApiError } from '@/shared/utils';
 import { CreateAddOnRequestDto, AvailableAddOnDto } from '@/domains/clinics/clinics.types';
 import { clinicsService } from '@/domains/clinics/clinics.service';
 
@@ -135,9 +136,9 @@ export function AddOnDrawer({
             } else {
                 onClose();
             }
-        } catch (err: any) {
+        } catch (err) {
             console.error('Error creating addons:', err);
-            setError(err?.response?.data?.message || t('common.error'));
+            setError(getApiError(err, t('common.error')));
         } finally {
             setIsSubmitting(false);
         }

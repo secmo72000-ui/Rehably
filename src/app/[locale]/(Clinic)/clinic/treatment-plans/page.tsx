@@ -7,6 +7,7 @@ import { treatmentPlansService } from '@/domains/treatment-plans/treatment-plans
 import { patientsService } from '@/domains/patients/patients.service';
 import type { TreatmentPlanItem } from '@/domains/treatment-plans/treatment-plans.types';
 import type { PatientListItem } from '@/domains/patients/patients.types';
+import { getApiError } from '@/shared/utils';
 
 type FilterStatus = 'all' | 'Draft' | 'Active' | 'Completed' | 'Cancelled';
 
@@ -61,8 +62,8 @@ function AddPlanModal({ onClose, onSaved, patients }: {
       });
       onSaved();
       onClose();
-    } catch {
-      setError('فشل في إنشاء خطة العلاج');
+    } catch (err) {
+      setError(getApiError(err, 'فشل في إنشاء خطة العلاج'));
     } finally {
       setSaving(false);
     }
@@ -162,8 +163,8 @@ export default function TreatmentPlansPage() {
       setPlans(result.items);
       setTotalCount(result.totalCount);
       setTotalPages(result.totalPages);
-    } catch {
-      setError('فشل في تحميل خطط العلاج');
+    } catch (err) {
+      setError(getApiError(err, 'فشل في تحميل خطط العلاج'));
     } finally {
       setLoading(false);
     }

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { staffService } from '@/domains/staff/staff.service';
 import type { StaffMember, InviteStaffRequest } from '@/domains/staff/staff.types';
+import { getApiError } from '@/shared/utils';
 
 // ── Helpers ────────────────────────────────────────────────
 
@@ -170,14 +171,7 @@ function InviteModal({
       onSaved();
       onClose();
     } catch (err: unknown) {
-      const axiosErr = err as { response?: { data?: { error?: { message?: string }; message?: string; title?: string } }; message?: string };
-      const msg =
-        axiosErr?.response?.data?.error?.message ||
-        axiosErr?.response?.data?.message ||
-        axiosErr?.response?.data?.title ||
-        axiosErr?.message ||
-        'فشل في إرسال الدعوة. حاول مرة أخرى.';
-      setApiError(msg);
+      setApiError(getApiError(err, 'فشل في إرسال الدعوة. حاول مرة أخرى.'));
     } finally {
       setSaving(false);
     }
@@ -323,8 +317,8 @@ export default function StaffPage() {
       setStaff(result.items);
       setTotalCount(result.totalCount);
       setTotalPages(result.totalPages);
-    } catch {
-      setError('فشل في تحميل بيانات الطاقم. حاول مرة أخرى.');
+    } catch (err) {
+      setError(getApiError(err, 'فشل في تحميل بيانات الطاقم. حاول مرة أخرى.'));
     } finally {
       setLoading(false);
     }
@@ -345,8 +339,8 @@ export default function StaffPage() {
         setToast({ message: 'تم إعادة تفعيل الحساب بنجاح', type: 'success' });
       }
       loadStaff();
-    } catch {
-      setToast({ message: 'حدث خطأ. حاول مرة أخرى.', type: 'error' });
+    } catch (err) {
+      setToast({ message: getApiError(err, 'حدث خطأ. حاول مرة أخرى.'), type: 'error' });
     } finally {
       setActionLoading(null);
     }

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { invoicesService, AdminInvoice } from '@/domains/invoices';
+import { getApiError } from '@/shared/utils';
 
 export function useInvoicesPage() {
     const [invoices, setInvoices] = useState<AdminInvoice[]>([]);
@@ -16,8 +17,8 @@ export function useInvoicesPage() {
             const response = await invoicesService.getAll({ page, pageSize: 20 });
             setInvoices(response.items || []);
             setTotalPages(response.totalPages || 1);
-        } catch (err: any) {
-            setError(err?.response?.data?.error?.message || err?.response?.data?.detail || err.message);
+        } catch (err) {
+            setError(getApiError(err, 'Failed to fetch invoices'));
         } finally {
             setIsLoading(false);
         }
@@ -35,8 +36,8 @@ export function useInvoicesPage() {
         try {
             await invoicesService.delete(id);
             setInvoices(prev => prev.filter(inv => inv.id !== id));
-        } catch (err: any) {
-            setError(err?.response?.data?.error?.message || err.message);
+        } catch (err) {
+            setError(getApiError(err, 'Failed to delete invoice'));
         }
     };
 
@@ -49,8 +50,8 @@ export function useInvoicesPage() {
             link.download = `invoice-${invoiceNumber}.pdf`;
             link.click();
             window.URL.revokeObjectURL(url);
-        } catch (err: any) {
-            setError(err?.response?.data?.error?.message || 'Failed to download PDF');
+        } catch (err) {
+            setError(getApiError(err, 'Failed to download PDF'));
         }
     };
 

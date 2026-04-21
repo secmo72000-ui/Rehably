@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { apiClient } from '@/services/api-client';
+import { getApiError } from '@/shared/utils';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -174,9 +175,9 @@ export default function SettingsPage() {
         if (!cancelled) {
           setProfile({ ...EMPTY_PROFILE, ...res.data.data });
         }
-      } catch {
+      } catch (err) {
         if (!cancelled) {
-          showToast('error', 'تعذّر تحميل بيانات العيادة. يرجى المحاولة مرة أخرى.');
+          showToast('error', getApiError(err, 'تعذّر تحميل بيانات العيادة. يرجى المحاولة مرة أخرى.'));
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -207,8 +208,8 @@ export default function SettingsPage() {
     try {
       await apiClient.put<ApiResponse<ClinicProfile>>('/api/clinic/profile', profile);
       showToast('success', 'تم حفظ البيانات بنجاح');
-    } catch {
-      showToast('error', 'حدث خطأ أثناء الحفظ. يرجى المحاولة مرة أخرى.');
+    } catch (err) {
+      showToast('error', getApiError(err, 'حدث خطأ أثناء الحفظ. يرجى المحاولة مرة أخرى.'));
     } finally {
       setSaving(false);
     }
