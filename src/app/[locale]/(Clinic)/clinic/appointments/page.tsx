@@ -139,9 +139,38 @@ function AddAppointmentModal({ onClose, onSaved, onWarning, patients }: {
     return () => { if (calcTimer.current) clearTimeout(calcTimer.current); };
   }, [step, unitPrice, selectedInsuranceId, promoCode, form.patientId]);
 
+  // Auto-set endTime when startTime changes (+1 hour, same day)
+  const handleStartTimeChange = (val: string) => {
+    setForm(f => {
+      let endTime = f.endTime;
+      if (val) {
+        const start = new Date(val);
+        const autoEnd = new Date(start.getTime() + 60 * 60 * 1000); // +1 hour
+        // Only auto-set if endTime is empty or already <= startTime
+        if (!f.endTime || new Date(f.endTime) <= start) {
+          endTime = autoEnd.toISOString().slice(0, 16);
+        }
+      }
+      return { ...f, startTime: val, endTime };
+    });
+  };
+
   const goToStep2 = () => {
     if (!form.patientId || !form.startTime || !form.endTime) {
       setError('يرجى ملء جميع الحقول المطلوبة'); return;
+    }
+    const start = new Date(form.startTime);
+    const end = new Date(form.endTime);
+    if (end <= start) {
+      setError('وقت النهاية يجب أن يكون بعد وقت البداية'); return;
+    }
+    const durationMs = end.getTime() - start.getTime();
+    if (durationMs > 8 * 60 * 60 * 1000) {
+      setError('مدة الموعد لا يمكن أن تزيد عن 8 ساعات'); return;
+    }
+    // Warn if spans midnight (different date)
+    if (start.toDateString() !== end.toDateString()) {
+      setError('يجب أن يبدأ وينتهي الموعد في نفس اليوم'); return;
     }
     setError(null);
     setStep(2);
@@ -219,11 +248,11 @@ function AddAppointmentModal({ onClose, onSaved, onWarning, patients }: {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-bold text-gray-600 mb-1.5">وقت البداية *</label>
-                <input type="datetime-local" value={form.startTime} onChange={e => setForm(f => ({ ...f, startTime: e.target.value }))} className={inputCls} />
+                <input type="datetime-local" value={form.startTime} onChange={e => handleStartTimeChange(e.target.value)} className={inputCls} />
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-600 mb-1.5">وقت النهاية *</label>
-                <input type="datetime-local" value={form.endTime} onChange={e => setForm(f => ({ ...f, endTime: e.target.value }))} className={inputCls} />
+                <input type="datetime-local" value={form.endTime} min={form.startTime || undefined} onChange={e => setForm(f => ({ ...f, endTime: e.target.value }))} className={inputCls} />
               </div>
             </div>
             <div>

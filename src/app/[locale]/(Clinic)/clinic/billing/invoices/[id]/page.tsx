@@ -37,7 +37,7 @@ export default function InvoiceDetailPage() {
     try {
       const data = await invoiceService.getById(id);
       setInvoice(data);
-      setPayForm(f => ({ ...f, amount: String(data.balance) }));
+      setPayForm(f => ({ ...f, amount: String(Math.max(0, data.balance || 0)) }));
     } catch { } finally { setLoading(false); }
   }
 
@@ -149,7 +149,7 @@ export default function InvoiceDetailPage() {
         </div>
         <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
           <div className="h-full bg-[#29AAFE] rounded-full transition-all"
-            style={{ width: `${Math.min(100, (invoice.totalPaid / invoice.totalDue) * 100)}%` }} />
+            style={{ width: `${invoice.totalDue > 0 ? Math.min(100, (invoice.totalPaid / invoice.totalDue) * 100) : 0}%` }} />
         </div>
       </div>
 
@@ -225,6 +225,9 @@ export default function InvoiceDetailPage() {
                   onChange={e => setPayForm(f => ({ ...f, amount: e.target.value }))}
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#29AAFE]" />
                 <p className="text-xs text-gray-400 mt-1">المتبقي: {fmt(invoice.balance)} ج.م</p>
+                {Number(payForm.amount) > invoice.balance && invoice.balance > 0 && (
+                  <p className="text-xs text-orange-500 mt-1">⚠️ المبلغ يزيد عن المتبقي بمقدار {fmt(Number(payForm.amount) - invoice.balance)} ج.م</p>
+                )}
               </div>
               <div>
                 <label className="text-xs font-medium text-gray-600 block mb-1">طريقة الدفع</label>
