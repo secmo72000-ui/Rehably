@@ -5,6 +5,7 @@ import { Button, GeneralInput, Checkbox } from '@/ui/primitives';
 import { getTranslation } from '@/shared/i18n';
 import type { Locale } from '@/configs/i18n.config';
 import type { Permission, CreateRolePayload } from '@/domains/roles/roles.types';
+import { getApiError } from '@/shared/utils';
 
 interface RoleFormProps {
     allPermissions: Permission[];
@@ -56,8 +57,8 @@ export function RoleForm({ allPermissions, locale, onSubmit, isLoading }: RoleFo
                 name: name.trim(),
                 permissions: selectedPermissions,
             });
-        } catch (err: any) {
-            setError(err.message || 'Failed to create role');
+        } catch (err) {
+            setError(getApiError(err, 'Failed to create role'));
         }
     };
 
