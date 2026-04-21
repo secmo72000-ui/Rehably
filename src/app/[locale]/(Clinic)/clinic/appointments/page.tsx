@@ -81,9 +81,10 @@ function WeekCalendar({ appointments }: { appointments: AppointmentItem[] }) {
 }
 
 // ── Add Appointment Modal (2-step: details → billing) ─────────────────
-function AddAppointmentModal({ onClose, onSaved, patients }: {
+function AddAppointmentModal({ onClose, onSaved, onWarning, patients }: {
   onClose: () => void;
   onSaved: () => void;
+  onWarning?: (msg: string) => void;
   patients: PatientListItem[];
 }) {
   const [step, setStep] = useState<1 | 2>(1);
@@ -141,8 +142,9 @@ function AddAppointmentModal({ onClose, onSaved, patients }: {
   };
 
   const handleSubmit = async () => {
-    setSaving(true); setError(null);
+    setSaving(true); setError(null); setInvoiceWarning(null);
     try {
+      // Step 1: create appointment (required)
       const apt = await appointmentsService.create({
         patientId: form.patientId,
         startTime: new Date(form.startTime).toISOString(),
@@ -151,15 +153,24 @@ function AddAppointmentModal({ onClose, onSaved, patients }: {
         notes: form.notes || undefined,
       });
 
-      // Create draft invoice if opted in and price entered
+      // Step 2: create draft invoice (optional — don't block on failure)
       if (createInvoice && unitPrice && Number(unitPrice) > 0) {
-        await invoiceService.create({
-          patientId: form.patientId,
-          appointmentId: apt?.id,
-          currency: 'EGP',
-          lineItems: [{ description: 'جلسة علاجية', quantity: 1, unitPrice: Number(unitPrice), serviceType: 0 }],
-          patientInsuranceId: selectedInsuranceId || undefined,
-        });
+        try {
+          await invoiceService.create({
+            patientId: form.patientId,
+            appointmentId: apt?.id,
+            currency: 'EGP',
+            lineItems: [{ description: 'جلسة علاجية', quantity: 1, unitPrice: Number(unitPrice), serviceType: 0 }],
+            patientInsuranceId: selectedInsuranceId || undefined,
+          });
+        } catch (invoiceErr) {
+          // Appointment saved — warn about invoice separately
+          const msg = getApiError(invoiceErr, 'تم حفظ الموعد، لكن فشل إنشاء الفاتورة');
+          onSaved();
+          onClose();
+          onWarning?.(`تم حفظ الموعد بنجاح. ${msg}`);
+          return;
+        }
       }
 
       onSaved(); onClose();
@@ -330,9 +341,22 @@ function AddAppointmentModal({ onClose, onSaved, patients }: {
 }
 
 // ── Page ───────────────────────────────────────────────────
+function Toast({ message, type, onClose }: { message: string; type: 'success' | 'warning' | 'error'; onClose: () => void }) {
+  useEffect(() => { const t = setTimeout(onClose, 6000); return () => clearTimeout(t); }, [onClose]);
+  const cls = type === 'success' ? 'bg-green-600' : type === 'warning' ? 'bg-yellow-500' : 'bg-red-600';
+  return (
+    <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-3 px-5 py-3 rounded-2xl shadow-lg text-sm font-bold text-white ${cls}`} dir="rtl">
+      <span>{type === 'success' ? '✓' : type === 'warning' ? '⚠' : '✕'}</span>
+      <span>{message}</span>
+      <button onClick={onClose} className="opacity-70 hover:opacity-100 mr-1 text-xs">✕</button>
+    </div>
+  );
+}
+
 export default function AppointmentsPage() {
   const [activeTab, setActiveTab] = useState<TabId>('calendar');
   const [showModal, setShowModal] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'warning' | 'error' } | null>(null);
 
   const [calendarApts, setCalendarApts] = useState<AppointmentItem[]>([]);
   const [listApts, setListApts] = useState<AppointmentItem[]>([]);
@@ -475,7 +499,16 @@ export default function AppointmentsPage() {
         </div>
       )}
 
-      {showModal && <AddAppointmentModal onClose={() => setShowModal(false)} onSaved={() => { loadList(); loadCalendar(); }} patients={patients} />}
+      {showModal && (
+        <AddAppointmentModal
+          onClose={() => setShowModal(false)}
+          onSaved={() => { loadList(); loadCalendar(); setToast({ message: 'تم حفظ الموعد بنجاح', type: 'success' }); }}
+          onWarning={msg => setToast({ message: msg, type: 'warning' })}
+          patients={patients}
+        />
+      )}
+
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   );
 }
