@@ -142,7 +142,7 @@ function AddAppointmentModal({ onClose, onSaved, onWarning, patients }: {
   };
 
   const handleSubmit = async () => {
-    setSaving(true); setError(null); setInvoiceWarning(null);
+    setSaving(true); setError(null);
     try {
       // Step 1: create appointment (required)
       const apt = await appointmentsService.create({
