@@ -1,4 +1,5 @@
-import {
+import { apiClient } from '@/services/api-client';
+import type {
   BillingBreakdown,
   BillingPolicy,
   ClinicInsuranceProvider,
@@ -16,122 +17,171 @@ import {
 
 const BASE = '/api/clinic';
 
-async function req<T>(url: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(url, {
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
-    ...options,
-  });
-  if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
-  if (res.status === 204) return undefined as T;
-  return res.json();
-}
-
 // ── Insurance ──────────────────────────────────────────────────────────
 export const insuranceService = {
-  getGlobalProviders: (params?: Record<string, string>) =>
-    req<PagedResult<InsuranceProvider>>(`${BASE}/insurance/providers/global?${new URLSearchParams(params)}`),
+  getGlobalProviders: async (params?: Record<string, string>) => {
+    const res = await apiClient.get<PagedResult<InsuranceProvider>>(
+      `${BASE}/insurance/providers/global`,
+      { params }
+    );
+    return res.data;
+  },
 
-  getClinicProviders: () =>
-    req<ClinicInsuranceProvider[]>(`${BASE}/insurance/providers`),
+  getClinicProviders: async () => {
+    const res = await apiClient.get<ClinicInsuranceProvider[]>(`${BASE}/insurance/providers`);
+    return res.data;
+  },
 
-  activateProvider: (body: object) =>
-    req<ClinicInsuranceProvider>(`${BASE}/insurance/providers`, { method: 'POST', body: JSON.stringify(body) }),
+  activateProvider: async (body: object) => {
+    const res = await apiClient.post<ClinicInsuranceProvider>(`${BASE}/insurance/providers`, body);
+    return res.data;
+  },
 
-  updateProvider: (id: string, body: object) =>
-    req<ClinicInsuranceProvider>(`${BASE}/insurance/providers/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+  updateProvider: async (id: string, body: object) => {
+    const res = await apiClient.put<ClinicInsuranceProvider>(`${BASE}/insurance/providers/${id}`, body);
+    return res.data;
+  },
 
-  deactivateProvider: (id: string) =>
-    req<void>(`${BASE}/insurance/providers/${id}`, { method: 'DELETE' }),
+  deactivateProvider: async (id: string) => {
+    await apiClient.delete(`${BASE}/insurance/providers/${id}`);
+  },
 
-  getPatientInsurances: (patientId: string) =>
-    req<PatientInsurance[]>(`${BASE}/insurance/patients/${patientId}`),
+  getPatientInsurances: async (patientId: string) => {
+    const res = await apiClient.get<PatientInsurance[]>(`${BASE}/insurance/patients/${patientId}`);
+    return res.data;
+  },
 
-  addPatientInsurance: (body: object) =>
-    req<PatientInsurance>(`${BASE}/insurance/patients`, { method: 'POST', body: JSON.stringify(body) }),
+  addPatientInsurance: async (body: object) => {
+    const res = await apiClient.post<PatientInsurance>(`${BASE}/insurance/patients`, body);
+    return res.data;
+  },
 
-  updatePatientInsurance: (id: string, body: object) =>
-    req<PatientInsurance>(`${BASE}/insurance/patients/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+  updatePatientInsurance: async (id: string, body: object) => {
+    const res = await apiClient.put<PatientInsurance>(`${BASE}/insurance/patients/${id}`, body);
+    return res.data;
+  },
 
-  deletePatientInsurance: (id: string) =>
-    req<void>(`${BASE}/insurance/patients/${id}`, { method: 'DELETE' }),
+  deletePatientInsurance: async (id: string) => {
+    await apiClient.delete(`${BASE}/insurance/patients/${id}`);
+  },
 
-  getClaims: (params?: Record<string, string>) =>
-    req<PagedResult<InsuranceClaim>>(`${BASE}/insurance/claims?${new URLSearchParams(params)}`),
+  getClaims: async (params?: Record<string, string>) => {
+    const res = await apiClient.get<PagedResult<InsuranceClaim>>(`${BASE}/insurance/claims`, { params });
+    return res.data;
+  },
 
-  submitClaim: (body: object) =>
-    req<InsuranceClaim>(`${BASE}/insurance/claims`, { method: 'POST', body: JSON.stringify(body) }),
+  submitClaim: async (body: object) => {
+    const res = await apiClient.post<InsuranceClaim>(`${BASE}/insurance/claims`, body);
+    return res.data;
+  },
 
-  updateClaim: (id: string, body: object) =>
-    req<InsuranceClaim>(`${BASE}/insurance/claims/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+  updateClaim: async (id: string, body: object) => {
+    const res = await apiClient.put<InsuranceClaim>(`${BASE}/insurance/claims/${id}`, body);
+    return res.data;
+  },
 };
 
 // ── Discounts ──────────────────────────────────────────────────────────
 export const discountService = {
-  getAll: (params?: Record<string, string>) =>
-    req<PagedResult<Discount>>(`${BASE}/discounts?${new URLSearchParams(params)}`),
+  getAll: async (params?: Record<string, string>) => {
+    const res = await apiClient.get<PagedResult<Discount>>(`${BASE}/discounts`, { params });
+    return res.data;
+  },
 
-  getById: (id: string) =>
-    req<Discount>(`${BASE}/discounts/${id}`),
+  getById: async (id: string) => {
+    const res = await apiClient.get<Discount>(`${BASE}/discounts/${id}`);
+    return res.data;
+  },
 
-  create: (body: object) =>
-    req<Discount>(`${BASE}/discounts`, { method: 'POST', body: JSON.stringify(body) }),
+  create: async (body: object) => {
+    const res = await apiClient.post<Discount>(`${BASE}/discounts`, body);
+    return res.data;
+  },
 
-  update: (id: string, body: object) =>
-    req<Discount>(`${BASE}/discounts/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+  update: async (id: string, body: object) => {
+    const res = await apiClient.put<Discount>(`${BASE}/discounts/${id}`, body);
+    return res.data;
+  },
 
-  delete: (id: string) =>
-    req<void>(`${BASE}/discounts/${id}`, { method: 'DELETE' }),
+  delete: async (id: string) => {
+    await apiClient.delete(`${BASE}/discounts/${id}`);
+  },
 
-  validateCode: (body: object) =>
-    req<ValidateDiscountResponse>(`${BASE}/discounts/validate`, { method: 'POST', body: JSON.stringify(body) }),
+  validateCode: async (body: object) => {
+    const res = await apiClient.post<ValidateDiscountResponse>(`${BASE}/discounts/validate`, body);
+    return res.data;
+  },
 };
 
 // ── Invoices ───────────────────────────────────────────────────────────
 export const invoiceService = {
-  getAll: (params?: Record<string, string>) =>
-    req<PagedResult<InvoiceSummary>>(`${BASE}/invoices?${new URLSearchParams(params)}`),
+  getAll: async (params?: Record<string, string>) => {
+    const res = await apiClient.get<PagedResult<InvoiceSummary>>(`${BASE}/invoices`, { params });
+    return res.data;
+  },
 
-  getById: (id: string) =>
-    req<ClinicInvoice>(`${BASE}/invoices/${id}`),
+  getById: async (id: string) => {
+    const res = await apiClient.get<ClinicInvoice>(`${BASE}/invoices/${id}`);
+    return res.data;
+  },
 
-  create: (body: object) =>
-    req<ClinicInvoice>(`${BASE}/invoices`, { method: 'POST', body: JSON.stringify(body) }),
+  create: async (body: object) => {
+    const res = await apiClient.post<ClinicInvoice>(`${BASE}/invoices`, body);
+    return res.data;
+  },
 
-  update: (id: string, body: object) =>
-    req<ClinicInvoice>(`${BASE}/invoices/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+  update: async (id: string, body: object) => {
+    const res = await apiClient.put<ClinicInvoice>(`${BASE}/invoices/${id}`, body);
+    return res.data;
+  },
 
-  cancel: (id: string) =>
-    req<void>(`${BASE}/invoices/${id}/cancel`, { method: 'POST' }),
+  cancel: async (id: string) => {
+    await apiClient.post(`${BASE}/invoices/${id}/cancel`);
+  },
 
-  createInstallments: (id: string, body: object) =>
-    req<ClinicInvoice>(`${BASE}/invoices/${id}/installments`, { method: 'POST', body: JSON.stringify(body) }),
+  createInstallments: async (id: string, body: object) => {
+    const res = await apiClient.post<ClinicInvoice>(`${BASE}/invoices/${id}/installments`, body);
+    return res.data;
+  },
 
-  calculateBreakdown: (body: object) =>
-    req<BillingBreakdown>(`${BASE}/invoices/breakdown`, { method: 'POST', body: JSON.stringify(body) }),
+  calculateBreakdown: async (body: object) => {
+    const res = await apiClient.post<BillingBreakdown>(`${BASE}/invoices/breakdown`, body);
+    return res.data;
+  },
 };
 
 // ── Payments ───────────────────────────────────────────────────────────
 export const paymentService = {
-  getAll: (params?: Record<string, string>) =>
-    req<PagedResult<ClinicPayment>>(`${BASE}/payments?${new URLSearchParams(params)}`),
-
-  record: (body: object) =>
-    req<ClinicPayment>(`${BASE}/payments`, { method: 'POST', body: JSON.stringify(body) }),
-
-  refund: (id: string, body: object) =>
-    req<ClinicPayment>(`${BASE}/payments/${id}/refund`, { method: 'POST', body: JSON.stringify(body) }),
-
-  getSummary: (from?: string, to?: string) => {
-    const p = new URLSearchParams();
-    if (from) p.set('from', from);
-    if (to) p.set('to', to);
-    return req<PaymentSummary>(`${BASE}/payments/summary?${p}`);
+  getAll: async (params?: Record<string, string>) => {
+    const res = await apiClient.get<PagedResult<ClinicPayment>>(`${BASE}/payments`, { params });
+    return res.data;
   },
 
-  getPolicy: () =>
-    req<BillingPolicy>(`${BASE}/payments/policy`),
+  record: async (body: object) => {
+    const res = await apiClient.post<ClinicPayment>(`${BASE}/payments`, body);
+    return res.data;
+  },
 
-  upsertPolicy: (body: object) =>
-    req<BillingPolicy>(`${BASE}/payments/policy`, { method: 'PUT', body: JSON.stringify(body) }),
+  refund: async (id: string, body: object) => {
+    const res = await apiClient.post<ClinicPayment>(`${BASE}/payments/${id}/refund`, body);
+    return res.data;
+  },
+
+  getSummary: async (from?: string, to?: string) => {
+    const params: Record<string, string> = {};
+    if (from) params.from = from;
+    if (to) params.to = to;
+    const res = await apiClient.get<PaymentSummary>(`${BASE}/payments/summary`, { params });
+    return res.data;
+  },
+
+  getPolicy: async () => {
+    const res = await apiClient.get<BillingPolicy>(`${BASE}/payments/policy`);
+    return res.data;
+  },
+
+  upsertPolicy: async (body: object) => {
+    const res = await apiClient.put<BillingPolicy>(`${BASE}/payments/policy`, body);
+    return res.data;
+  },
 };
