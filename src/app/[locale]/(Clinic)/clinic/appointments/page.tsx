@@ -86,6 +86,34 @@ function WeekCalendar({ appointments }: { appointments: AppointmentItem[] }) {
   );
 }
 
+// ── Duration defaults per service type (minutes) ─────────────────────
+// Key = service type index. Stored in localStorage so each clinic can override.
+const DURATION_STORAGE_KEY = 'rehably_apt_durations';
+const HARDCODED_DURATIONS: Record<number, number> = {
+  0: 60,  // علاج طبيعي
+  1: 90,  // تقييم
+  2: 30,  // متابعة
+  3: 30,  // استشارة
+};
+
+function loadDurations(): Record<number, number> {
+  if (typeof window === 'undefined') return { ...HARDCODED_DURATIONS };
+  try {
+    const raw = localStorage.getItem(DURATION_STORAGE_KEY);
+    if (raw) return { ...HARDCODED_DURATIONS, ...JSON.parse(raw) };
+  } catch { /* ignore */ }
+  return { ...HARDCODED_DURATIONS };
+}
+
+/** Add minutes to a datetime-local string in LOCAL time (no UTC conversion). */
+function addMinutesLocal(localDt: string, minutes: number): string {
+  if (!localDt) return '';
+  const d = new Date(localDt); // parsed as local time by the browser
+  d.setMinutes(d.getMinutes() + minutes);
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
 // ── Add Appointment Modal (2-step: details → billing) ─────────────────
 function AddAppointmentModal({ onClose, onSaved, onWarning, patients }: {
   onClose: () => void;
@@ -94,6 +122,7 @@ function AddAppointmentModal({ onClose, onSaved, onWarning, patients }: {
   patients: PatientListItem[];
 }) {
   const [step, setStep] = useState<1 | 2>(1);
+  const durations = React.useRef(loadDurations());
 
   // Step 1 — appointment details
   const [form, setForm] = useState({ patientId: '', startTime: '', endTime: '', type: 0, notes: '' });
@@ -139,21 +168,30 @@ function AddAppointmentModal({ onClose, onSaved, onWarning, patients }: {
     return () => { if (calcTimer.current) clearTimeout(calcTimer.current); };
   }, [step, unitPrice, selectedInsuranceId, promoCode, form.patientId]);
 
-  // Auto-set endTime when startTime changes (+1 hour, same day)
+  // Auto-set endTime when startTime changes — uses service-type duration, local time only
   const handleStartTimeChange = (val: string) => {
     setForm(f => {
-      let endTime = f.endTime;
-      if (val) {
-        const start = new Date(val);
-        const autoEnd = new Date(start.getTime() + 60 * 60 * 1000); // +1 hour
-        // Only auto-set if endTime is empty or already <= startTime
-        if (!f.endTime || new Date(f.endTime) <= start) {
-          endTime = autoEnd.toISOString().slice(0, 16);
-        }
-      }
+      const dur = durations.current[f.type] ?? 60;
+      const endTime = val && (!f.endTime || new Date(f.endTime) <= new Date(val))
+        ? addMinutesLocal(val, dur)
+        : f.endTime;
       return { ...f, startTime: val, endTime };
     });
   };
+
+  // When service type changes, recalc end from start + new type's default duration
+  const handleTypeChange = (type: number) => {
+    setForm(f => {
+      const dur = durations.current[type] ?? 60;
+      const endTime = f.startTime ? addMinutesLocal(f.startTime, dur) : f.endTime;
+      return { ...f, type, endTime };
+    });
+  };
+
+  // Computed duration in minutes for display
+  const durationMin = form.startTime && form.endTime
+    ? Math.round((new Date(form.endTime).getTime() - new Date(form.startTime).getTime()) / 60000)
+    : null;
 
   const goToStep2 = () => {
     if (!form.patientId || !form.startTime || !form.endTime) {
@@ -245,6 +283,19 @@ function AddAppointmentModal({ onClose, onSaved, onWarning, patients }: {
                 {patients.map(p => <option key={p.id} value={p.id}>{p.firstName} {p.lastName}</option>)}
               </select>
             </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-600 mb-1.5">النوع</label>
+              <select value={form.type} onChange={e => handleTypeChange(Number(e.target.value))} className={`${inputCls} bg-white`}>
+                {[
+                  ['0', 'علاج طبيعي', durations.current[0]],
+                  ['1', 'تقييم',       durations.current[1]],
+                  ['2', 'متابعة',      durations.current[2]],
+                  ['3', 'استشارة',     durations.current[3]],
+                ].map(([v, l, d]) => (
+                  <option key={v} value={v}>{l} ({d} د)</option>
+                ))}
+              </select>
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-bold text-gray-600 mb-1.5">وقت البداية *</label>
@@ -255,14 +306,17 @@ function AddAppointmentModal({ onClose, onSaved, onWarning, patients }: {
                 <input type="datetime-local" value={form.endTime} min={form.startTime || undefined} onChange={e => setForm(f => ({ ...f, endTime: e.target.value }))} className={inputCls} />
               </div>
             </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-600 mb-1.5">النوع</label>
-              <select value={form.type} onChange={e => setForm(f => ({ ...f, type: Number(e.target.value) }))} className={`${inputCls} bg-white`}>
-                {[['0','علاج طبيعي'],['1','تقييم'],['2','متابعة'],['3','استشارة']].map(([v,l]) => (
-                  <option key={v} value={v}>{l}</option>
-                ))}
-              </select>
-            </div>
+            {/* Duration display */}
+            {durationMin !== null && durationMin > 0 && (
+              <div className={`text-xs px-3 py-1.5 rounded-lg inline-flex items-center gap-1.5 ${
+                durationMin > 480 ? 'bg-red-50 text-red-600' : 'bg-[#E8F5FF] text-[#29AAFE]'
+              }`}>
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                مدة الجلسة: <span className="font-bold">{durationMin} دقيقة</span>
+              </div>
+            )}
             <div>
               <label className="block text-xs font-bold text-gray-600 mb-1.5">ملاحظات</label>
               <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} rows={3} className={`${inputCls} resize-none`} />
