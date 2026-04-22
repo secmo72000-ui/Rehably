@@ -168,13 +168,11 @@ function AddAppointmentModal({ onClose, onSaved, onWarning, patients }: {
     return () => { if (calcTimer.current) clearTimeout(calcTimer.current); };
   }, [step, unitPrice, selectedInsuranceId, promoCode, form.patientId]);
 
-  // Auto-set endTime when startTime changes — uses service-type duration, local time only
+  // Auto-set endTime when startTime changes — always recalcs from start + service duration
   const handleStartTimeChange = (val: string) => {
     setForm(f => {
       const dur = durations.current[f.type] ?? 60;
-      const endTime = val && (!f.endTime || new Date(f.endTime) <= new Date(val))
-        ? addMinutesLocal(val, dur)
-        : f.endTime;
+      const endTime = val ? addMinutesLocal(val, dur) : f.endTime;
       return { ...f, startTime: val, endTime };
     });
   };
