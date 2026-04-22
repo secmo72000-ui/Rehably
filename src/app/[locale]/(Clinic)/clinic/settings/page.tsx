@@ -5,6 +5,10 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { apiClient } from '@/services/api-client';
 import { getApiError } from '@/shared/utils';
+import {
+  loadServices, saveServices, newServiceId, EMPTY_SERVICE, BACKEND_TYPE_LABELS,
+  type ClinicService,
+} from '@/shared/utils/clinicServices';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -26,55 +30,15 @@ interface ApiResponse<T> {
   data: T;
 }
 
-type SettingsTab = 'clinic' | 'contact' | 'appointments';
+type SettingsTab = 'clinic' | 'contact' | 'services';
 
-// ─── Appointment duration constants (shared with appointments page) ────────────
+// ─── Service color palette ────────────────────────────────────────────────────
 
-const DURATION_STORAGE_KEY = 'rehably_apt_durations';
-const PRICE_STORAGE_KEY    = 'rehably_service_prices';
-
-const HARDCODED_DURATIONS: Record<number, number> = {
-  0: 60,   // علاج طبيعي
-  1: 90,   // تقييم
-  2: 30,   // متابعة
-  3: 30,   // استشارة
-};
-
-const SERVICE_TYPES: { id: number; label: string; icon: string; hint: string }[] = [
-  { id: 0, label: 'علاج طبيعي',  icon: '🩺', hint: 'جلسة علاج — عادةً 45-60 دقيقة' },
-  { id: 1, label: 'تقييم',       icon: '📋', hint: 'جلسة تقييم أولية — عادةً 60-90 دقيقة' },
-  { id: 2, label: 'متابعة',      icon: '🔄', hint: 'جلسة متابعة — عادةً 20-30 دقيقة' },
-  { id: 3, label: 'استشارة',     icon: '💬', hint: 'استشارة طبية — عادةً 15-30 دقيقة' },
+const COLOR_PALETTE = [
+  '#29AAFE', '#10b981', '#f59e0b', '#8b5cf6',
+  '#ef4444', '#ec4899', '#14b8a6', '#f97316',
+  '#6366f1', '#84cc16',
 ];
-
-function loadDurationsFromStorage(): Record<number, number> {
-  if (typeof window === 'undefined') return { ...HARDCODED_DURATIONS };
-  try {
-    const raw = localStorage.getItem(DURATION_STORAGE_KEY);
-    if (raw) return { ...HARDCODED_DURATIONS, ...JSON.parse(raw) };
-  } catch { /* ignore */ }
-  return { ...HARDCODED_DURATIONS };
-}
-
-function saveDurationsToStorage(d: Record<number, number>) {
-  try { localStorage.setItem(DURATION_STORAGE_KEY, JSON.stringify(d)); } catch { /* ignore */ }
-}
-
-// ─── Price storage helpers ────────────────────────────────────────────────────
-const HARDCODED_PRICES: Record<number, number> = { 0: 0, 1: 0, 2: 0, 3: 0 };
-
-function loadPricesFromStorage(): Record<number, number> {
-  if (typeof window === 'undefined') return { ...HARDCODED_PRICES };
-  try {
-    const raw = localStorage.getItem(PRICE_STORAGE_KEY);
-    if (raw) return { ...HARDCODED_PRICES, ...JSON.parse(raw) };
-  } catch { /* ignore */ }
-  return { ...HARDCODED_PRICES };
-}
-
-function savePricesToStorage(p: Record<number, number>) {
-  try { localStorage.setItem(PRICE_STORAGE_KEY, JSON.stringify(p)); } catch { /* ignore */ }
-}
 
 function fmtDuration(min: number): string {
   if (min < 60) return `${min} دقيقة`;
@@ -219,17 +183,14 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<ToastProps | null>(null);
 
-  // Appointment durations — loaded from localStorage, saved on click
-  const [durations, setDurations] = useState<Record<number, number>>(HARDCODED_DURATIONS);
-  const [durationsSaved, setDurationsSaved] = useState(false);
+  // ── Clinic services state ──────────────────────────────────────────────────
+  const [services, setServices] = useState<ClinicService[]>([]);
+  const [editingId, setEditingId]   = useState<string | null>(null);
+  const [editForm,  setEditForm]    = useState<ClinicService | null>(null);
+  const [addingNew, setAddingNew]   = useState(false);
+  const [newForm,   setNewForm]     = useState<ClinicService>({ id: '', ...EMPTY_SERVICE });
 
-  // Service prices — loaded from localStorage, saved on click
-  const [prices, setPrices] = useState<Record<number, number>>(HARDCODED_PRICES);
-
-  useEffect(() => {
-    setDurations(loadDurationsFromStorage());
-    setPrices(loadPricesFromStorage());
-  }, []);
+  useEffect(() => { setServices(loadServices()); }, []);
 
   // ── Load profile on mount ──────────────────────────────────────────────────
 
@@ -282,27 +243,52 @@ export default function SettingsPage() {
     }
   };
 
-  // ── Duration save handler ──────────────────────────────────────────────────
+  // ── Clinic services CRUD ──────────────────────────────────────────────────
 
-  const handleSaveDurations = () => {
-    saveDurationsToStorage(durations);
-    savePricesToStorage(prices);
-    setDurationsSaved(true);
-    showToast('success', 'تم حفظ إعدادات المواعيد');
-    setTimeout(() => setDurationsSaved(false), 2000);
+  const persistServices = (updated: ClinicService[]) => {
+    saveServices(updated);
+    setServices(updated);
   };
 
-  const handleResetDurations = () => {
-    setDurations({ ...HARDCODED_DURATIONS });
-    setPrices({ ...HARDCODED_PRICES });
+  const handleAddService = () => {
+    if (!newForm.nameArabic.trim()) return;
+    const svc: ClinicService = { ...newForm, id: newServiceId() };
+    persistServices([...services, svc]);
+    setAddingNew(false);
+    setNewForm({ id: '', ...EMPTY_SERVICE });
+    showToast('success', 'تمت إضافة الخدمة');
+  };
+
+  const handleSaveEdit = () => {
+    if (!editForm || !editForm.nameArabic.trim()) return;
+    persistServices(services.map(s => s.id === editForm.id ? editForm : s));
+    setEditingId(null);
+    setEditForm(null);
+    showToast('success', 'تم حفظ التعديلات');
+  };
+
+  const handleDeleteService = (id: string) => {
+    persistServices(services.filter(s => s.id !== id));
+    if (editingId === id) { setEditingId(null); setEditForm(null); }
+    showToast('success', 'تم حذف الخدمة');
+  };
+
+  const handleToggleActive = (id: string) => {
+    persistServices(services.map(s => s.id === id ? { ...s, isActive: !s.isActive } : s));
+  };
+
+  const startEdit = (svc: ClinicService) => {
+    setEditingId(svc.id);
+    setEditForm({ ...svc });
+    setAddingNew(false);
   };
 
   // ── Tab definitions ────────────────────────────────────────────────────────
 
   const tabs: { id: SettingsTab; label: string }[] = [
-    { id: 'clinic',       label: 'معلومات العيادة' },
-    { id: 'contact',      label: 'معلومات الاتصال' },
-    { id: 'appointments', label: 'إعدادات المواعيد' },
+    { id: 'clinic',   label: 'معلومات العيادة' },
+    { id: 'contact',  label: 'معلومات الاتصال' },
+    { id: 'services', label: 'خدمات العيادة' },
   ];
 
   // ── Save button ────────────────────────────────────────────────────────────
@@ -454,125 +440,249 @@ export default function SettingsPage() {
               )
           )}
 
-          {/* ── Tab 3: Appointment Settings ───────────────────────────────── */}
-          {activeTab === 'appointments' && (
-            <div className="space-y-6 max-w-2xl">
+          {/* ── Tab 3: Clinic Services ────────────────────────────────────── */}
+          {activeTab === 'services' && (
+            <div className="space-y-5 max-w-2xl">
 
-              {/* Default durations card */}
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <h3 className="text-sm font-bold text-gray-700">مدة الجلسة الافتراضية لكل نوع موعد</h3>
+              {/* Header */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-bold text-gray-700">خدمات العيادة</h3>
+                  <p className="text-xs text-gray-400 mt-0.5">الخدمات المتاحة في المواعيد والفواتير — تُحفظ محلياً على هذا الجهاز</p>
+                </div>
+                {!addingNew && (
                   <button
                     type="button"
-                    onClick={handleResetDurations}
-                    className="text-xs text-gray-400 hover:text-gray-600 underline underline-offset-2"
+                    onClick={() => { setAddingNew(true); setEditingId(null); setEditForm(null); setNewForm({ id: '', ...EMPTY_SERVICE }); }}
+                    className="flex items-center gap-1.5 bg-[#29AAFE] hover:bg-[#1A8FD9] text-white text-xs font-bold px-3.5 py-2 rounded-xl transition-colors"
                   >
-                    إعادة تعيين الافتراضيات
+                    <span className="text-base leading-none">+</span> خدمة جديدة
                   </button>
-                </div>
-                <p className="text-xs text-gray-400 mb-5">
-                  عند اختيار نوع الموعد سيتم حساب وقت النهاية تلقائياً بناءً على هذه المدة.
-                </p>
-
-                <div className="space-y-3">
-                  {SERVICE_TYPES.map(st => {
-                    const dur = durations[st.id] ?? HARDCODED_DURATIONS[st.id];
-                    const price = prices[st.id] ?? 0;
-                    return (
-                      <div key={st.id}
-                        className="border border-gray-200 rounded-xl px-4 py-3 hover:border-[#29AAFE]/40 transition-colors space-y-3">
-
-                        {/* Row 1: icon + label */}
-                        <div className="flex items-center gap-2.5">
-                          <span className="text-xl">{st.icon}</span>
-                          <div>
-                            <div className="text-sm font-bold text-gray-800">{st.label}</div>
-                            <div className="text-[11px] text-gray-400">{st.hint}</div>
-                          </div>
-                        </div>
-
-                        {/* Row 2: duration + price */}
-                        <div className="grid grid-cols-2 gap-3">
-                          {/* Duration stepper */}
-                          <div>
-                            <div className="text-[11px] text-gray-400 mb-1.5">المدة الافتراضية</div>
-                            <div className="flex items-center gap-1.5">
-                              <button
-                                type="button"
-                                onClick={() => setDurations(d => ({ ...d, [st.id]: Math.max(5, (d[st.id] ?? 60) - 5) }))}
-                                className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-100 font-bold text-lg leading-none shrink-0"
-                              >−</button>
-                              <div className="flex items-center gap-1 flex-1 justify-center">
-                                <input
-                                  type="number"
-                                  min={5} max={480} step={5}
-                                  value={dur}
-                                  onChange={e => {
-                                    const n = Math.max(5, Math.min(480, Number(e.target.value) || 5));
-                                    setDurations(d => ({ ...d, [st.id]: n }));
-                                  }}
-                                  className="w-14 text-center border border-gray-200 rounded-lg py-1.5 text-sm font-bold outline-none focus:border-[#29AAFE] focus:ring-2 focus:ring-[#29AAFE]/10"
-                                  dir="ltr"
-                                />
-                                <span className="text-xs text-gray-400">د</span>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => setDurations(d => ({ ...d, [st.id]: Math.min(480, (d[st.id] ?? 60) + 5) }))}
-                                className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-100 font-bold text-lg leading-none shrink-0"
-                              >+</button>
-                            </div>
-                            <div className={`text-[11px] mt-1 font-bold ${dur === HARDCODED_DURATIONS[st.id] ? 'text-gray-400' : 'text-[#29AAFE]'}`}>
-                              {fmtDuration(dur)}
-                            </div>
-                          </div>
-
-                          {/* Price input */}
-                          <div>
-                            <div className="text-[11px] text-gray-400 mb-1.5">السعر الافتراضي</div>
-                            <div className="flex items-center gap-1.5">
-                              <input
-                                type="number"
-                                min={0}
-                                step={10}
-                                value={price || ''}
-                                placeholder="0"
-                                onChange={e => {
-                                  const n = Math.max(0, Number(e.target.value) || 0);
-                                  setPrices(p => ({ ...p, [st.id]: n }));
-                                }}
-                                className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm font-bold outline-none focus:border-[#29AAFE] focus:ring-2 focus:ring-[#29AAFE]/10"
-                                dir="ltr"
-                              />
-                              <span className="text-xs text-gray-400 shrink-0">ج.م</span>
-                            </div>
-                            <div className={`text-[11px] mt-1 font-bold ${price > 0 ? 'text-green-600' : 'text-gray-300'}`}>
-                              {price > 0 ? `${price.toLocaleString('ar-EG')} ج.م` : 'غير محدد'}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                )}
               </div>
 
-              {/* Save */}
-              <div className="flex items-center gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={handleSaveDurations}
-                  className={`inline-flex items-center gap-2 font-bold text-sm px-6 py-2.5 rounded-xl transition-all shadow-sm ${
-                    durationsSaved
-                      ? 'bg-green-500 text-white'
-                      : 'bg-[#29AAFE] hover:bg-[#1A8FD9] text-white'
-                  }`}
-                >
-                  {durationsSaved ? '✓ تم الحفظ' : 'حفظ الإعدادات'}
-                </button>
-                <p className="text-xs text-gray-400">
-                  تُحفظ هذه الإعدادات محلياً على هذا الجهاز
-                </p>
+              {/* ── Add new service form ──────────────────────────────── */}
+              {addingNew && (
+                <div className="border-2 border-[#29AAFE]/40 rounded-2xl p-4 bg-[#F0F9FF] space-y-3">
+                  <div className="text-xs font-bold text-[#29AAFE] mb-1">إضافة خدمة جديدة</div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-500 mb-1">الاسم بالعربية *</label>
+                      <input type="text" value={newForm.nameArabic}
+                        onChange={e => setNewForm(f => ({ ...f, nameArabic: e.target.value }))}
+                        placeholder="مثال: علاج طبيعي"
+                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#29AAFE] focus:ring-2 focus:ring-[#29AAFE]/10"
+                        dir="rtl" />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-500 mb-1">الاسم بالإنجليزية</label>
+                      <input type="text" value={newForm.nameEnglish}
+                        onChange={e => setNewForm(f => ({ ...f, nameEnglish: e.target.value }))}
+                        placeholder="e.g. Physical Therapy"
+                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#29AAFE] focus:ring-2 focus:ring-[#29AAFE]/10"
+                        dir="ltr" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-500 mb-1">المدة (دقيقة)</label>
+                      <div className="flex items-center gap-1">
+                        <button type="button" onClick={() => setNewForm(f => ({ ...f, duration: Math.max(5, f.duration - 5) }))}
+                          className="w-7 h-7 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-100 font-bold shrink-0">−</button>
+                        <input type="number" min={5} max={480} step={5} value={newForm.duration}
+                          onChange={e => setNewForm(f => ({ ...f, duration: Math.max(5, Math.min(480, Number(e.target.value) || 5)) }))}
+                          className="flex-1 text-center border border-gray-200 rounded-lg py-1.5 text-sm font-bold outline-none focus:border-[#29AAFE]"
+                          dir="ltr" />
+                        <button type="button" onClick={() => setNewForm(f => ({ ...f, duration: Math.min(480, f.duration + 5) }))}
+                          className="w-7 h-7 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-100 font-bold shrink-0">+</button>
+                      </div>
+                      <div className="text-[11px] text-[#29AAFE] font-bold mt-1">{fmtDuration(newForm.duration)}</div>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-500 mb-1">السعر (ج.م)</label>
+                      <input type="number" min={0} step={10} value={newForm.price || ''}
+                        onChange={e => setNewForm(f => ({ ...f, price: Math.max(0, Number(e.target.value) || 0) }))}
+                        placeholder="0"
+                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#29AAFE] focus:ring-2 focus:ring-[#29AAFE]/10"
+                        dir="ltr" />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-500 mb-1">النوع</label>
+                      <select value={newForm.backendType}
+                        onChange={e => setNewForm(f => ({ ...f, backendType: Number(e.target.value) }))}
+                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#29AAFE] bg-white">
+                        {Object.entries(BACKEND_TYPE_LABELS).map(([k, v]) => (
+                          <option key={k} value={k}>{v}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  {/* Color picker */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-500 mb-1.5">اللون</label>
+                    <div className="flex gap-2 flex-wrap">
+                      {COLOR_PALETTE.map(c => (
+                        <button key={c} type="button" title={c}
+                          onClick={() => setNewForm(f => ({ ...f, color: c }))}
+                          style={{ backgroundColor: c }}
+                          className={`w-7 h-7 rounded-lg transition-all ${newForm.color === c ? 'ring-2 ring-offset-1 ring-gray-400 scale-110' : 'hover:scale-105'}`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex gap-2 pt-1">
+                    <button type="button" onClick={handleAddService}
+                      disabled={!newForm.nameArabic.trim()}
+                      className="flex-1 bg-[#29AAFE] hover:bg-[#1A8FD9] disabled:opacity-40 text-white font-bold text-sm py-2 rounded-xl transition-colors">
+                      إضافة الخدمة
+                    </button>
+                    <button type="button" onClick={() => setAddingNew(false)}
+                      className="px-4 py-2 border border-gray-200 text-sm text-gray-500 font-semibold rounded-xl hover:bg-gray-50">
+                      إلغاء
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* ── Services list ─────────────────────────────────────── */}
+              {services.length === 0 && !addingNew && (
+                <div className="text-center py-10 text-gray-400 text-sm border-2 border-dashed border-gray-200 rounded-2xl">
+                  لا توجد خدمات — اضغط &quot;خدمة جديدة&quot; للبدء
+                </div>
+              )}
+              <div className="space-y-2">
+                {services.map(svc => (
+                  <div key={svc.id} className={`border rounded-2xl transition-all ${editingId === svc.id ? 'border-[#29AAFE]/50 bg-[#F0F9FF]' : 'border-gray-200 bg-white hover:border-gray-300'}`}>
+
+                    {/* ── Collapsed row ── */}
+                    {editingId !== svc.id && (
+                      <div className="flex items-center gap-3 px-4 py-3">
+                        {/* Color dot */}
+                        <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: svc.color }} />
+                        {/* Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-bold text-gray-800">{svc.nameArabic}</span>
+                            {svc.nameEnglish && <span className="text-xs text-gray-400">— {svc.nameEnglish}</span>}
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${svc.isActive ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
+                              {svc.isActive ? 'نشطة' : 'معطلة'}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3 mt-0.5">
+                            <span className="text-[11px] text-gray-400">{fmtDuration(svc.duration)}</span>
+                            <span className="text-[11px] text-gray-300">·</span>
+                            <span className={`text-[11px] font-semibold ${svc.price > 0 ? 'text-green-600' : 'text-gray-300'}`}>
+                              {svc.price > 0 ? `${svc.price.toLocaleString('ar-EG')} ج.م` : 'بدون سعر'}
+                            </span>
+                            <span className="text-[11px] text-gray-300">·</span>
+                            <span className="text-[11px] text-gray-400">{BACKEND_TYPE_LABELS[svc.backendType]}</span>
+                          </div>
+                        </div>
+                        {/* Actions */}
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <button type="button" onClick={() => handleToggleActive(svc.id)} title={svc.isActive ? 'تعطيل' : 'تفعيل'}
+                            className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-colors ${svc.isActive ? 'bg-green-50 hover:bg-green-100 text-green-600' : 'bg-gray-100 hover:bg-gray-200 text-gray-400'}`}>
+                            {svc.isActive ? '✓' : '○'}
+                          </button>
+                          <button type="button" onClick={() => startEdit(svc)} title="تعديل"
+                            className="w-8 h-8 rounded-lg flex items-center justify-center text-sm bg-blue-50 hover:bg-blue-100 text-blue-500 transition-colors">
+                            ✎
+                          </button>
+                          <button type="button" onClick={() => handleDeleteService(svc.id)} title="حذف"
+                            className="w-8 h-8 rounded-lg flex items-center justify-center text-sm bg-red-50 hover:bg-red-100 text-red-500 transition-colors">
+                            ✕
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ── Expanded edit form ── */}
+                    {editingId === svc.id && editForm && (
+                      <div className="p-4 space-y-3">
+                        <div className="text-xs font-bold text-[#29AAFE] mb-1">تعديل الخدمة</div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-[11px] font-bold text-gray-500 mb-1">الاسم بالعربية *</label>
+                            <input type="text" value={editForm.nameArabic}
+                              onChange={e => setEditForm(f => f ? { ...f, nameArabic: e.target.value } : f)}
+                              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#29AAFE] focus:ring-2 focus:ring-[#29AAFE]/10"
+                              dir="rtl" />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] font-bold text-gray-500 mb-1">الاسم بالإنجليزية</label>
+                            <input type="text" value={editForm.nameEnglish}
+                              onChange={e => setEditForm(f => f ? { ...f, nameEnglish: e.target.value } : f)}
+                              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#29AAFE] focus:ring-2 focus:ring-[#29AAFE]/10"
+                              dir="ltr" />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-3 gap-3">
+                          <div>
+                            <label className="block text-[11px] font-bold text-gray-500 mb-1">المدة (دقيقة)</label>
+                            <div className="flex items-center gap-1">
+                              <button type="button" onClick={() => setEditForm(f => f ? { ...f, duration: Math.max(5, f.duration - 5) } : f)}
+                                className="w-7 h-7 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-100 font-bold shrink-0">−</button>
+                              <input type="number" min={5} max={480} step={5} value={editForm.duration}
+                                onChange={e => setEditForm(f => f ? { ...f, duration: Math.max(5, Math.min(480, Number(e.target.value) || 5)) } : f)}
+                                className="flex-1 text-center border border-gray-200 rounded-lg py-1.5 text-sm font-bold outline-none focus:border-[#29AAFE]"
+                                dir="ltr" />
+                              <button type="button" onClick={() => setEditForm(f => f ? { ...f, duration: Math.min(480, f.duration + 5) } : f)}
+                                className="w-7 h-7 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-100 font-bold shrink-0">+</button>
+                            </div>
+                            <div className="text-[11px] text-[#29AAFE] font-bold mt-1">{fmtDuration(editForm.duration)}</div>
+                          </div>
+                          <div>
+                            <label className="block text-[11px] font-bold text-gray-500 mb-1">السعر (ج.م)</label>
+                            <input type="number" min={0} step={10} value={editForm.price || ''}
+                              onChange={e => setEditForm(f => f ? { ...f, price: Math.max(0, Number(e.target.value) || 0) } : f)}
+                              placeholder="0"
+                              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#29AAFE] focus:ring-2 focus:ring-[#29AAFE]/10"
+                              dir="ltr" />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] font-bold text-gray-500 mb-1">النوع</label>
+                            <select value={editForm.backendType}
+                              onChange={e => setEditForm(f => f ? { ...f, backendType: Number(e.target.value) } : f)}
+                              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#29AAFE] bg-white">
+                              {Object.entries(BACKEND_TYPE_LABELS).map(([k, v]) => (
+                                <option key={k} value={k}>{v}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                        {/* Color picker */}
+                        <div>
+                          <label className="block text-[11px] font-bold text-gray-500 mb-1.5">اللون</label>
+                          <div className="flex gap-2 flex-wrap">
+                            {COLOR_PALETTE.map(c => (
+                              <button key={c} type="button" title={c}
+                                onClick={() => setEditForm(f => f ? { ...f, color: c } : f)}
+                                style={{ backgroundColor: c }}
+                                className={`w-7 h-7 rounded-lg transition-all ${editForm.color === c ? 'ring-2 ring-offset-1 ring-gray-400 scale-110' : 'hover:scale-105'}`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        <div className="flex gap-2 pt-1">
+                          <button type="button" onClick={handleSaveEdit}
+                            disabled={!editForm.nameArabic.trim()}
+                            className="flex-1 bg-[#29AAFE] hover:bg-[#1A8FD9] disabled:opacity-40 text-white font-bold text-sm py-2 rounded-xl transition-colors">
+                            حفظ التعديلات
+                          </button>
+                          <button type="button" onClick={() => { setEditingId(null); setEditForm(null); }}
+                            className="px-4 py-2 border border-gray-200 text-sm text-gray-500 font-semibold rounded-xl hover:bg-gray-50">
+                            إلغاء
+                          </button>
+                          <button type="button" onClick={() => handleDeleteService(svc.id)}
+                            className="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-500 text-sm font-semibold rounded-xl transition-colors">
+                            حذف
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                  </div>
+                ))}
               </div>
 
             </div>

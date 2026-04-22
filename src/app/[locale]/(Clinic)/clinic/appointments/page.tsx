@@ -86,36 +86,8 @@ function WeekCalendar({ appointments }: { appointments: AppointmentItem[] }) {
   );
 }
 
-// ── Duration defaults per service type (minutes) ─────────────────────
-const DURATION_STORAGE_KEY = 'rehably_apt_durations';
-const HARDCODED_DURATIONS: Record<number, number> = {
-  0: 60,  // علاج طبيعي
-  1: 90,  // تقييم
-  2: 30,  // متابعة
-  3: 30,  // استشارة
-};
-
-function loadDurations(): Record<number, number> {
-  if (typeof window === 'undefined') return { ...HARDCODED_DURATIONS };
-  try {
-    const raw = localStorage.getItem(DURATION_STORAGE_KEY);
-    if (raw) return { ...HARDCODED_DURATIONS, ...JSON.parse(raw) };
-  } catch { /* ignore */ }
-  return { ...HARDCODED_DURATIONS };
-}
-
-// ── Price defaults per service type (EGP) ────────────────────────────
-export const PRICE_STORAGE_KEY = 'rehably_service_prices';
-const HARDCODED_PRICES: Record<number, number> = { 0: 0, 1: 0, 2: 0, 3: 0 };
-
-export function loadPrices(): Record<number, number> {
-  if (typeof window === 'undefined') return { ...HARDCODED_PRICES };
-  try {
-    const raw = localStorage.getItem(PRICE_STORAGE_KEY);
-    if (raw) return { ...HARDCODED_PRICES, ...JSON.parse(raw) };
-  } catch { /* ignore */ }
-  return { ...HARDCODED_PRICES };
-}
+// ── Clinic services (replaces hardcoded type list) ───────────────────
+import { loadServices, type ClinicService } from '@/shared/utils/clinicServices';
 
 /** Add minutes to a datetime-local string in LOCAL time (no UTC conversion). */
 function addMinutesLocal(localDt: string, minutes: number): string {
@@ -134,11 +106,17 @@ function AddAppointmentModal({ onClose, onSaved, onWarning, patients }: {
   patients: PatientListItem[];
 }) {
   const [step, setStep] = useState<1 | 2>(1);
-  const durations = React.useRef(loadDurations());
-  const prices = React.useRef(loadPrices());
+  const services = React.useRef<ClinicService[]>(loadServices());
+  const activeServices = services.current.filter(s => s.isActive);
 
   // Step 1 — appointment details
-  const [form, setForm] = useState({ patientId: '', startTime: '', endTime: '', type: 0, notes: '' });
+  const [form, setForm] = useState({
+    patientId: '',
+    startTime: '',
+    endTime: '',
+    serviceId: activeServices[0]?.id ?? '',
+    notes: '',
+  });
 
   // Step 2 — billing
   const [patientInsurances, setPatientInsurances] = useState<PatientInsurance[]>([]);
@@ -171,7 +149,7 @@ function AddAppointmentModal({ onClose, onSaved, onWarning, patients }: {
         const result = await invoiceService.calculateBreakdown({
           patientId: form.patientId,
           patientInsuranceId: selectedInsuranceId || undefined,
-          lineItems: [{ description: 'جلسة علاجية', quantity: 1, unitPrice: Number(unitPrice), serviceType: 0 }],
+          lineItems: [{ description: selectedService?.nameArabic ?? 'جلسة علاجية', quantity: 1, unitPrice: Number(unitPrice), serviceType: selectedService?.backendType ?? 0 }],
           promoCode: promoCode || undefined,
         });
         setBreakdown(result);
@@ -181,25 +159,22 @@ function AddAppointmentModal({ onClose, onSaved, onWarning, patients }: {
     return () => { if (calcTimer.current) clearTimeout(calcTimer.current); };
   }, [step, unitPrice, selectedInsuranceId, promoCode, form.patientId]);
 
-  // Auto-set endTime when startTime changes — always recalcs from start + service duration
+  const selectedService = services.current.find(s => s.id === form.serviceId) ?? activeServices[0];
+
   const handleStartTimeChange = (val: string) => {
-    setForm(f => {
-      const dur = durations.current[f.type] ?? 60;
-      const endTime = val ? addMinutesLocal(val, dur) : f.endTime;
-      return { ...f, startTime: val, endTime };
-    });
+    const dur = selectedService?.duration ?? 60;
+    setForm(f => ({ ...f, startTime: val, endTime: val ? addMinutesLocal(val, dur) : f.endTime }));
   };
 
-  // When service type changes, recalc end from start + new type's default duration
-  const handleTypeChange = (type: number) => {
+  const handleServiceChange = (serviceId: string) => {
+    const svc = services.current.find(s => s.id === serviceId);
     setForm(f => {
-      const dur = durations.current[type] ?? 60;
+      const dur = svc?.duration ?? 60;
       const endTime = f.startTime ? addMinutesLocal(f.startTime, dur) : f.endTime;
-      return { ...f, type, endTime };
+      return { ...f, serviceId, endTime };
     });
   };
 
-  // Computed duration in minutes for display
   const durationMin = form.startTime && form.endTime
     ? Math.round((new Date(form.endTime).getTime() - new Date(form.startTime).getTime()) / 60000)
     : null;
@@ -222,9 +197,9 @@ function AddAppointmentModal({ onClose, onSaved, onWarning, patients }: {
       setError('يجب أن يبدأ وينتهي الموعد في نفس اليوم'); return;
     }
     setError(null);
-    // Auto-fill price from service type default (only if user hasn't typed one)
+    // Auto-fill price from selected service default (only if user hasn't typed one)
     if (!unitPrice) {
-      const defaultPrice = prices.current[form.type] ?? 0;
+      const defaultPrice = selectedService?.price ?? 0;
       if (defaultPrice > 0) setUnitPrice(String(defaultPrice));
     }
     setStep(2);
@@ -238,7 +213,7 @@ function AddAppointmentModal({ onClose, onSaved, onWarning, patients }: {
         patientId: form.patientId,
         startTime: new Date(form.startTime).toISOString(),
         endTime: new Date(form.endTime).toISOString(),
-        type: form.type,
+        type: selectedService?.backendType ?? 0,
         notes: form.notes || undefined,
       });
 
@@ -249,7 +224,7 @@ function AddAppointmentModal({ onClose, onSaved, onWarning, patients }: {
             patientId: form.patientId,
             appointmentId: apt?.id,
             currency: 'EGP',
-            lineItems: [{ description: 'جلسة علاجية', quantity: 1, unitPrice: Number(unitPrice), serviceType: 0 }],
+            lineItems: [{ description: selectedService?.nameArabic ?? 'جلسة علاجية', quantity: 1, unitPrice: Number(unitPrice), serviceType: selectedService?.backendType ?? 0 }],
             patientInsuranceId: selectedInsuranceId || undefined,
           });
         } catch (invoiceErr) {
@@ -300,15 +275,10 @@ function AddAppointmentModal({ onClose, onSaved, onWarning, patients }: {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-bold text-gray-600 mb-1.5">النوع</label>
-              <select value={form.type} onChange={e => handleTypeChange(Number(e.target.value))} className={`${inputCls} bg-white`}>
-                {[
-                  ['0', 'علاج طبيعي', durations.current[0]],
-                  ['1', 'تقييم',       durations.current[1]],
-                  ['2', 'متابعة',      durations.current[2]],
-                  ['3', 'استشارة',     durations.current[3]],
-                ].map(([v, l, d]) => (
-                  <option key={v} value={v}>{l} ({d} د)</option>
+              <label className="block text-xs font-bold text-gray-600 mb-1.5">الخدمة *</label>
+              <select value={form.serviceId} onChange={e => handleServiceChange(e.target.value)} className={`${inputCls} bg-white`}>
+                {activeServices.map(s => (
+                  <option key={s.id} value={s.id}>{s.nameArabic} ({s.duration} د)</option>
                 ))}
               </select>
             </div>
