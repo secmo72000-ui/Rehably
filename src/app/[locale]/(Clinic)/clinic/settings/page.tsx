@@ -26,7 +26,45 @@ interface ApiResponse<T> {
   data: T;
 }
 
-type SettingsTab = 'clinic' | 'contact';
+type SettingsTab = 'clinic' | 'contact' | 'appointments';
+
+// ─── Appointment duration constants (shared with appointments page) ────────────
+
+const DURATION_STORAGE_KEY = 'rehably_apt_durations';
+
+const HARDCODED_DURATIONS: Record<number, number> = {
+  0: 60,   // علاج طبيعي
+  1: 90,   // تقييم
+  2: 30,   // متابعة
+  3: 30,   // استشارة
+};
+
+const SERVICE_TYPES: { id: number; label: string; icon: string; hint: string }[] = [
+  { id: 0, label: 'علاج طبيعي',  icon: '🩺', hint: 'جلسة علاج — عادةً 45-60 دقيقة' },
+  { id: 1, label: 'تقييم',       icon: '📋', hint: 'جلسة تقييم أولية — عادةً 60-90 دقيقة' },
+  { id: 2, label: 'متابعة',      icon: '🔄', hint: 'جلسة متابعة — عادةً 20-30 دقيقة' },
+  { id: 3, label: 'استشارة',     icon: '💬', hint: 'استشارة طبية — عادةً 15-30 دقيقة' },
+];
+
+function loadDurationsFromStorage(): Record<number, number> {
+  if (typeof window === 'undefined') return { ...HARDCODED_DURATIONS };
+  try {
+    const raw = localStorage.getItem(DURATION_STORAGE_KEY);
+    if (raw) return { ...HARDCODED_DURATIONS, ...JSON.parse(raw) };
+  } catch { /* ignore */ }
+  return { ...HARDCODED_DURATIONS };
+}
+
+function saveDurationsToStorage(d: Record<number, number>) {
+  try { localStorage.setItem(DURATION_STORAGE_KEY, JSON.stringify(d)); } catch { /* ignore */ }
+}
+
+function fmtDuration(min: number): string {
+  if (min < 60) return `${min} دقيقة`;
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return m ? `${h} ساعة و${m} دقيقة` : `${h} ساعة`;
+}
 
 const EMPTY_PROFILE: ClinicProfile = {
   clinicName: '',
@@ -164,6 +202,14 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<ToastProps | null>(null);
 
+  // Appointment durations — loaded from localStorage, saved on click
+  const [durations, setDurations] = useState<Record<number, number>>(HARDCODED_DURATIONS);
+  const [durationsSaved, setDurationsSaved] = useState(false);
+
+  useEffect(() => {
+    setDurations(loadDurationsFromStorage());
+  }, []);
+
   // ── Load profile on mount ──────────────────────────────────────────────────
 
   useEffect(() => {
@@ -215,11 +261,25 @@ export default function SettingsPage() {
     }
   };
 
+  // ── Duration save handler ──────────────────────────────────────────────────
+
+  const handleSaveDurations = () => {
+    saveDurationsToStorage(durations);
+    setDurationsSaved(true);
+    showToast('success', 'تم حفظ مدد الجلسات الافتراضية');
+    setTimeout(() => setDurationsSaved(false), 2000);
+  };
+
+  const handleResetDurations = () => {
+    setDurations({ ...HARDCODED_DURATIONS });
+  };
+
   // ── Tab definitions ────────────────────────────────────────────────────────
 
   const tabs: { id: SettingsTab; label: string }[] = [
-    { id: 'clinic',  label: 'معلومات العيادة' },
-    { id: 'contact', label: 'معلومات الاتصال' },
+    { id: 'clinic',       label: 'معلومات العيادة' },
+    { id: 'contact',      label: 'معلومات الاتصال' },
+    { id: 'appointments', label: 'إعدادات المواعيد' },
   ];
 
   // ── Save button ────────────────────────────────────────────────────────────
@@ -369,6 +429,106 @@ export default function SettingsPage() {
                   </div>
                 </div>
               )
+          )}
+
+          {/* ── Tab 3: Appointment Settings ───────────────────────────────── */}
+          {activeTab === 'appointments' && (
+            <div className="space-y-6 max-w-2xl">
+
+              {/* Default durations card */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <h3 className="text-sm font-bold text-gray-700">مدة الجلسة الافتراضية لكل نوع موعد</h3>
+                  <button
+                    type="button"
+                    onClick={handleResetDurations}
+                    className="text-xs text-gray-400 hover:text-gray-600 underline underline-offset-2"
+                  >
+                    إعادة تعيين الافتراضيات
+                  </button>
+                </div>
+                <p className="text-xs text-gray-400 mb-5">
+                  عند اختيار نوع الموعد سيتم حساب وقت النهاية تلقائياً بناءً على هذه المدة.
+                </p>
+
+                <div className="space-y-3">
+                  {SERVICE_TYPES.map(st => {
+                    const val = durations[st.id] ?? HARDCODED_DURATIONS[st.id];
+                    return (
+                      <div key={st.id}
+                        className="flex items-center gap-4 border border-gray-200 rounded-xl px-4 py-3 hover:border-[#29AAFE]/40 transition-colors">
+                        {/* Icon + label */}
+                        <div className="flex items-center gap-2.5 min-w-[130px]">
+                          <span className="text-xl">{st.icon}</span>
+                          <div>
+                            <div className="text-sm font-bold text-gray-800">{st.label}</div>
+                            <div className="text-[11px] text-gray-400">{st.hint}</div>
+                          </div>
+                        </div>
+
+                        {/* Stepper */}
+                        <div className="flex items-center gap-2 mr-auto">
+                          <button
+                            type="button"
+                            onClick={() => setDurations(d => ({ ...d, [st.id]: Math.max(5, (d[st.id] ?? 60) - 5) }))}
+                            className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-100 font-bold text-lg leading-none"
+                          >−</button>
+                          <div className="flex items-center gap-1 min-w-[90px] justify-center">
+                            <input
+                              type="number"
+                              min={5}
+                              max={480}
+                              step={5}
+                              value={val}
+                              onChange={e => {
+                                const n = Math.max(5, Math.min(480, Number(e.target.value) || 5));
+                                setDurations(d => ({ ...d, [st.id]: n }));
+                              }}
+                              className="w-14 text-center border border-gray-200 rounded-lg py-1.5 text-sm font-bold outline-none focus:border-[#29AAFE] focus:ring-2 focus:ring-[#29AAFE]/10"
+                              dir="ltr"
+                            />
+                            <span className="text-xs text-gray-400">د</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setDurations(d => ({ ...d, [st.id]: Math.min(480, (d[st.id] ?? 60) + 5) }))}
+                            className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-100 font-bold text-lg leading-none"
+                          >+</button>
+                        </div>
+
+                        {/* Duration label */}
+                        <div className={`text-xs px-2.5 py-1 rounded-full font-bold min-w-[80px] text-center ${
+                          val === HARDCODED_DURATIONS[st.id]
+                            ? 'bg-gray-100 text-gray-500'
+                            : 'bg-[#E8F5FF] text-[#29AAFE]'
+                        }`}>
+                          {fmtDuration(val)}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Save */}
+              <div className="flex items-center gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={handleSaveDurations}
+                  className={`inline-flex items-center gap-2 font-bold text-sm px-6 py-2.5 rounded-xl transition-all shadow-sm ${
+                    durationsSaved
+                      ? 'bg-green-500 text-white'
+                      : 'bg-[#29AAFE] hover:bg-[#1A8FD9] text-white'
+                  }`}
+                >
+                  {durationsSaved ? '✓ تم الحفظ' : 'حفظ الإعدادات'}
+                </button>
+                <p className="text-xs text-gray-400">
+                  تُحفظ هذه الإعدادات محلياً على هذا الجهاز
+                </p>
+              </div>
+
+            </div>
           )}
 
         </div>
