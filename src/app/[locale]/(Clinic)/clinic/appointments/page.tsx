@@ -87,7 +87,6 @@ function WeekCalendar({ appointments }: { appointments: AppointmentItem[] }) {
 }
 
 // ── Duration defaults per service type (minutes) ─────────────────────
-// Key = service type index. Stored in localStorage so each clinic can override.
 const DURATION_STORAGE_KEY = 'rehably_apt_durations';
 const HARDCODED_DURATIONS: Record<number, number> = {
   0: 60,  // علاج طبيعي
@@ -103,6 +102,19 @@ function loadDurations(): Record<number, number> {
     if (raw) return { ...HARDCODED_DURATIONS, ...JSON.parse(raw) };
   } catch { /* ignore */ }
   return { ...HARDCODED_DURATIONS };
+}
+
+// ── Price defaults per service type (EGP) ────────────────────────────
+export const PRICE_STORAGE_KEY = 'rehably_service_prices';
+const HARDCODED_PRICES: Record<number, number> = { 0: 0, 1: 0, 2: 0, 3: 0 };
+
+export function loadPrices(): Record<number, number> {
+  if (typeof window === 'undefined') return { ...HARDCODED_PRICES };
+  try {
+    const raw = localStorage.getItem(PRICE_STORAGE_KEY);
+    if (raw) return { ...HARDCODED_PRICES, ...JSON.parse(raw) };
+  } catch { /* ignore */ }
+  return { ...HARDCODED_PRICES };
 }
 
 /** Add minutes to a datetime-local string in LOCAL time (no UTC conversion). */
@@ -123,6 +135,7 @@ function AddAppointmentModal({ onClose, onSaved, onWarning, patients }: {
 }) {
   const [step, setStep] = useState<1 | 2>(1);
   const durations = React.useRef(loadDurations());
+  const prices = React.useRef(loadPrices());
 
   // Step 1 — appointment details
   const [form, setForm] = useState({ patientId: '', startTime: '', endTime: '', type: 0, notes: '' });
@@ -209,6 +222,11 @@ function AddAppointmentModal({ onClose, onSaved, onWarning, patients }: {
       setError('يجب أن يبدأ وينتهي الموعد في نفس اليوم'); return;
     }
     setError(null);
+    // Auto-fill price from service type default (only if user hasn't typed one)
+    if (!unitPrice) {
+      const defaultPrice = prices.current[form.type] ?? 0;
+      if (defaultPrice > 0) setUnitPrice(String(defaultPrice));
+    }
     setStep(2);
   };
 

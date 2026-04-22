@@ -31,6 +31,7 @@ type SettingsTab = 'clinic' | 'contact' | 'appointments';
 // ─── Appointment duration constants (shared with appointments page) ────────────
 
 const DURATION_STORAGE_KEY = 'rehably_apt_durations';
+const PRICE_STORAGE_KEY    = 'rehably_service_prices';
 
 const HARDCODED_DURATIONS: Record<number, number> = {
   0: 60,   // علاج طبيعي
@@ -57,6 +58,22 @@ function loadDurationsFromStorage(): Record<number, number> {
 
 function saveDurationsToStorage(d: Record<number, number>) {
   try { localStorage.setItem(DURATION_STORAGE_KEY, JSON.stringify(d)); } catch { /* ignore */ }
+}
+
+// ─── Price storage helpers ────────────────────────────────────────────────────
+const HARDCODED_PRICES: Record<number, number> = { 0: 0, 1: 0, 2: 0, 3: 0 };
+
+function loadPricesFromStorage(): Record<number, number> {
+  if (typeof window === 'undefined') return { ...HARDCODED_PRICES };
+  try {
+    const raw = localStorage.getItem(PRICE_STORAGE_KEY);
+    if (raw) return { ...HARDCODED_PRICES, ...JSON.parse(raw) };
+  } catch { /* ignore */ }
+  return { ...HARDCODED_PRICES };
+}
+
+function savePricesToStorage(p: Record<number, number>) {
+  try { localStorage.setItem(PRICE_STORAGE_KEY, JSON.stringify(p)); } catch { /* ignore */ }
 }
 
 function fmtDuration(min: number): string {
@@ -206,8 +223,12 @@ export default function SettingsPage() {
   const [durations, setDurations] = useState<Record<number, number>>(HARDCODED_DURATIONS);
   const [durationsSaved, setDurationsSaved] = useState(false);
 
+  // Service prices — loaded from localStorage, saved on click
+  const [prices, setPrices] = useState<Record<number, number>>(HARDCODED_PRICES);
+
   useEffect(() => {
     setDurations(loadDurationsFromStorage());
+    setPrices(loadPricesFromStorage());
   }, []);
 
   // ── Load profile on mount ──────────────────────────────────────────────────
@@ -265,13 +286,15 @@ export default function SettingsPage() {
 
   const handleSaveDurations = () => {
     saveDurationsToStorage(durations);
+    savePricesToStorage(prices);
     setDurationsSaved(true);
-    showToast('success', 'تم حفظ مدد الجلسات الافتراضية');
+    showToast('success', 'تم حفظ إعدادات المواعيد');
     setTimeout(() => setDurationsSaved(false), 2000);
   };
 
   const handleResetDurations = () => {
     setDurations({ ...HARDCODED_DURATIONS });
+    setPrices({ ...HARDCODED_PRICES });
   };
 
   // ── Tab definitions ────────────────────────────────────────────────────────
@@ -453,12 +476,14 @@ export default function SettingsPage() {
 
                 <div className="space-y-3">
                   {SERVICE_TYPES.map(st => {
-                    const val = durations[st.id] ?? HARDCODED_DURATIONS[st.id];
+                    const dur = durations[st.id] ?? HARDCODED_DURATIONS[st.id];
+                    const price = prices[st.id] ?? 0;
                     return (
                       <div key={st.id}
-                        className="flex items-center gap-4 border border-gray-200 rounded-xl px-4 py-3 hover:border-[#29AAFE]/40 transition-colors">
-                        {/* Icon + label */}
-                        <div className="flex items-center gap-2.5 min-w-[130px]">
+                        className="border border-gray-200 rounded-xl px-4 py-3 hover:border-[#29AAFE]/40 transition-colors space-y-3">
+
+                        {/* Row 1: icon + label */}
+                        <div className="flex items-center gap-2.5">
                           <span className="text-xl">{st.icon}</span>
                           <div>
                             <div className="text-sm font-bold text-gray-800">{st.label}</div>
@@ -466,43 +491,65 @@ export default function SettingsPage() {
                           </div>
                         </div>
 
-                        {/* Stepper */}
-                        <div className="flex items-center gap-2 mr-auto">
-                          <button
-                            type="button"
-                            onClick={() => setDurations(d => ({ ...d, [st.id]: Math.max(5, (d[st.id] ?? 60) - 5) }))}
-                            className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-100 font-bold text-lg leading-none"
-                          >−</button>
-                          <div className="flex items-center gap-1 min-w-[90px] justify-center">
-                            <input
-                              type="number"
-                              min={5}
-                              max={480}
-                              step={5}
-                              value={val}
-                              onChange={e => {
-                                const n = Math.max(5, Math.min(480, Number(e.target.value) || 5));
-                                setDurations(d => ({ ...d, [st.id]: n }));
-                              }}
-                              className="w-14 text-center border border-gray-200 rounded-lg py-1.5 text-sm font-bold outline-none focus:border-[#29AAFE] focus:ring-2 focus:ring-[#29AAFE]/10"
-                              dir="ltr"
-                            />
-                            <span className="text-xs text-gray-400">د</span>
+                        {/* Row 2: duration + price */}
+                        <div className="grid grid-cols-2 gap-3">
+                          {/* Duration stepper */}
+                          <div>
+                            <div className="text-[11px] text-gray-400 mb-1.5">المدة الافتراضية</div>
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => setDurations(d => ({ ...d, [st.id]: Math.max(5, (d[st.id] ?? 60) - 5) }))}
+                                className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-100 font-bold text-lg leading-none shrink-0"
+                              >−</button>
+                              <div className="flex items-center gap-1 flex-1 justify-center">
+                                <input
+                                  type="number"
+                                  min={5} max={480} step={5}
+                                  value={dur}
+                                  onChange={e => {
+                                    const n = Math.max(5, Math.min(480, Number(e.target.value) || 5));
+                                    setDurations(d => ({ ...d, [st.id]: n }));
+                                  }}
+                                  className="w-14 text-center border border-gray-200 rounded-lg py-1.5 text-sm font-bold outline-none focus:border-[#29AAFE] focus:ring-2 focus:ring-[#29AAFE]/10"
+                                  dir="ltr"
+                                />
+                                <span className="text-xs text-gray-400">د</span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setDurations(d => ({ ...d, [st.id]: Math.min(480, (d[st.id] ?? 60) + 5) }))}
+                                className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-100 font-bold text-lg leading-none shrink-0"
+                              >+</button>
+                            </div>
+                            <div className={`text-[11px] mt-1 font-bold ${dur === HARDCODED_DURATIONS[st.id] ? 'text-gray-400' : 'text-[#29AAFE]'}`}>
+                              {fmtDuration(dur)}
+                            </div>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => setDurations(d => ({ ...d, [st.id]: Math.min(480, (d[st.id] ?? 60) + 5) }))}
-                            className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-100 font-bold text-lg leading-none"
-                          >+</button>
-                        </div>
 
-                        {/* Duration label */}
-                        <div className={`text-xs px-2.5 py-1 rounded-full font-bold min-w-[80px] text-center ${
-                          val === HARDCODED_DURATIONS[st.id]
-                            ? 'bg-gray-100 text-gray-500'
-                            : 'bg-[#E8F5FF] text-[#29AAFE]'
-                        }`}>
-                          {fmtDuration(val)}
+                          {/* Price input */}
+                          <div>
+                            <div className="text-[11px] text-gray-400 mb-1.5">السعر الافتراضي</div>
+                            <div className="flex items-center gap-1.5">
+                              <input
+                                type="number"
+                                min={0}
+                                step={10}
+                                value={price || ''}
+                                placeholder="0"
+                                onChange={e => {
+                                  const n = Math.max(0, Number(e.target.value) || 0);
+                                  setPrices(p => ({ ...p, [st.id]: n }));
+                                }}
+                                className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm font-bold outline-none focus:border-[#29AAFE] focus:ring-2 focus:ring-[#29AAFE]/10"
+                                dir="ltr"
+                              />
+                              <span className="text-xs text-gray-400 shrink-0">ج.م</span>
+                            </div>
+                            <div className={`text-[11px] mt-1 font-bold ${price > 0 ? 'text-green-600' : 'text-gray-300'}`}>
+                              {price > 0 ? `${price.toLocaleString('ar-EG')} ج.م` : 'غير محدد'}
+                            </div>
+                          </div>
                         </div>
                       </div>
                     );
