@@ -696,6 +696,7 @@ export default function SettingsPage() {
         <h2 className="text-sm font-bold text-gray-700 mb-4">إعدادات إضافية</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {[
+            { href: `/${locale}/clinic/settings/working-hours`, icon: '🕐', title: 'ساعات العمل', desc: 'تحديد أوقات العمل وأيام الإجازة الأسبوعية' },
             { href: `/${locale}/clinic/settings/insurance`, icon: '🏥', title: 'إعدادات التأمين', desc: 'إدارة شركات التأمين المقبولة ونسب التغطية' },
             { href: `/${locale}/clinic/settings/discounts`, icon: '🏷️', title: 'العروض والخصومات', desc: 'إنشاء كودات الخصم والعروض الخاصة' },
             { href: `/${locale}/clinic/billing/payments`, icon: '💰', title: 'سياسة الدفع', desc: 'تحديد طرق وتوقيت تحصيل المدفوعات' },
