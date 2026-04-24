@@ -62,13 +62,18 @@ const rolesApi = {
 // ── Resource label map ─────────────────────────────────────
 
 const RESOURCE_LABELS: Record<string, string> = {
-  patients: 'المرضى',
-  appointments: 'المواعيد',
-  'treatment-plans': 'خطط العلاج',
-  staff: 'الطاقم',
-  library: 'المكتبة',
-  reports: 'التقارير',
-  settings: 'الإعدادات',
+  patients:         'المرضى',
+  appointments:     'المواعيد',
+  'treatment-plans':'خطط العلاج',
+  staff:            'فريق العمل',
+  billing:          'الفواتير والمدفوعات',
+  reports:          'التقارير',
+  library:          'المكتبة الطبية',
+  settings:         'الإعدادات',
+  branches:         'الفروع',
+  roles:            'الأدوار والصلاحيات',
+  clinics:          'العيادات',
+  platform:         'إدارة المنصة',
 };
 
 function resourceLabel(resource: string): string {
