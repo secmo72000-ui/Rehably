@@ -57,6 +57,8 @@ const rolesApi = {
     apiClient.post(`/api/clinic/roles/${roleName}/permissions/${perm}`),
   removePermission: (roleName: string, perm: string) =>
     apiClient.delete(`/api/clinic/roles/${roleName}/permissions/${perm}`),
+  seedDefaults: () =>
+    apiClient.post<Wrap<string[]>>('/api/clinic/roles/seed-defaults').then((r) => r.data.data),
 };
 
 // ── Resource label map ─────────────────────────────────────
@@ -157,6 +159,185 @@ function ConfirmDialog({
           >
             {loading ? 'جارٍ الحذف...' : 'حذف'}
           </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Seed Defaults Modal ────────────────────────────────────
+
+const PRESET_ROLES = [
+  {
+    name: 'مالك العيادة',
+    icon: '👑',
+    description: 'صلاحيات كاملة — إدارة الفريق، المرضى، الفواتير، الإعدادات وكل شيء',
+    color: 'bg-purple-50 border-purple-200 text-purple-700',
+    badgeColor: 'bg-purple-100 text-purple-700',
+  },
+  {
+    name: 'أخصائي أول',
+    icon: '🏅',
+    description: 'مرضى، مواعيد، خطط علاج، تقارير، مكتبة طبية، عرض الفريق والفواتير',
+    color: 'bg-blue-50 border-blue-200 text-blue-700',
+    badgeColor: 'bg-blue-100 text-blue-700',
+  },
+  {
+    name: 'أخصائي علاج طبيعي',
+    icon: '🩺',
+    description: 'مرضى، مواعيد، خطط علاج، مكتبة طبية — بدون حذف أو إدارة',
+    color: 'bg-cyan-50 border-cyan-200 text-cyan-700',
+    badgeColor: 'bg-cyan-100 text-cyan-700',
+  },
+  {
+    name: 'مشرف الاستقبال',
+    icon: '🗂️',
+    description: 'مرضى، مواعيد، فواتير، تقارير، عرض الفريق — إدارة كاملة للاستقبال',
+    color: 'bg-green-50 border-green-200 text-green-700',
+    badgeColor: 'bg-green-100 text-green-700',
+  },
+  {
+    name: 'موظف استقبال',
+    icon: '💁',
+    description: 'إضافة المرضى، حجز المواعيد، إنشاء الفواتير وتسجيل المدفوعات',
+    color: 'bg-orange-50 border-orange-200 text-orange-700',
+    badgeColor: 'bg-orange-100 text-orange-700',
+  },
+];
+
+function SeedDefaultsModal({
+  existingRoleNames,
+  onClose,
+  onSeeded,
+}: {
+  existingRoleNames: Set<string>;
+  onClose: () => void;
+  onSeeded: (created: string[]) => void;
+}) {
+  const [seeding, setSeeding] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [done, setDone] = useState<string[] | null>(null);
+
+  const allExist = PRESET_ROLES.every((r) => existingRoleNames.has(r.name));
+
+  const handleSeed = async () => {
+    setSeeding(true);
+    setApiError(null);
+    try {
+      const created = await rolesApi.seedDefaults();
+      setDone(created);
+      onSeeded(created);
+    } catch (err) {
+      setApiError(getApiError(err, 'فشل في تطبيق الأدوار الافتراضية'));
+    } finally {
+      setSeeding(false);
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+      dir="rtl"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-lg bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between p-5 border-b border-gray-100">
+          <div className="flex items-center gap-2.5">
+            <span className="text-xl">🎭</span>
+            <div>
+              <p className="text-base font-black text-gray-800">الأدوار الجاهزة</p>
+              <p className="text-xs text-gray-400 mt-0.5">5 أدوار مُعدّة مسبقاً لعيادة العلاج الطبيعي</p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400 transition-colors"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto p-5 space-y-3">
+          {apiError && (
+            <div className="bg-red-50 text-red-600 text-xs rounded-xl px-3 py-2.5 font-semibold">
+              {apiError}
+            </div>
+          )}
+
+          {done !== null ? (
+            <div className="flex flex-col items-center gap-3 py-8 text-center">
+              <span className="text-5xl">{done.length === 0 ? '✅' : '🎉'}</span>
+              <p className="text-lg font-black text-gray-800">
+                {done.length === 0 ? 'الأدوار موجودة بالفعل' : `تم إنشاء ${done.length} ${done.length === 1 ? 'دور' : 'أدوار'}`}
+              </p>
+              <p className="text-sm text-gray-500">
+                {done.length === 0
+                  ? 'جميع الأدوار الافتراضية مُضافة مسبقاً'
+                  : done.join(' • ')}
+              </p>
+            </div>
+          ) : (
+            <>
+              {allExist && (
+                <div className="flex items-center gap-2 bg-green-50 text-green-700 text-xs font-semibold rounded-xl px-3 py-2.5 mb-1">
+                  <span>✓</span>
+                  جميع الأدوار الافتراضية مُضافة بالفعل — يمكنك تطبيقها مجدداً بأمان (لن تُكرَّر)
+                </div>
+              )}
+              {PRESET_ROLES.map((role) => {
+                const exists = existingRoleNames.has(role.name);
+                return (
+                  <div
+                    key={role.name}
+                    className={`flex items-start gap-3 p-3.5 rounded-xl border ${role.color} transition-opacity ${exists ? 'opacity-60' : ''}`}
+                  >
+                    <span className="text-xl shrink-0 mt-0.5">{role.icon}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-black">{role.name}</span>
+                        {exists && (
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${role.badgeColor}`}>
+                            موجود
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs mt-0.5 opacity-80 leading-relaxed">{role.description}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="p-5 border-t border-gray-100 flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm font-bold hover:bg-gray-50 transition-colors"
+          >
+            {done !== null ? 'إغلاق' : 'إلغاء'}
+          </button>
+          {done === null && (
+            <button
+              onClick={handleSeed}
+              disabled={seeding}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#29AAFE] hover:bg-[#1A8FD9] disabled:opacity-60 text-white text-sm font-bold transition-colors"
+            >
+              {seeding && (
+                <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8h4z"/>
+                </svg>
+              )}
+              {seeding ? 'جارٍ التطبيق...' : 'تطبيق الأدوار الافتراضية'}
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -603,6 +784,7 @@ export default function RolesPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showSeedModal, setShowSeedModal] = useState(false);
   const [toast, setToast] = useState<ToastState | null>(null);
 
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -666,6 +848,15 @@ export default function RolesPage() {
     await loadData();
   };
 
+  const handleSeeded = async (created: string[]) => {
+    await loadData();
+    if (created.length === 0) {
+      showToast('الأدوار الافتراضية موجودة بالفعل', 'success');
+    } else {
+      showToast(`تم إنشاء ${created.length} ${created.length === 1 ? 'دور' : 'أدوار'} جديدة`, 'success');
+    }
+  };
+
   return (
     <div className="space-y-5" dir="rtl">
       {/* Page Header */}
@@ -712,13 +903,22 @@ export default function RolesPage() {
                   {roles.length}
                 </span>
               </div>
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="flex items-center gap-1 bg-[#29AAFE] hover:bg-[#1A8FD9] text-white text-xs font-bold px-3 py-1.5 rounded-xl transition-colors"
-              >
-                <span className="text-sm leading-none">+</span>
-                إضافة دور
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowSeedModal(true)}
+                  className="flex items-center gap-1 bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-bold px-3 py-1.5 rounded-xl border border-purple-200 transition-colors"
+                  title="تطبيق أدوار افتراضية جاهزة"
+                >
+                  🎭 أدوار جاهزة
+                </button>
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  className="flex items-center gap-1 bg-[#29AAFE] hover:bg-[#1A8FD9] text-white text-xs font-bold px-3 py-1.5 rounded-xl transition-colors"
+                >
+                  <span className="text-sm leading-none">+</span>
+                  إضافة دور
+                </button>
+              </div>
             </div>
 
             {/* Role list */}
@@ -808,6 +1008,15 @@ export default function RolesPage() {
             )}
           </div>
         </div>
+      )}
+
+      {/* Seed Defaults Modal */}
+      {showSeedModal && (
+        <SeedDefaultsModal
+          existingRoleNames={new Set(roles.map((r) => r.name))}
+          onClose={() => setShowSeedModal(false)}
+          onSeeded={handleSeeded}
+        />
       )}
 
       {/* Create Role Modal */}
