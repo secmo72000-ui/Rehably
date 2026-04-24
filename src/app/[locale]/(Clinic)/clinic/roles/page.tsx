@@ -391,21 +391,70 @@ function CreateRoleModal({
 function RoleDetailPanel({
   role,
   availablePermissions,
-  onPermissionToggle,
+  onSaved,
   onDelete,
-  permTogglingSet,
 }: {
   role: RoleDto;
   availablePermissions: PermissionDto[];
-  onPermissionToggle: (perm: PermissionDto, currentlyActive: boolean) => void;
+  onSaved: (updated: RoleDto) => void;
   onDelete: () => void;
-  permTogglingSet: Set<string>;
 }) {
-  const activePermNames = new Set(role.permissions.map((p) => p.name));
+  const originalNames = new Set(role.permissions.map((p) => p.name));
+  const [selected, setSelected] = useState<Set<string>>(new Set(originalNames));
+  const [saving, setSaving]     = useState(false);
+  const [saveErr, setSaveErr]   = useState<string | null>(null);
 
-  // Merge available perms with role perms to show all possible perms per resource
+  // Re-sync when parent role changes (e.g. after external reload)
+  useEffect(() => {
+    setSelected(new Set(role.permissions.map((p) => p.name)));
+    setSaveErr(null);
+  }, [role.name]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const allPermsForDisplay = availablePermissions.length > 0 ? availablePermissions : role.permissions;
-  const grouped = groupByResource(allPermsForDisplay);
+  const grouped            = groupByResource(allPermsForDisplay);
+
+  const isDirty = (() => {
+    if (selected.size !== originalNames.size) return true;
+    for (const n of selected) if (!originalNames.has(n)) return true;
+    return false;
+  })();
+
+  const toggle = (name: string) => {
+    if (!role.isCustom) return;
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(name)) next.delete(name); else next.add(name);
+      return next;
+    });
+  };
+
+  const toggleResource = (resource: string) => {
+    if (!role.isCustom) return;
+    const perms     = grouped[resource] ?? [];
+    const allActive = perms.every(p => selected.has(p.name));
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (allActive) perms.forEach(p => next.delete(p.name));
+      else           perms.forEach(p => next.add(p.name));
+      return next;
+    });
+  };
+
+  const selectAll  = () => { if (role.isCustom) setSelected(new Set(allPermsForDisplay.map(p => p.name))); };
+  const deselectAll = () => { if (role.isCustom) setSelected(new Set()); };
+  const discard    = () => { setSelected(new Set(originalNames)); setSaveErr(null); };
+
+  const handleSave = async () => {
+    setSaving(true); setSaveErr(null);
+    try {
+      const updated = await rolesApi.update(role.name, { permissions: Array.from(selected) });
+      onSaved(updated);
+    } catch (err) {
+      setSaveErr(getApiError(err, 'فشل في حفظ الصلاحيات'));
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -415,39 +464,41 @@ function RoleDetailPanel({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 flex-wrap">
               <h2 className="text-xl font-black text-gray-800 break-all">{role.name}</h2>
-              <span
-                className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                  role.isCustom
-                    ? 'bg-[#E8F5FF] text-[#29AAFE]'
-                    : 'bg-gray-100 text-gray-500'
-                }`}
-              >
+              <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${role.isCustom ? 'bg-[#E8F5FF] text-[#29AAFE]' : 'bg-gray-100 text-gray-500'}`}>
                 {role.isCustom ? 'مخصص' : 'نظام'}
               </span>
             </div>
-            {role.description && (
-              <p className="mt-1.5 text-sm text-gray-500 leading-relaxed">{role.description}</p>
-            )}
-            <p className="mt-1 text-xs text-gray-400">
-              {role.permissions.length} صلاحية
-            </p>
+            {role.description && <p className="mt-1.5 text-sm text-gray-500">{role.description}</p>}
+            <p className="mt-1 text-xs text-gray-400">{selected.size} صلاحية محددة</p>
           </div>
-
           {role.isCustom && (
-            <button
-              onClick={onDelete}
-              className="shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-500 text-xs font-bold transition-colors"
-            >
+            <button onClick={onDelete}
+              className="shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-500 text-xs font-bold transition-colors">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <polyline points="3 6 5 6 21 6" />
-                <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
-                <path d="M10 11v6M14 11v6" />
-                <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" />
+                <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+                <path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
               </svg>
               حذف الدور
             </button>
           )}
         </div>
+
+        {/* Quick-select bar (custom roles only) */}
+        {role.isCustom && (
+          <div className="flex items-center gap-2 mt-3 flex-wrap">
+            <button type="button" onClick={selectAll}
+              className="text-[11px] px-2.5 py-1 rounded-lg bg-[#29AAFE]/10 text-[#29AAFE] font-bold hover:bg-[#29AAFE]/20 transition-colors">
+              تحديد الكل
+            </button>
+            <button type="button" onClick={deselectAll}
+              className="text-[11px] px-2.5 py-1 rounded-lg bg-gray-100 text-gray-500 font-bold hover:bg-gray-200 transition-colors">
+              إلغاء الكل
+            </button>
+            {isDirty && (
+              <span className="text-[11px] text-amber-600 font-semibold mr-1">● تغييرات غير محفوظة</span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Permissions */}
@@ -455,67 +506,87 @@ function RoleDetailPanel({
         {Object.keys(grouped).length === 0 ? (
           <p className="text-sm text-gray-400 text-center py-8">لا توجد صلاحيات</p>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-5">
             {!role.isCustom && (
               <div className="flex items-center gap-2 bg-amber-50 text-amber-700 text-xs font-semibold rounded-xl px-3 py-2.5">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="12" y1="8" x2="12" y2="12" />
-                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
                 </svg>
                 هذا دور النظام ولا يمكن تعديل صلاحياته
               </div>
             )}
 
-            {Object.entries(grouped).map(([resource, perms]) => (
-              <div key={resource}>
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-xs font-black text-gray-700 uppercase tracking-wide">
-                    {resourceLabel(resource)}
-                  </span>
-                  <div className="flex-1 h-px bg-gray-100" />
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {perms.map((perm) => {
-                    const active = activePermNames.has(perm.name);
-                    const toggling = permTogglingSet.has(perm.name);
-                    const isClickable = role.isCustom && !toggling;
-
-                    return (
-                      <button
-                        key={perm.name}
-                        type="button"
-                        disabled={!isClickable}
-                        onClick={() => isClickable && onPermissionToggle(perm, active)}
-                        className={`px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all ${
-                          active
-                            ? 'bg-[#29AAFE] border-[#29AAFE] text-white shadow-sm'
-                            : 'border-gray-200 text-gray-400 bg-white'
-                        } ${
-                          isClickable
-                            ? active
-                              ? 'hover:bg-[#1A8FD9] hover:border-[#1A8FD9] cursor-pointer'
-                              : 'hover:border-[#29AAFE] hover:text-[#29AAFE] cursor-pointer'
-                            : 'cursor-default'
-                        } ${toggling ? 'opacity-50' : ''}`}
-                      >
-                        {toggling ? (
-                          <span className="inline-flex items-center gap-1">
-                            <span className="w-2.5 h-2.5 border border-current border-t-transparent rounded-full animate-spin inline-block" />
-                            {perm.action}
-                          </span>
-                        ) : (
-                          perm.action
+            {Object.entries(grouped).map(([resource, perms]) => {
+              const allActive  = perms.every(p => selected.has(p.name));
+              const someActive = perms.some(p => selected.has(p.name));
+              return (
+                <div key={resource}>
+                  {/* Resource header + group toggle */}
+                  <div className="flex items-center gap-2 mb-2.5">
+                    {role.isCustom && (
+                      <button type="button" onClick={() => toggleResource(resource)}
+                        className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${
+                          allActive ? 'bg-[#29AAFE] border-[#29AAFE]' : someActive ? 'bg-[#29AAFE]/30 border-[#29AAFE]' : 'border-gray-300 hover:border-[#29AAFE]'
+                        }`}>
+                        {(allActive || someActive) && (
+                          <svg width="9" height="7" viewBox="0 0 10 8" fill="none">
+                            {allActive
+                              ? <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                              : <rect x="1" y="3.5" width="8" height="1.5" rx="0.75" fill="white"/>
+                            }
+                          </svg>
                         )}
                       </button>
-                    );
-                  })}
+                    )}
+                    <span className="text-xs font-black text-gray-700">{resourceLabel(resource)}</span>
+                    <div className="flex-1 h-px bg-gray-100" />
+                    <span className="text-[11px] text-gray-400">{perms.filter(p => selected.has(p.name)).length}/{perms.length}</span>
+                  </div>
+
+                  {/* Permission chips */}
+                  <div className="flex flex-wrap gap-2 pr-6">
+                    {perms.map(perm => {
+                      const active = selected.has(perm.name);
+                      return (
+                        <button key={perm.name} type="button"
+                          disabled={!role.isCustom}
+                          onClick={() => toggle(perm.name)}
+                          className={`px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                            active
+                              ? 'bg-[#29AAFE] border-[#29AAFE] text-white shadow-sm'
+                              : 'border-gray-200 text-gray-400 bg-white'
+                          } ${role.isCustom
+                              ? active ? 'hover:bg-[#1A8FD9] cursor-pointer' : 'hover:border-[#29AAFE] hover:text-[#29AAFE] cursor-pointer'
+                              : 'cursor-default'
+                          }`}>
+                          {perm.action}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
+
+      {/* Sticky save footer — only shown for custom roles */}
+      {role.isCustom && (
+        <div className={`shrink-0 border-t px-6 py-4 flex items-center gap-3 transition-colors ${isDirty ? 'border-[#29AAFE]/30 bg-[#F0F9FF]' : 'border-gray-100 bg-white'}`}>
+          {saveErr && <p className="text-xs text-red-500 font-semibold flex-1">{saveErr}</p>}
+          {!saveErr && <p className="text-xs text-gray-400 flex-1">{isDirty ? 'لديك تغييرات غير محفوظة' : 'لا توجد تغييرات'}</p>}
+          <button type="button" onClick={discard} disabled={!isDirty || saving}
+            className="px-4 py-2 rounded-xl border border-gray-200 text-gray-500 text-xs font-bold hover:bg-gray-50 disabled:opacity-40 transition-colors">
+            تجاهل
+          </button>
+          <button type="button" onClick={handleSave} disabled={!isDirty || saving}
+            className="flex items-center gap-2 bg-[#29AAFE] hover:bg-[#1A8FD9] disabled:opacity-40 text-white font-bold text-xs px-5 py-2 rounded-xl transition-colors">
+            {saving && <svg className="animate-spin w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8h4z"/></svg>}
+            {saving ? 'جارٍ الحفظ…' : 'حفظ الصلاحيات'}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -534,7 +605,6 @@ export default function RolesPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [toast, setToast] = useState<ToastState | null>(null);
 
-  const [permTogglingSet, setPermTogglingSet] = useState<Set<string>>(new Set());
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -569,35 +639,10 @@ export default function RolesPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handlePermissionToggle = async (perm: PermissionDto, currentlyActive: boolean) => {
-    if (!selectedRole) return;
-    setPermTogglingSet((prev) => new Set(prev).add(perm.name));
-    try {
-      if (currentlyActive) {
-        await rolesApi.removePermission(selectedRole.name, perm.name);
-      } else {
-        await rolesApi.assignPermission(selectedRole.name, perm.name);
-      }
-      // Optimistic update on selectedRole
-      const updatedPerms = currentlyActive
-        ? selectedRole.permissions.filter((p) => p.name !== perm.name)
-        : [...selectedRole.permissions, perm];
-      const updatedRole: RoleDto = { ...selectedRole, permissions: updatedPerms };
-      setSelectedRole(updatedRole);
-      setRoles((prev) => prev.map((r) => (r.name === updatedRole.name ? updatedRole : r)));
-      showToast(
-        currentlyActive ? 'تم إزالة الصلاحية بنجاح' : 'تم إضافة الصلاحية بنجاح',
-        'success'
-      );
-    } catch (err) {
-      showToast(getApiError(err, 'فشل في تحديث الصلاحية. حاول مرة أخرى.'), 'error');
-    } finally {
-      setPermTogglingSet((prev) => {
-        const next = new Set(prev);
-        next.delete(perm.name);
-        return next;
-      });
-    }
+  const handlePermsSaved = (updated: RoleDto) => {
+    setSelectedRole(updated);
+    setRoles(prev => prev.map(r => r.name === updated.name ? updated : r));
+    showToast('تم حفظ الصلاحيات بنجاح', 'success');
   };
 
   const handleDelete = async () => {
@@ -742,9 +787,8 @@ export default function RolesPage() {
               <RoleDetailPanel
                 role={selectedRole}
                 availablePermissions={availablePermissions}
-                onPermissionToggle={handlePermissionToggle}
+                onSaved={handlePermsSaved}
                 onDelete={() => setConfirmDelete(true)}
-                permTogglingSet={permTogglingSet}
               />
             ) : (
               <div className="flex flex-col items-center justify-center h-full gap-4 py-24 text-gray-300">
