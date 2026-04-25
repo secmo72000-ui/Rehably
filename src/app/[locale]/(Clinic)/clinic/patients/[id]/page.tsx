@@ -6,13 +6,15 @@ import { useParams } from 'next/navigation';
 import { patientsService } from '@/domains/patients/patients.service';
 import { appointmentsService } from '@/domains/appointments/appointments.service';
 import { treatmentPlansService } from '@/domains/treatment-plans/treatment-plans.service';
+import { assessmentService } from '@/domains/assessment';
+import type { AssessmentSummary } from '@/domains/assessment';
 import type { PatientDetail } from '@/domains/patients/patients.types';
 import type { AppointmentItem } from '@/domains/appointments/appointments.types';
 import type { TreatmentPlanItem } from '@/domains/treatment-plans/treatment-plans.types';
 import { getApiError } from '@/shared/utils';
 
 // ── Types ──────────────────────────────────────────────────
-type TabId = 'info' | 'appointments' | 'plans';
+type TabId = 'info' | 'appointments' | 'plans' | 'assessments';
 
 // ── Static maps ────────────────────────────────────────────
 const patientStatusMap: Record<string, { label: string; cls: string }> = {
@@ -689,6 +691,81 @@ function PlansTab({ patientId, locale }: { patientId: string; locale: string }) 
   );
 }
 
+// ── Tab 4: Assessments ─────────────────────────────────────
+function AssessmentsTab({ patientId, locale }: { patientId: string; locale: string }) {
+  const [assessments, setAssessments] = useState<AssessmentSummary[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const loadedRef = useRef(false);
+
+  useEffect(() => {
+    if (loadedRef.current) return;
+    loadedRef.current = true;
+    (async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await assessmentService.getByPatient(patientId);
+        setAssessments(data);
+      } catch (err) {
+        setError(getApiError(err, 'فشل في تحميل التقييمات'));
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [patientId]);
+
+  const asmStatusMap: Record<string, { label: string; cls: string }> = {
+    Draft:     { label: 'مسودة',  cls: 'bg-yellow-50 text-yellow-600' },
+    Submitted: { label: 'مكتمل', cls: 'bg-green-50 text-green-600' },
+    Archived:  { label: 'مؤرشف', cls: 'bg-gray-100 text-gray-500' },
+  };
+
+  if (loading) return <div className="text-center py-16 text-gray-400 text-sm">جاري التحميل...</div>;
+  if (error)   return <div className="bg-red-50 text-red-600 rounded-2xl px-5 py-4 text-sm">{error}</div>;
+
+  if (assessments.length === 0) {
+    return (
+      <div className="bg-white rounded-2xl p-16 shadow-sm flex flex-col items-center gap-3 text-gray-400">
+        <span className="text-4xl">📋</span>
+        <span className="text-sm font-semibold">لا توجد تقييمات</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {assessments.map(a => {
+        const st = asmStatusMap[a.status] ?? { label: a.status, cls: 'bg-gray-100 text-gray-500' };
+        return (
+          <div key={a.id} className="bg-white rounded-2xl p-4 shadow-sm flex items-center justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                <span className="text-sm font-bold text-gray-800">
+                  {a.diagnosisNameAr || a.diagnosisFreeText || 'تقييم SOAP'}
+                </span>
+                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${st.cls}`}>{st.label}</span>
+              </div>
+              <div className="flex flex-wrap gap-3 text-xs text-gray-400">
+                {a.specialityNameAr && <span>التخصص: {a.specialityNameAr}</span>}
+                {a.therapistName    && <span>المعالج: {a.therapistName}</span>}
+                <span>{fmtDate(a.createdAt)}</span>
+                {a.submittedAt && <span>مقدَّم: {fmtDate(a.submittedAt)}</span>}
+              </div>
+            </div>
+            <Link
+              href={`/${locale}/clinic/assessments/${a.id}`}
+              className="shrink-0 px-4 py-2 rounded-xl bg-[#E8F5FF] text-[#29AAFE] text-xs font-bold hover:bg-[#29AAFE] hover:text-white transition-colors"
+            >
+              عرض
+            </Link>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // ── Page ───────────────────────────────────────────────────
 export default function PatientProfilePage() {
   const params = useParams();
@@ -793,6 +870,7 @@ export default function PatientProfilePage() {
     { id: 'info',         label: 'المعلومات الشخصية' },
     { id: 'appointments', label: 'المواعيد' },
     { id: 'plans',        label: 'خطط العلاج' },
+    { id: 'assessments',  label: 'التقييمات' },
   ];
 
   return (
@@ -888,6 +966,10 @@ export default function PatientProfilePage() {
 
       {activeTab === 'plans' && activatedTabs.has('plans') && (
         <PlansTab patientId={patientId} locale={locale} />
+      )}
+
+      {activeTab === 'assessments' && activatedTabs.has('assessments') && (
+        <AssessmentsTab patientId={patientId} locale={locale} />
       )}
 
       {/* ── Discharge dialog ─────────────────────────────── */}

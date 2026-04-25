@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
+import { treatmentPlansService } from '@/domains/treatment-plans/treatment-plans.service';
 import { assessmentService } from '@/domains/assessment';
 import { specialityService } from '@/domains/clinical';
 import type {
@@ -541,6 +543,12 @@ export default function AssessmentWizardPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
+  const [showPlanDrawer, setShowPlanDrawer] = useState(false);
+  const [planCreating, setPlanCreating] = useState(false);
+  const [planTitle, setPlanTitle] = useState('');
+  const [planSessions, setPlanSessions] = useState('6');
+  const [planStartDate, setPlanStartDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [planNotes, setPlanNotes] = useState('');
 
   // Step local state
   const [s1, setS1] = useState<CreateAssessmentRequest>({
@@ -696,6 +704,28 @@ export default function AssessmentWizardPage() {
     router.push(`/${locale}/clinic/appointments/${appointmentId}`);
   };
 
+  const handleCreatePlan = async () => {
+    if (!assessment || !planTitle.trim()) { flash('يرجى إدخال عنوان الخطة', false); return; }
+    setPlanCreating(true);
+    try {
+      const plan = await treatmentPlansService.create({
+        patientId: assessment.patientId,
+        title: planTitle.trim(),
+        diagnosis: assessment.diagnosisNameAr || assessment.diagnosisFreeText,
+        startDate: planStartDate,
+        totalSessionsPlanned: parseInt(planSessions) || 6,
+        notes: planNotes.trim() || undefined,
+      });
+      flash('تم إنشاء خطة العلاج ✓', true);
+      setShowPlanDrawer(false);
+      setTimeout(() => router.push(`/${locale}/clinic/treatment-plans/${plan.id}`), 1000);
+    } catch (e: any) {
+      flash(e?.response?.data?.message || 'فشل في إنشاء الخطة', false);
+    } finally {
+      setPlanCreating(false);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!assessment) return;
     const saved = await saveCurrentStep();
@@ -803,10 +833,33 @@ export default function AssessmentWizardPage() {
         </h2>
 
         {isSubmitted ? (
-          <div className="text-center py-8 text-green-600">
-            <div className="text-4xl mb-3">✓</div>
-            <p className="font-bold">تم تقديم هذا التقييم</p>
-            <p className="text-sm text-gray-400 mt-1">لا يمكن تعديله بعد التقديم</p>
+          <div className="py-6 text-center space-y-5">
+            <div className="flex flex-col items-center gap-2 text-green-600">
+              <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center text-2xl">✓</div>
+              <p className="font-black text-gray-800">تم تقديم هذا التقييم</p>
+              <p className="text-xs text-gray-400">لا يمكن تعديله بعد التقديم</p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
+              {assessment && (
+                <Link
+                  href={`/${locale}/clinic/assessments/${assessment.id}`}
+                  className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#E8F5FF] text-[#29AAFE] text-sm font-bold hover:bg-[#29AAFE] hover:text-white transition-colors"
+                >
+                  📄 عرض التقرير الكامل
+                </Link>
+              )}
+              <button
+                onClick={() => {
+                  if (assessment) {
+                    setPlanTitle(assessment.diagnosisNameAr || assessment.diagnosisFreeText || 'خطة علاج');
+                  }
+                  setShowPlanDrawer(true);
+                }}
+                className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-sm font-bold transition-colors"
+              >
+                📋 إنشاء خطة علاج
+              </button>
+            </div>
           </div>
         ) : (
           <>
@@ -871,6 +924,78 @@ export default function AssessmentWizardPage() {
           ${toast.ok ? 'bg-green-600' : 'bg-red-600'}`}>
           {toast.ok ? '✓' : '✕'} {toast.msg}
         </div>
+      )}
+
+      {/* Create Plan Drawer */}
+      {showPlanDrawer && (
+        <>
+          <div className="fixed inset-0 bg-black/40 z-40" onClick={() => setShowPlanDrawer(false)} />
+          <div className="fixed inset-y-0 left-0 z-50 w-full max-w-md bg-white shadow-2xl flex flex-col" dir="rtl">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+              <h2 className="font-black text-gray-800 text-base">إنشاء خطة علاج</h2>
+              <button onClick={() => setShowPlanDrawer(false)} className="text-gray-400 hover:text-gray-600 text-xl">✕</button>
+            </div>
+            <div className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-600 mb-1">عنوان الخطة <span className="text-red-500">*</span></label>
+                <input
+                  value={planTitle}
+                  onChange={e => setPlanTitle(e.target.value)}
+                  placeholder="مثال: خطة علاج الكتف"
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#29AAFE] focus:ring-1 focus:ring-[#29AAFE]/20"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-600 mb-1">تاريخ البدء</label>
+                <input
+                  type="date"
+                  value={planStartDate}
+                  onChange={e => setPlanStartDate(e.target.value)}
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#29AAFE] focus:ring-1 focus:ring-[#29AAFE]/20"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-600 mb-1">عدد الجلسات المخططة</label>
+                <input
+                  type="number"
+                  min={1}
+                  max={100}
+                  value={planSessions}
+                  onChange={e => setPlanSessions(e.target.value)}
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#29AAFE] focus:ring-1 focus:ring-[#29AAFE]/20"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-600 mb-1">ملاحظات</label>
+                <textarea
+                  rows={3}
+                  value={planNotes}
+                  onChange={e => setPlanNotes(e.target.value)}
+                  placeholder="أهداف الخطة، توقعات التعافي..."
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#29AAFE] focus:ring-1 focus:ring-[#29AAFE]/20 resize-none"
+                />
+              </div>
+            </div>
+            <div className="px-5 py-4 border-t border-gray-100 flex gap-3">
+              <button
+                onClick={() => setShowPlanDrawer(false)}
+                className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors"
+              >
+                إلغاء
+              </button>
+              <button
+                onClick={handleCreatePlan}
+                disabled={planCreating || !planTitle.trim()}
+                className="flex-1 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white text-sm font-bold transition-colors flex items-center justify-center gap-2"
+              >
+                {planCreating ? (
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : null}
+                {planCreating ? 'جاري الإنشاء...' : 'إنشاء الخطة'}
+              </button>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );
