@@ -44,6 +44,11 @@ export const appointmentsService = {
     return res.data.data;
   },
 
+  checkIn: async (id: string): Promise<AppointmentItem> => {
+    const res = await apiClient.post<ApiResponse<AppointmentItem>>(`/api/clinic/appointments/${id}/checkin`);
+    return res.data.data;
+  },
+
   cancel: async (id: string, reason: string): Promise<AppointmentItem> => {
     const res = await apiClient.post<ApiResponse<AppointmentItem>>(`/api/clinic/appointments/${id}/cancel`, JSON.stringify(reason), {
       headers: { 'Content-Type': 'application/json' },

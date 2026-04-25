@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { appointmentsService } from '@/domains/appointments/appointments.service';
 import type { AppointmentItem } from '@/domains/appointments/appointments.types';
 import { getApiError } from '@/shared/utils';
@@ -17,11 +17,13 @@ const typeLabels: Record<string, string> = {
 };
 
 const statusConfig: Record<string, { label: string; cls: string; dot: string }> = {
-  Scheduled: { label: 'مجدول',    cls: 'bg-blue-50 text-blue-600 border border-blue-200',   dot: 'bg-blue-500' },
-  Confirmed: { label: 'مؤكد',    cls: 'bg-green-50 text-green-600 border border-green-200', dot: 'bg-green-500' },
-  Completed: { label: 'مكتمل',   cls: 'bg-gray-100 text-gray-600 border border-gray-200',   dot: 'bg-gray-500' },
-  Cancelled: { label: 'ملغي',    cls: 'bg-red-50 text-red-500 border border-red-200',       dot: 'bg-red-500' },
-  NoShow:    { label: 'لم يحضر', cls: 'bg-orange-50 text-orange-500 border border-orange-200', dot: 'bg-orange-500' },
+  Scheduled:  { label: 'مجدول',       cls: 'bg-blue-50 text-blue-600 border border-blue-200',       dot: 'bg-blue-500' },
+  Confirmed:  { label: 'مؤكد',        cls: 'bg-green-50 text-green-600 border border-green-200',     dot: 'bg-green-500' },
+  CheckedIn:  { label: 'حضر المريض',  cls: 'bg-teal-50 text-teal-600 border border-teal-200',        dot: 'bg-teal-500' },
+  InProgress: { label: 'قيد التقييم', cls: 'bg-purple-50 text-purple-600 border border-purple-200',  dot: 'bg-purple-500' },
+  Completed:  { label: 'مكتمل',       cls: 'bg-gray-100 text-gray-600 border border-gray-200',       dot: 'bg-gray-500' },
+  Cancelled:  { label: 'ملغي',        cls: 'bg-red-50 text-red-500 border border-red-200',           dot: 'bg-red-500' },
+  NoShow:     { label: 'لم يحضر',     cls: 'bg-orange-50 text-orange-500 border border-orange-200',  dot: 'bg-orange-500' },
 };
 
 function fmtDate(iso: string) {
@@ -207,6 +209,7 @@ function CancelModal({ onClose, onCancel, loading }: {
 type ModalState =
   | { type: 'none' }
   | { type: 'confirm-confirm' }
+  | { type: 'confirm-checkin' }
   | { type: 'confirm-complete' }
   | { type: 'cancel' };
 
@@ -214,6 +217,7 @@ type ToastState = { message: string; kind: 'success' | 'error' } | null;
 
 export default function AppointmentDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const locale = (params?.locale as string) || 'ar';
   const id = params?.id as string;
 
@@ -243,6 +247,20 @@ export default function AppointmentDetailPage() {
 
   const showToast = (message: string, kind: 'success' | 'error') =>
     setToast({ message, kind });
+
+  const handleCheckIn = async () => {
+    setActionLoading(true);
+    try {
+      await appointmentsService.checkIn(id);
+      setModal({ type: 'none' });
+      showToast('تم تسجيل وصول المريض', 'success');
+      await load();
+    } catch (err) {
+      showToast(getApiError(err, 'فشل في تسجيل الوصول'), 'error');
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   const handleConfirm = async () => {
     setActionLoading(true);
@@ -321,6 +339,8 @@ export default function AppointmentDetailPage() {
   const typeLabel  = typeLabels[appointment.type] ?? appointment.type;
   const pageTitle  = appointment.title || typeLabel;
   const isCancellable = appointment.status === 'Scheduled' || appointment.status === 'Confirmed';
+  const canCheckIn = appointment.status === 'Scheduled' || appointment.status === 'Confirmed';
+  const canStartAssessment = appointment.status === 'CheckedIn' || appointment.status === 'InProgress';
 
   return (
     <div className="space-y-5" dir="rtl">
@@ -363,8 +383,9 @@ export default function AppointmentDetailPage() {
         </div>
 
         {/* Action buttons */}
-        {(appointment.status === 'Scheduled' || appointment.status === 'Confirmed') && (
+        {(canCheckIn || canStartAssessment || isCancellable) && (
           <div className="flex flex-wrap gap-3 mt-5 pt-5 border-t border-gray-100">
+            {/* Scheduled → confirm */}
             {appointment.status === 'Scheduled' && (
               <button
                 onClick={() => setModal({ type: 'confirm-confirm' })}
@@ -376,17 +397,34 @@ export default function AppointmentDetailPage() {
                 تأكيد الموعد
               </button>
             )}
-            {appointment.status === 'Confirmed' && (
+
+            {/* Scheduled/Confirmed → check-in (reception) */}
+            {canCheckIn && (
               <button
-                onClick={() => setModal({ type: 'confirm-complete' })}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#29AAFE] hover:bg-[#1A8FD9] text-white text-sm font-bold transition-colors"
+                onClick={() => setModal({ type: 'confirm-checkin' })}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-teal-500 hover:bg-teal-600 text-white text-sm font-bold transition-colors"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
-                إتمام الموعد
+                تسجيل الوصول
               </button>
             )}
+
+            {/* CheckedIn / InProgress → start/continue assessment (doctor) */}
+            {canStartAssessment && (
+              <button
+                onClick={() => router.push(`/${locale}/clinic/appointments/${id}/assessment`)}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-sm font-bold transition-colors shadow-sm"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                {appointment.status === 'InProgress' ? 'متابعة التقييم' : 'بدء التقييم'}
+              </button>
+            )}
+
+            {/* Cancel */}
             {isCancellable && (
               <button
                 onClick={() => setModal({ type: 'cancel' })}
@@ -494,6 +532,15 @@ export default function AppointmentDetailPage() {
         <ConfirmModal
           message="هل أنت متأكد من تأكيد الموعد؟"
           onConfirm={handleConfirm}
+          onClose={() => setModal({ type: 'none' })}
+          loading={actionLoading}
+        />
+      )}
+
+      {modal.type === 'confirm-checkin' && (
+        <ConfirmModal
+          message="تأكيد وصول المريض وسداد الدفعة؟ سيتم تغيير حالة الموعد إلى «حضر المريض»."
+          onConfirm={handleCheckIn}
           onClose={() => setModal({ type: 'none' })}
           loading={actionLoading}
         />
