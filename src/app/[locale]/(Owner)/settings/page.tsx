@@ -69,6 +69,36 @@ export default function SettingsPage() {
                     <Image src="/shered/arrwo.svg" alt="arrow" width={10} height={10} className="opacity-50" />
                 </button>
 
+                {/* Specialities */}
+                <button
+                    onClick={() => router.push(`settings/specialities`)}
+                    className="w-full border border-grey-200 rounded-lg p-6 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                >
+                    <div className="flex items-center gap-3">
+                        <span className="text-xl">🏥</span>
+                        <div className="text-start">
+                            <p className="text-base font-medium text-gray-700">التخصصات الطبية</p>
+                            <p className="text-xs text-gray-400 mt-0.5">إدارة التخصصات وتعيينها للعيادات</p>
+                        </div>
+                    </div>
+                    <Image src="/shered/arrwo.svg" alt="arrow" width={10} height={10} className="opacity-50" />
+                </button>
+
+                {/* Diagnoses */}
+                <button
+                    onClick={() => router.push(`settings/diagnoses`)}
+                    className="w-full border border-grey-200 rounded-lg p-6 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                >
+                    <div className="flex items-center gap-3">
+                        <span className="text-xl">🩺</span>
+                        <div className="text-start">
+                            <p className="text-base font-medium text-gray-700">قائمة التشخيصات ICD-10</p>
+                            <p className="text-xs text-gray-400 mt-0.5">التشخيصات العالمية المنسقة لكل تخصص</p>
+                        </div>
+                    </div>
+                    <Image src="/shered/arrwo.svg" alt="arrow" width={10} height={10} className="opacity-50" />
+                </button>
+
             </div>
       
     );

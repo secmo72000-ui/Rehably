@@ -18,6 +18,7 @@ import { ProfileSection } from './ProfileSection';
 import { InfoGrid } from './InfoGrid';
 import { PackageSection } from './PackageSection';
 import { AddOnDrawer } from '../AddOnDrawer';
+import { SpecialitySection } from './SpecialitySection';
 
 export function ClinicDetails({
     clinic,
@@ -129,6 +130,13 @@ export function ClinicDetails({
                 <InfoGrid
                     clinic={clinic}
                     addons={addons}
+                    t={t}
+                    isRtl={isRtl}
+                />
+
+                {/* Specialities assigned to this clinic */}
+                <SpecialitySection
+                    clinicId={clinic.id}
                     t={t}
                     isRtl={isRtl}
                 />
