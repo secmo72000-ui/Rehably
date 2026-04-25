@@ -1,190 +1,230 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { getTranslation } from '@/shared/i18n';
 import type { Locale } from '@/configs/i18n.config';
-import { StatsCard, Table, type TableColumn, PaymentStatusBadge } from '@/ui/components';
-import { SubscriptionsChart, SalesChart } from './components';
-import Image from 'next/image';
 import { useAuthStore } from '@/domains/auth/auth.store';
+import { adminDashboardService, type AdminDashboardData, type RecentSubscriptionItem } from '@/domains/admin-dashboard/admin-dashboard.service';
 
-// ========== Types ==========
-interface Subscription {
-  id: string;
-  clinicName: string;
-  package: string;
-  paymentDate: string;
-  dueDate: string;
-  paymentMethod: string;
-  status: 'paid' | 'rejected' | 'pending';
-  invoiceNumber: string;
+// ─── Status map ───────────────────────────────────────────────────────────────
+
+const subStatusMap: Record<string, { label: string; cls: string }> = {
+  Trial:     { label: 'تجريبي',   cls: 'bg-yellow-50 text-yellow-600' },
+  Active:    { label: 'نشط',      cls: 'bg-green-50 text-green-600' },
+  Suspended: { label: 'موقوف',    cls: 'bg-orange-50 text-orange-600' },
+  Cancelled: { label: 'ملغي',     cls: 'bg-red-50 text-red-500' },
+  Expired:   { label: 'منتهي',    cls: 'bg-gray-100 text-gray-500' },
+};
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+function StatCard({
+  title, value, sub, trend, icon, color,
+}: {
+  title: string; value: string | number; sub?: string;
+  trend?: number; icon?: string; color?: string;
+}) {
+  const trendCls = trend === undefined ? '' : trend >= 0 ? 'text-green-500' : 'text-red-500';
+  return (
+    <div className="bg-white rounded-2xl p-5 shadow-sm flex flex-col gap-3 border border-gray-100">
+      <div className="flex items-center justify-between">
+        <span className="text-sm text-gray-500 font-semibold">{title}</span>
+        {icon && (
+          <span className={`w-9 h-9 rounded-xl flex items-center justify-center text-lg ${color ?? 'bg-[#E8F5FF]'}`}>
+            {icon}
+          </span>
+        )}
+      </div>
+      <div className="flex items-end justify-between">
+        <span className="text-3xl font-black text-gray-800">
+          {typeof value === 'number' ? value.toLocaleString('ar-EG') : value}
+        </span>
+        {trend !== undefined && (
+          <span className={`text-xs font-bold px-2 py-0.5 rounded-lg ${trendCls} ${trend >= 0 ? 'bg-green-50' : 'bg-red-50'}`}>
+            {trend >= 0 ? '+' : ''}{trend}%
+          </span>
+        )}
+      </div>
+      {sub && <span className="text-xs text-gray-400">{sub}</span>}
+    </div>
+  );
 }
 
-// ========== Mock Data ==========
-const statsData = [
-  {
-    title: 'اجمالي المدخلات',
-    value: '2,530',
-    trend: 17, // +17%
-  },
-  {
-    title: 'عدد العيادات',
-    value: '2,530',
-    trend: -11, // -11%
-  },
-  {
-    title: 'العيادات النشطة',
-    value: '2,530',
-    trend: 17, // +17%
-  },
-  {
-    title: 'عدد المستخدمين',
-    value: '2,530',
-    trend: 17, // +17%
-  }
-];
+function RecentSubsTable({ items, loading }: { items: RecentSubscriptionItem[]; loading: boolean }) {
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+        <span className="font-bold text-gray-800 text-sm">آخر الاشتراكات</span>
+        <span className="text-xs text-gray-400">{items.length} اشتراك</span>
+      </div>
+      {loading ? (
+        <div className="text-center py-10 text-gray-400 text-sm">جاري التحميل…</div>
+      ) : items.length === 0 ? (
+        <div className="text-center py-10 text-gray-400 text-sm">لا توجد اشتراكات</div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm" dir="rtl">
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-200">
+                {['اسم العيادة', 'الباقة', 'تاريخ البدء', 'ينتهي في', 'الحالة'].map(h => (
+                  <th key={h} className="px-4 py-3 text-right text-xs font-bold text-gray-400 whitespace-nowrap">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {items.map(s => {
+                const st = subStatusMap[s.status] ?? { label: s.status, cls: 'bg-gray-100 text-gray-500' };
+                return (
+                  <tr key={s.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                    <td className="px-4 py-3 font-semibold text-gray-800 whitespace-nowrap">{s.clinicName}</td>
+                    <td className="px-4 py-3 text-gray-500 text-xs whitespace-nowrap">{s.packageName}</td>
+                    <td className="px-4 py-3 text-gray-500 text-xs whitespace-nowrap">
+                      {new Date(s.startDate).toLocaleDateString('ar', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </td>
+                    <td className="px-4 py-3 text-gray-500 text-xs whitespace-nowrap">
+                      {new Date(s.endDate).toLocaleDateString('ar', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold ${st.cls}`}>{st.label}</span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
 
-const mockSubscriptions: Subscription[] = [
-  {
-    id: 'Sub-10',
-    clinicName: 'أحمد منصور',
-    package: 'Package-1',
-    paymentDate: '01/02/2025',
-    dueDate: '01/03/2025',
-    paymentMethod: 'بطاقة ائتمان',
-    status: 'paid',
-    invoiceNumber: 'INV-001'
-  },
-  {
-    id: 'Sub-11',
-    clinicName: 'أحمد منصور',
-    package: 'Package-1',
-    paymentDate: '01/02/2025',
-    dueDate: '01/03/2025',
-    paymentMethod: 'بطاقة ائتمان',
-    status: 'paid',
-    invoiceNumber: 'INV-002'
-  },
-  {
-    id: 'Sub-12',
-    clinicName: 'أحمد منصور',
-    package: 'Package-1',
-    paymentDate: '01/02/2025',
-    dueDate: '01/03/2025',
-    paymentMethod: 'بطاقة ائتمان',
-    status: 'paid',
-    invoiceNumber: 'INV-003'
-  },
-  {
-    id: 'Sub-13',
-    clinicName: 'أحمد منصور',
-    package: 'Package-1',
-    paymentDate: '01/02/2025',
-    dueDate: '01/03/2025',
-    paymentMethod: 'بطاقة ائتمان',
-    status: 'paid',
-    invoiceNumber: 'INV-004'
-  },
-];
+function MiniDonut({ pct, color = '#29AAFE' }: { pct: number; color?: string }) {
+  const r = 40, cx = 50, cy = 50;
+  const circ = 2 * Math.PI * r;
+  const dash = (pct / 100) * circ;
+  return (
+    <svg viewBox="0 0 100 100" className="w-24 h-24 -rotate-90">
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#F3F4F6" strokeWidth="12" />
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke={color} strokeWidth="12"
+        strokeDasharray={`${dash} ${circ}`} strokeLinecap="round" />
+    </svg>
+  );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function HomePage() {
   const params = useParams();
   const locale = params.locale as Locale;
-  const t = (key: string) => getTranslation(locale, `home.${key}`);
-  const tGlobal = (key: string) => getTranslation(locale, `${key}`);
   const { user } = useAuthStore();
+  const [data, setData] = useState<AdminDashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Translation Helpers for dynamic keys
-  const getStatTitle = (index: number) => {
-    const keys = ['totalEntries', 'clinicsCount', 'activeClinics', 'usersCount'];
-    return t(`stats.${keys[index]}`);
-  };
+  useEffect(() => {
+    adminDashboardService.getDashboard()
+      .then(setData)
+      .catch(e => setError(e?.message ?? 'خطأ في التحميل'))
+      .finally(() => setLoading(false));
+  }, []);
 
-  // Table Columns
-  const columns: TableColumn<Subscription>[] = [
-    { key: 'id', header: 'ID' },
-    { key: 'clinicName', header: 'اسم العيادة' }, // Should use translations in real app
-    { key: 'package', header: 'Package' },
-    { key: 'paymentDate', header: 'تاريخ الدفع' },
-    { key: 'dueDate', header: 'ممتد الى' },
-    { key: 'paymentMethod', header: 'طريقة الدفع' },
-    {
-      key: 'status',
-      header: 'حالة الدفع',
-      render: (value) => <PaymentStatusBadge status={value as string} />,
-    },
-    {
-      key: 'invoiceNumber',
-      header: 'تفاصيل',
-      render: () => (
-        <button className="p-1 hover:bg-gray-100 rounded transition-colors">
-          <Image src="/shered/trash.svg" alt="delete" width={18} height={18} />
-        </button>
-      ),
-    }
-  ];
+  const d = data;
+  const activeClinicsPct = d && d.totalClinics > 0
+    ? Math.round((d.activeClinics / d.totalClinics) * 100) : 0;
+  const activeSubsPct = d && d.totalClinics > 0
+    ? Math.round((d.activeSubscriptions / d.totalClinics) * 100) : 0;
 
   return (
-    <div className="space-y-6">
-      {/* Welcome Message */}
-      <div className="flex justify-start mb-6">
-        <h1 className="text-2xl font-bold text-[#101828]">
-          {t('welcome')} {user?.firstName || 'User'}
+    <div className="space-y-6" dir="rtl">
+      {/* Welcome */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-black text-gray-800">
+          مرحباً <span className="text-[#29AAFE]">{user?.firstName || ''}</span> 👋
         </h1>
+        {error && <span className="text-xs text-red-500 bg-red-50 px-3 py-1 rounded-lg">{error}</span>}
       </div>
 
-      {/* Stats Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {statsData.map((stat, index) => (
-          <StatsCard
-            key={index}
-            title={getStatTitle(index)}
-            value={stat.value}
-            trend={stat.trend}
-          />
-        ))}
-      </div>
-
-      {/* Charts Section */}
-      <div className="flex flex-col lg:flex-row gap-6 h-auto lg:h-[400px]">
-        {/* Donut Chart (Sales) - Takes ~30% */}
-        <div className="w-full lg:w-[30%]">
-          <SalesChart
-            title={t('charts.salesReport')}
-            filterLabel={t('stats.thisMonth')}
-            totalSales="20.480"
-            percentage="+15%"
-          />
-        </div>
-        {/* Bar Chart (Subscriptions) - Takes ~70% */}
-        <div className="w-full lg:w-[70%]">
-          <SubscriptionsChart
-            title={t('charts.subscriptions')}
-            filterLabel={t('stats.thisMonth')}
-          />
-        </div>
-      </div>
-
-      {/* Recent Subscriptions Table */}
-      <div className="pt-4 bg-white rounded-2xl  shadow-sm">
-        <div className="flex items-center justify-between mb-4 px-6 ">
-
-          <h3 className=" text-xl-bold text-text">{t('charts.lastSubscriptions')}</h3>
-          {/* View All Button - styled as link */}
-          <button className=" text-primary-500 text-base-regular  underline cursor-pointer">
-            {t('charts.viewAll')}
-          </button>
-        </div>
-
-        <Table
-          data={mockSubscriptions}
-          columns={columns}
-          rowKey="id"
-          // Simplified table without complex pagination/sorting visuals for this widget view if needed
-          className="shadow-none border-none"
+      {/* Stats row */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard
+          title="إجمالي الإيرادات"
+          value={d ? `${d.totalRevenue.toLocaleString('ar-EG')} ج.م` : '—'}
+          icon="💰" color="bg-green-50"
+        />
+        <StatCard
+          title="إجمالي العيادات"
+          value={loading ? '—' : (d?.totalClinics ?? 0)}
+          sub={d ? `${d.suspendedClinics} موقوف` : undefined}
+          icon="🏥" color="bg-[#E8F5FF]"
+        />
+        <StatCard
+          title="العيادات النشطة"
+          value={loading ? '—' : (d?.activeClinics ?? 0)}
+          sub={d ? `${activeClinicsPct}% من الإجمالي` : undefined}
+          icon="✅" color="bg-teal-50"
+        />
+        <StatCard
+          title="المستخدمون"
+          value={loading ? '—' : (d?.totalUsers ?? 0)}
+          sub={d ? `${d.activeSubscriptions} اشتراك نشط` : undefined}
+          icon="👥" color="bg-purple-50"
         />
       </div>
+
+      {/* Charts row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        {/* Active clinics donut */}
+        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex flex-col items-center justify-center gap-3">
+          <span className="text-sm font-bold text-gray-700">العيادات النشطة</span>
+          <div className="relative">
+            <MiniDonut pct={activeClinicsPct} color="#29AAFE" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-lg font-black text-gray-800">{activeClinicsPct}%</span>
+            </div>
+          </div>
+          <div className="text-xs text-gray-400">
+            {d?.activeClinics ?? 0} نشطة من {d?.totalClinics ?? 0}
+          </div>
+        </div>
+
+        {/* Active subscriptions donut */}
+        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex flex-col items-center justify-center gap-3">
+          <span className="text-sm font-bold text-gray-700">الاشتراكات النشطة</span>
+          <div className="relative">
+            <MiniDonut pct={activeSubsPct} color="#10B981" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-lg font-black text-gray-800">{activeSubsPct}%</span>
+            </div>
+          </div>
+          <div className="text-xs text-gray-400">
+            {d?.activeSubscriptions ?? 0} نشط من {d?.totalClinics ?? 0}
+          </div>
+        </div>
+
+        {/* Revenue summary */}
+        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex flex-col justify-between">
+          <span className="text-sm font-bold text-gray-700 mb-3">ملخص الإيرادات</span>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-xs text-gray-500">إجمالي المدفوعات</span>
+              <span className="text-sm font-black text-gray-800">
+                {d ? `${d.totalRevenue.toLocaleString('ar-EG')} ج.م` : '—'}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-xs text-gray-500">الاشتراكات النشطة</span>
+              <span className="text-sm font-bold text-green-600">{d?.activeSubscriptions ?? '—'}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-xs text-gray-500">المستخدمون</span>
+              <span className="text-sm font-bold text-purple-600">{d?.totalUsers ?? '—'}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Recent subscriptions */}
+      <RecentSubsTable items={d?.recentSubscriptions ?? []} loading={loading} />
     </div>
   );
 }

@@ -21,6 +21,7 @@ const navItems = [
   { id: 'library',          label: 'المكتبة الطبية',        href: 'clinic/library/exercises',      icon: '📚' },
   { id: 'branches',         label: 'الفروع',                href: 'clinic/branches',               icon: '🏢' },
   { id: 'roles',            label: 'الصلاحيات',             href: 'clinic/roles',                  icon: '🔑' },
+  { id: 'assessment-fields', label: 'إعدادات التقييم',       href: 'clinic/settings/assessment-fields', icon: '🔧' },
   { id: 'settings',         label: 'الإعدادات',             href: 'clinic/settings',               icon: '⚙️' },
 ];
 
