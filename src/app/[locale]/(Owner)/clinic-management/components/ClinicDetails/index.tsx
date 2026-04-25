@@ -8,6 +8,7 @@ import { cn } from "@/shared/utils/cn";
 import { bytesToGB } from '@/shared/utils/format.utils';
 import { rtlTextAlign } from '@/shared/utils/rtl.utils';
 import { clinicsService } from '@/domains/clinics/clinics.service';
+import { ClinicStatus } from '@/domains/clinics/clinics.types';
 import type { AddOnDto } from '@/domains/clinics/clinics.types';
 
 import { ClinicDetailsProps } from './types';
@@ -34,6 +35,7 @@ export function ClinicDetails({
     const [isAddonDrawerOpen, setIsAddonDrawerOpen] = useState(false);
     const [addons, setAddons] = useState<AddOnDto[]>([]);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const [statusChanging, setStatusChanging] = useState(false);
     const params = useParams();
     const locale = params.locale as Locale;
     const t = (key: string) => getTranslation(locale, `clinicManagement.${key}`);
@@ -51,6 +53,34 @@ export function ClinicDetails({
     useEffect(() => {
         fetchAddons();
     }, [fetchAddons]);
+
+    const handleActivate = async () => {
+        if (!clinic?.id) return;
+        setStatusChanging(true);
+        try {
+            await clinicsService.activate(clinic.id);
+            showSuccess('تم تفعيل العيادة بنجاح ✓');
+            onRefresh?.();
+        } catch {
+            showSuccess('فشل تفعيل العيادة');
+        } finally {
+            setStatusChanging(false);
+        }
+    };
+
+    const handleSuspend = async () => {
+        if (!clinic?.id) return;
+        setStatusChanging(true);
+        try {
+            await clinicsService.suspend(clinic.id);
+            showSuccess('تم تعليق العيادة');
+            onRefresh?.();
+        } catch {
+            showSuccess('فشل تعليق العيادة');
+        } finally {
+            setStatusChanging(false);
+        }
+    };
 
     const showSuccess = (message: string) => {
         setSuccessMessage(message);
@@ -95,7 +125,35 @@ export function ClinicDetails({
             <ClinicDetailsHeader onClose={onClose} t={t} isRtl={isRtl} />
 
             <div className="p-8 space-y-10">
-                <ClinicDetailsActions onEdit={onEdit} onDelete={onDelete} t={t} isRtl={isRtl} />
+                <div className={cn("flex flex-wrap gap-3 items-center", isRtl ? "flex-row-reverse" : "")}>
+                    <ClinicDetailsActions onEdit={onEdit} onDelete={onDelete} t={t} isRtl={isRtl} />
+
+                    {/* Activate / Suspend */}
+                    {clinic.status !== ClinicStatus.Active && clinic.status !== ClinicStatus.Banned && (
+                        <button
+                            onClick={handleActivate}
+                            disabled={statusChanging}
+                            className="px-4 py-2.5 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-lg font-bold shadow-sm transition-colors flex items-center gap-2"
+                        >
+                            {statusChanging && (
+                                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            )}
+                            ✓ تفعيل العيادة
+                        </button>
+                    )}
+                    {clinic.status === ClinicStatus.Active && (
+                        <button
+                            onClick={handleSuspend}
+                            disabled={statusChanging}
+                            className="px-4 py-2.5 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white rounded-lg font-bold shadow-sm transition-colors flex items-center gap-2"
+                        >
+                            {statusChanging && (
+                                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            )}
+                            ⏸ تعليق العيادة
+                        </button>
+                    )}
+                </div>
 
                 <StorageSection
                     storagePercentage={storagePercentage}
