@@ -12,6 +12,7 @@ const navItems = [
   { id: 'dashboard',        label: 'الرئيسية',             href: 'clinic/dashboard',              icon: '🏠' },
   { id: 'appointments',     label: 'المواعيد والجلسات',    href: 'clinic/appointments',           icon: '📅' },
   { id: 'patients',         label: 'المرضى',               href: 'clinic/patients',               icon: '👥' },
+  { id: 'diagnoses',        label: 'التشخيصات',             href: 'clinic/diagnoses',              icon: '🩺' },
   { id: 'treatment-plans',  label: 'خطط العلاج',           href: 'clinic/treatment-plans',        icon: '📋' },
   { id: 'staff',            label: 'فريق العيادة',          href: 'clinic/staff',                  icon: '👨‍⚕️' },
   { id: 'invoices',         label: 'الفواتير',              href: 'clinic/billing/invoices',       icon: '🧾' },

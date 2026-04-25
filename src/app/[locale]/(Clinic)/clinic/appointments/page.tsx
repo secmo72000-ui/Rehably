@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { appointmentsService } from '@/domains/appointments/appointments.service';
 import { patientsService } from '@/domains/patients/patients.service';
 import { insuranceService, invoiceService } from '@/domains/billing/billing.service';
@@ -15,11 +16,13 @@ const DAYS_AR = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأرب
 const HOURS = Array.from({ length: 16 }, (_, i) => `${i + 7}:00`); // 7:00 → 22:00
 
 const statusMap: Record<string, { label: string; cls: string }> = {
-  Scheduled:  { label: 'مجدول',    cls: 'bg-blue-50 text-blue-600' },
-  Confirmed:  { label: 'مؤكد',    cls: 'bg-green-50 text-green-600' },
-  Completed:  { label: 'مكتمل',   cls: 'bg-gray-100 text-gray-600' },
-  Cancelled:  { label: 'ملغي',    cls: 'bg-red-50 text-red-500' },
-  NoShow:     { label: 'لم يحضر', cls: 'bg-yellow-50 text-yellow-600' },
+  Scheduled:  { label: 'مجدول',       cls: 'bg-blue-50 text-blue-600' },
+  Confirmed:  { label: 'مؤكد',       cls: 'bg-green-50 text-green-600' },
+  CheckedIn:  { label: 'حضر المريض', cls: 'bg-teal-50 text-teal-600' },
+  InProgress: { label: 'قيد التقييم', cls: 'bg-purple-50 text-purple-600' },
+  Completed:  { label: 'مكتمل',      cls: 'bg-gray-100 text-gray-600' },
+  Cancelled:  { label: 'ملغي',       cls: 'bg-red-50 text-red-500' },
+  NoShow:     { label: 'لم يحضر',    cls: 'bg-yellow-50 text-yellow-600' },
 };
 
 const COLORS = ['bg-[#E8F5FF] border-r-[3px] border-[#29AAFE]', 'bg-green-50 border-r-[3px] border-green-500', 'bg-yellow-50 border-r-[3px] border-orange-400'];
@@ -429,9 +432,11 @@ function Toast({ message, type, onClose }: { message: string; type: 'success' | 
 }
 
 export default function AppointmentsPage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabId>('calendar');
   const [showModal, setShowModal] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'warning' | 'error' } | null>(null);
+  const [checkingIn, setCheckingIn] = useState<string | null>(null);
 
   const [calendarApts, setCalendarApts] = useState<AppointmentItem[]>([]);
   const [listApts, setListApts] = useState<AppointmentItem[]>([]);
@@ -482,6 +487,20 @@ export default function AppointmentsPage() {
     } catch { /* ignore */ }
   };
 
+  const handleCheckIn = async (id: string) => {
+    setCheckingIn(id);
+    try {
+      await appointmentsService.checkIn(id);
+      setToast({ message: 'تم تسجيل وصول المريض', type: 'success' });
+      loadList();
+      loadCalendar();
+    } catch (err) {
+      setToast({ message: getApiError(err, 'فشل تسجيل الوصول'), type: 'error' });
+    } finally {
+      setCheckingIn(null);
+    }
+  };
+
   const tabs = [
     { id: 'calendar' as TabId, label: 'التقويم الأسبوعي' },
     { id: 'list' as TabId, label: 'قائمة المواعيد' },
@@ -530,9 +549,18 @@ export default function AppointmentsPage() {
                   <tr><td colSpan={7} className="text-center py-12 text-gray-400 text-sm">لا توجد مواعيد</td></tr>
                 ) : listApts.map(a => {
                   const s = statusMap[a.status] ?? { label: a.status, cls: 'bg-gray-100 text-gray-500' };
+                  const canCheckIn = a.status === 'Scheduled' || a.status === 'Confirmed';
+                  const canAssess  = a.status === 'CheckedIn' || a.status === 'InProgress';
                   return (
                     <tr key={a.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-3 font-bold text-gray-800 whitespace-nowrap">{a.patientName}</td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <button
+                          onClick={() => router.push(`/clinic/appointments/${a.id}`)}
+                          className="font-bold text-gray-800 hover:text-[#29AAFE] transition-colors text-right"
+                        >
+                          {a.patientName}
+                        </button>
+                      </td>
                       <td className="px-4 py-3 text-gray-600 text-xs whitespace-nowrap">{a.therapistName ?? '—'}</td>
                       <td className="px-4 py-3 text-gray-600 text-xs whitespace-nowrap">{new Date(a.startTime).toLocaleString('ar')}</td>
                       <td className="px-4 py-3 text-gray-600 text-xs whitespace-nowrap">{new Date(a.endTime).toLocaleString('ar')}</td>
@@ -541,16 +569,44 @@ export default function AppointmentsPage() {
                         <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold ${s.cls}`}>{s.label}</span>
                       </td>
                       <td className="px-4 py-3">
-                        <div className="flex gap-1.5">
+                        <div className="flex gap-1.5 flex-wrap">
+                          {/* Confirm */}
                           {a.status === 'Scheduled' && (
-                            <button onClick={() => handleAction(a.id, 'confirm')} className="text-xs px-2 py-1 bg-green-50 text-green-600 rounded-lg hover:bg-green-100">تأكيد</button>
+                            <button onClick={() => handleAction(a.id, 'confirm')}
+                              className="text-xs px-2 py-1 bg-green-50 text-green-600 rounded-lg hover:bg-green-100">
+                              تأكيد
+                            </button>
                           )}
-                          {a.status === 'Confirmed' && (
-                            <button onClick={() => handleAction(a.id, 'complete')} className="text-xs px-2 py-1 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100">إتمام</button>
+                          {/* Check-in */}
+                          {canCheckIn && (
+                            <button
+                              onClick={() => handleCheckIn(a.id)}
+                              disabled={checkingIn === a.id}
+                              className="text-xs px-2 py-1 bg-teal-50 text-teal-600 rounded-lg hover:bg-teal-100 disabled:opacity-50">
+                              {checkingIn === a.id ? '…' : 'تسجيل وصول'}
+                            </button>
                           )}
-                          {(a.status === 'Scheduled' || a.status === 'Confirmed') && (
-                            <button onClick={() => handleAction(a.id, 'cancel')} className="text-xs px-2 py-1 bg-red-50 text-red-500 rounded-lg hover:bg-red-100">إلغاء</button>
+                          {/* Start / Resume assessment */}
+                          {canAssess && (
+                            <button
+                              onClick={() => router.push(`/clinic/appointments/${a.id}/assessment`)}
+                              className="text-xs px-2 py-1 bg-purple-50 text-purple-600 rounded-lg hover:bg-purple-100 font-semibold">
+                              {a.status === 'InProgress' ? 'متابعة التقييم' : 'بدء التقييم'}
+                            </button>
                           )}
+                          {/* Cancel */}
+                          {canCheckIn && (
+                            <button onClick={() => handleAction(a.id, 'cancel')}
+                              className="text-xs px-2 py-1 bg-red-50 text-red-500 rounded-lg hover:bg-red-100">
+                              إلغاء
+                            </button>
+                          )}
+                          {/* View detail */}
+                          <button
+                            onClick={() => router.push(`/clinic/appointments/${a.id}`)}
+                            className="text-xs px-2 py-1 bg-gray-50 text-gray-500 rounded-lg hover:bg-gray-100">
+                            عرض
+                          </button>
                         </div>
                       </td>
                     </tr>
