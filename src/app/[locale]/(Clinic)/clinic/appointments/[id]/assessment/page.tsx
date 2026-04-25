@@ -390,8 +390,8 @@ function Step5({ data, onChange }: { data: StepObjectiveDto; onChange: (d: StepO
     { key: 'grip', label: 'Grip' }, { key: 'balance', label: 'Balance' },
   ];
   const ftSelected: string[] = data.functionalTests ? JSON.parse(data.functionalTests) : [];
-  const romRows: import('../assessment/page').RomRow[] = data.romData ? JSON.parse(data.romData) : [];
-  const strRows: import('../assessment/page').StrRow[] = data.strengthData ? JSON.parse(data.strengthData) : [];
+  const romRows: RomRow[] = data.romData ? JSON.parse(data.romData) : [];
+  const strRows: StrRow[] = data.strengthData ? JSON.parse(data.strengthData) : [];
 
   return (
     <div className="space-y-4">
